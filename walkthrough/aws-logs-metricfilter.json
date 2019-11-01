@@ -1,103 +1,56 @@
 {
     "typeName": "AWS::Logs::MetricFilter",
     "description": "An example resource schema demonstrating some basic constructs and validation rules.",
-    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+    "sourceUrl": "https://w.amazon.com/bin/view/AWS21/Design/Uluru/Onboarding_Guide/Development_Walkthrough",
     "definitions": {
-        "InitechDateFormat": {
-            "$comment": "Use the `definitions` block to provide shared resource property schemas",
-            "type": "string",
-            "format": "date-time"
-        },
-        "Memo": {
+        "MetricTransformationProperty": {
             "type": "object",
             "properties": {
-                "Heading": {
+                "DefaultValue": {
+                    "type": "number"
+                },
+                "MetricName": {
                     "type": "string"
                 },
-                "Body": {
+                "MetricNamespace": {
+                    "type": "string"
+                },
+                "MetricValue": {
                     "type": "string"
                 }
-            }
+            },
+            "required": ["MetricName", "MetricNamespace", "MetricValue"]
         }
     },
     "properties": {
-        "TPSCode": {
-            "description": "A TPS Code is automatically generated on creation and assigned as the unique identifier.",
-            "type": "string",
-            "pattern": "^[A-Z]{3,5}[0-9]{8}-[0-9]{4}$"
+        "FilterPattern": {
+            "description": "Pattern that Logs follows to interpret each entry in a log.",
+            "type": "string"
         },
-        "Title": {
-            "description": "The title of the TPS report is a mandatory element.",
-            "type": "string",
-            "minLength": 20,
-            "maxLength": 250
+        "LogGroupName": {
+            "description": "Existing log group that you want to associate with this filter",
+            "type": "string"
         },
-        "CoverSheetIncluded": {
-            "description": "Required for all TPS Reports submitted after 2/19/1999",
-            "type": "boolean"
-        },
-        "DueDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
-        "ApprovalDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
-        "Memo": {
-            "$ref": "#/definitions/Memo"
-        },
-        "SecondCopyOfMemo": {
-            "description": "In case you didn't get the first one.",
-            "$ref": "#/definitions/Memo"
-        },
-        "TestCode": {
-            "type": "string",
-            "enum": [
-                "NOT_STARTED",
-                "CANCELLED"
-            ]
-        },
-        "Authors": {
+        "MetricTransformations": {
+            "description": "MetricTransformation",
             "type": "array",
             "items": {
-                "type": "string"
+                "$ref": "#/definitions/MetricTransformationProperty"
             }
+        },
+        "FilterName": {
+            "type": "string"
         }
     },
     "required": [
-        "TestCode",
-        "Title"
+        "FilterPattern",
+        "LogGroupName",
+        "MetricTransformations"
     ],
     "readOnlyProperties": [
-        "/properties/TPSCode"
+        "/properties/FilterName"
     ],
     "primaryIdentifier": [
-        "/properties/TPSCode"
-    ],
-    "handlers": {
-        "create": {
-            "permissions": [
-                "initech:CreateReport"
-            ]
-        },
-        "read": {
-            "permissions": [
-                "initech:DescribeReport"
-            ]
-        },
-        "update": {
-            "permissions": [
-                "initech:UpdateReport"
-            ]
-        },
-        "delete": {
-            "permissions": [
-                "initech:DeleteReport"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "initech:ListReports"
-            ]
-        }
-    }
+        "/properties/FilterName"
+    ]
 }
