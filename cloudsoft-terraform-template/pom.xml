@@ -73,6 +73,11 @@
             <artifactId>aws-java-sdk-logs</artifactId>
             <version>1.11.592</version>
         </dependency>
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+            <version>0.27.0</version>
+        </dependency>
     </dependencies>
 
     <build>
