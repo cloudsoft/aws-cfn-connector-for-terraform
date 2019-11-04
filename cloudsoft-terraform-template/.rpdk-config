@@ -1,0 +1,15 @@
+{
+    "typeName": "Cloudsoft::Terraform::Template",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "io.cloudsoft.terraform.template.HandlerWrapper::handleRequest",
+    "testEntrypoint": "io.cloudsoft.terraform.template.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "io",
+            "cloudsoft",
+            "terraform",
+            "template"
+        ]
+    }
+}

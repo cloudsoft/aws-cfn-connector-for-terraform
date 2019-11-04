@@ -1,0 +1,27 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Cloudformation to GitHub interface",
+	"Resources": {
+		"LogGroup": {
+			"Type": "AWS::Logs::LogGroup"
+		},
+		"Filter": {
+			"Type": "Cloudsoft::Terraform::Template",
+			"Properties": {
+				"MetricTransformations": [
+					{
+						"DefaultValue": 1,
+						"MetricName": "404Count",
+						"MetricValue": "1",
+						"MetricNamespace": "WebServer/404s"
+					}
+				],
+				"FilterPattern": "ERROR",
+				"FilterName": "MyFilter",
+				"LogGroupName": {
+					"Ref": "LogGroup"
+				}
+			}
+		}
+	}
+}
