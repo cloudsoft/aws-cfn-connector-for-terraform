@@ -1,8 +1,8 @@
 {
 	"credentials": {
-		"accessKeyId": "<ID>",
-		"secretAccessKey": "<SECRET>",
-		"sessionToken": "<TOKEN>"
+		"accessKeyId": "(unused)",
+		"secretAccessKey": "(unused)",
+		"sessionToken": "(unused)"
 	},
 	"action": "CREATE",
 	"request": {
