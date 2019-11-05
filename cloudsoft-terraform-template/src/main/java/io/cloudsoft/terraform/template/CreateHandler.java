@@ -19,8 +19,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         ResourceModel model = request.getDesiredResourceState();
         OperationStatus ret = OperationStatus.PENDING;
         try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH("localhost", "template1");
-            tfif.createTemplateFromURL("http://example.com/template1.tf");
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(model.getTFServerName(), model.getTFInfrastructureName());
+            tfif.createTemplateFromURL(model.getTFConfigurationURL());
             ret = OperationStatus.SUCCESS;
         } catch (IOException e) {
             ret = OperationStatus.FAILED;

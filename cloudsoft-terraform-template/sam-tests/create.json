@@ -8,17 +8,9 @@
 	"request": {
 		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
 		"desiredResourceState": {
-			"FilterPattern": "",
-			"FilterName": "MyFilter",
-			"LogGroupName": "LogGroupName",
-			"MetricTransformations": [
-				{
-					"DefaultValue": 3,
-					"MetricName": "MyMetric",
-					"MetricNamespace": "MyNamespace",
-					"MetricValue": "3"
-				}
-			]
+			"TFServerName": "tf-denis",
+			"TFInfrastructureName": "example8",
+			"TFConfigurationURL": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.tf"
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},
