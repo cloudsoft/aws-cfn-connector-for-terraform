@@ -23,10 +23,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - initech:CreateReport
-                - initech:DescribeReport
                 - initech:UpdateReport
+                - initech:CreateReport
                 - initech:ListReports
+                - initech:DescribeReport
                 - initech:DeleteReport
                 Resource: "*"
 Outputs:
