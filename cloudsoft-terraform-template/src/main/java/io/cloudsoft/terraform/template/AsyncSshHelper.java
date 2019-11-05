@@ -2,34 +2,27 @@ package io.cloudsoft.terraform.template;
 
 public class AsyncSshHelper {
 
-    String sessionId, stepId;
-    
-    public static boolean MOCK = true;
+    CallbackContext callback;
     
     boolean running;
     String stdout;
     String stderr;
     
-    public AsyncSshHelper(String sessionId, String stepId) {
-        this.sessionId = sessionId;
-        this.stepId = stepId;
-    }
-    
     public AsyncSshHelper(CallbackContext callback) {
-        this(callback.sessionId, callback.stepId);
+        this.callback = callback;
     }
     
     protected String exec(String command) {
         // TODO run command over ssh, return the output
-        return "TODO";
+        return "TODO "+marker("PID")+" 999 "+marker("FINISHED")+" true";
     }
     
     protected String dir() {
-        return "/tmp/"+sessionId+"/"+stepId;
+        return "/tmp/"+callback.sessionId+"/"+callback.stepId;
     }
     
     protected String marker(String marker) {
-        return marker+"_"+sessionId+"_"+stepId;
+        return marker+"_"+callback.sessionId+"_"+callback.stepId;
     }
 
     private String getWordAfter(String marker, String output) {
@@ -49,42 +42,46 @@ public class AsyncSshHelper {
     }
 
 
-    /** returns PID */
-    public int runOrRejoin(String rawCommand) {
+    /** sets PID in callback; callback should not have a PID */
+    public void runOrRejoinAndSetPid(String rawCommand) {
+        if (callback.pid!=0) {
+            throw new IllegalStateException("Callback specified PID "+callback.pid+" when asked to run '"+rawCommand+"' for "+callback.stepId);
+        }
+        
         // TODO tidy the below, idea is it runs rawCommand in the BG and this script is idempotent
         // returning the PID
+        // ... nohupping script.sh and taking its pid might be better
         
         String script = "cat > script.sh <<EOF \n" +
-            "mkdir -p /tmp/"+sessionId+"/"+stepId+"\n"+
-            "cd /tmp/"+sessionId+"/"+stepId+"\n" +
+            "mkdir -p "+dir()+"\n"+
+            "cd "+dir()+"\n"+
             "if [ ! -f out ] ; then \n"+
             "  nohup "+rawCommand+" > out 2> err & \n" +
-            "  echo $1 > pid \n"+
+            "  echo $! > pid \n"+
             "fi\n"+
             "echo "+marker("PID")+" `cat pid`\n"+
             "EOF\n"+
             ". ./script.sh\n";
         
-        // TODO run the above SSH, parse the output for the pid, or throw error
-        int pid;
-        if (MOCK) {
-            pid = 999;
-        } else {
-            String pidS = getWordAfter(marker("PID"), exec(script));
-            try {
-                pid = Integer.parseInt(pidS);
-            } catch (Exception e) {
-                throw new IllegalStateException("Could not find PID in '"+pidS+"': "+e, e);
-            }
+        callback.pid = execAndGetPid(script);
+    }
+
+    protected int execAndGetPid(String script) {
+        String pidS = getWordAfter(marker("PID"), exec(script));
+        try {
+            return Integer.parseInt(pidS);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not find PID in '"+pidS+"': "+e, e);
         }
-        
-        return pid;
     }
 
     /** returns whether this is finished.  if so, stdout and stderr are updated. */
-    public boolean update(int pid) {
-        boolean isFinished = 
-            MOCK ? Math.random()<0.3 : exec("ps -p "+pid + " || echo "+marker("FINISHED")).contains(marker("FINISHED"));
+    public boolean checkFinishedAndUpdate() {
+        if (callback.pid==0) {
+            throw new IllegalStateException("Callback specified PID "+callback.pid+" when asked to check finished for "+callback.stepId);
+        }
+
+        boolean isFinished = execIsPidFinished(callback.pid);
         
         if (!isFinished) {
             running = true;
@@ -93,6 +90,10 @@ public class AsyncSshHelper {
             updateStdinStdout();
         }
         return !running;
+    }
+
+    protected boolean execIsPidFinished(int pid) {
+        return exec("ps -p "+pid + " || echo "+marker("FINISHED")).contains(marker("FINISHED"));
     }
 
     protected void updateStdinStdout() {

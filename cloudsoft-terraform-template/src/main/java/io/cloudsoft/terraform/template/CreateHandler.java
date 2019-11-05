@@ -1,5 +1,7 @@
 package io.cloudsoft.terraform.template;
 
+import java.util.function.Function;
+
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
@@ -12,102 +14,121 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         INSTALL_PLAN, APPLY_PLAN, SET_OUTPUTS
     }
     
+    // visible for testing
+    Function<CallbackContext, AsyncSshHelper> asyncSshHelperFactory = cb -> new AsyncSshHelper(cb);
+    
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
-            final CallbackContext callbackContext,
+            CallbackContext callbackContext,
             final Logger logger) {
         
-        ResourceModel model = request.getDesiredResourceState();
+        return new Worker(request, callbackContext, logger).run();
+    }
+    
+    protected class Worker {
+
+        final ResourceHandlerRequest<ResourceModel> request;
+        private ResourceModel model;
+        final CallbackContext callbackContext;
+        final Logger logger;
+        private AsyncSshHelper asyncSshHelper;
         
-        if (callbackContext.sessionId == null) {
-            installPlan(request, callbackContext, logger);
-        } else {
-            AsyncSshHelper helper = new AsyncSshHelper(callbackContext);
-            switch (Steps.valueOf(callbackContext.stepId)) {
-            case INSTALL_PLAN:
-                if (helper.update(callbackContext.pid)) {
-                    // TODO check if succeeded or failed; for now assume success
-                    applyPlan(request, callbackContext, logger);
-                } else {
-                    // not finished yet, keep waiting
-                }
-                break;
+        protected Worker(
+                final ResourceHandlerRequest<ResourceModel> request,
+                final CallbackContext callbackContext,
+                final Logger logger) {
+            
+            this.request = request;
+            this.model = request.getDesiredResourceState();
+            this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
+            this.logger = logger;
+            this.asyncSshHelper = asyncSshHelperFactory.apply(this.callbackContext);
+        }
+        
+        public ProgressEvent<ResourceModel, CallbackContext> run() {
+            if (callbackContext.sessionId == null) {
+                // TODO better session ID
+                callbackContext.sessionId = "session"+System.currentTimeMillis();
+    
+                installPlan(request, callbackContext, logger);
                 
-            case APPLY_PLAN:
-                if (helper.update(callbackContext.pid)) {
-                    // TODO check if succeeded or failed; for now assume success
-                    setOutputs(request, callbackContext, logger);
-                } else {
-                    // not finished yet, keep waiting
-                }
-                break;
+            } else if (!asyncSshHelper.checkFinishedAndUpdate()) {
+                // still running last command, no op
                 
-            case SET_OUTPUTS:
-                if (helper.update(callbackContext.pid)) {
-                    // TODO check if succeeded or failed; for now assume success
+            } else {
+                // TODO check if succeeded or failed; for now assume success
+                
+                switch (Steps.valueOf(callbackContext.stepId)) {
+                
+                case INSTALL_PLAN:
+                    // TODO check asyncSshHelper.stdout, stderr okay
+                    
+                    applyPlan();
+                    break;
+                    
+                case APPLY_PLAN:
+                    // TODO check asyncSshHelper.stdout, stderr okay
+                    setOutputs();
+                    break;
+                    
+                case SET_OUTPUTS:
+                    // TODO check asyncSshHelper.stdout, stderr okay
                     // TODO store output
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                         .resourceModel(model)
                         .status(OperationStatus.SUCCESS)
                         .build();
-                    
-                } else {
-                    // not finished yet, keep waiting
                 }
-                break;
-                
-            default:
-                break;
             }
+            
+            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .resourceModel(model)
+                    .callbackContext(callbackContext)
+                    .callbackDelaySeconds(nextDelay(callbackContext))
+                    .status(OperationStatus.IN_PROGRESS)
+                    .build();
+            }
+
+        private int nextDelay(CallbackContext callbackContext) {
+            if (callbackContext.lastDelaySeconds==0) {
+                callbackContext.lastDelaySeconds = 1;
+            } else {
+                if (callbackContext.lastDelaySeconds < 60) {
+                    // exponential backoff from 1 second up to 1 minute
+                    callbackContext.lastDelaySeconds *= 2;
+                } else {
+                    callbackContext.lastDelaySeconds = 60;
+                }
+            }
+            return callbackContext.lastDelaySeconds;
+        }
+    
+        private void advanceTo(Steps nextStep) {
+            callbackContext.stepId = nextStep.toString();
+            callbackContext.lastDelaySeconds = 0;
+            callbackContext.pid = 0;
         }
         
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .callbackContext(callbackContext)
-                .callbackDelaySeconds(nextDelay(callbackContext))
-                .status(OperationStatus.IN_PROGRESS)
-                .build();
-    }
-
-    private int nextDelay(CallbackContext callbackContext) {
-        if (callbackContext.lastDelaySeconds==0) {
-            callbackContext.lastDelaySeconds = 1;
-        } else {
-            if (callbackContext.lastDelaySeconds < 60) {
-                // exponential backoff from 1 second up to 1 minute
-                callbackContext.lastDelaySeconds *= 2;
-            }
+        private void installPlan(ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
+            advanceTo(Steps.INSTALL_PLAN);
+            // TODO fix the command
+            asyncSshHelper.runOrRejoinAndSetPid("wget xxxx");
         }
-        // reset every time step changes
-        return 5;
-    }
-
-    private void installPlan(ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
-        // TODO better session ID
-        callbackContext.sessionId = "session"+System.currentTimeMillis();
-        callbackContext.stepId = Steps.INSTALL_PLAN.toString();
-        callbackContext.lastDelaySeconds = 0;
         
-        // TODO
-        callbackContext.pid = new AsyncSshHelper(callbackContext).runOrRejoin("wget xxxx");
+        private void applyPlan() {
+            advanceTo(Steps.APPLY_PLAN);
+            // TODO fix the command
+            asyncSshHelper.runOrRejoinAndSetPid("wget xxxx");
+        }
+    
+        private void setOutputs() {
+            advanceTo(Steps.SET_OUTPUTS);
+            // TODO fix the command
+            // TODO - note this should probably be synchronous
+            asyncSshHelper.runOrRejoinAndSetPid("TODO get outputs");
+        }
     }
     
-    private void applyPlan(ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
-        callbackContext.stepId = Steps.APPLY_PLAN.toString();
-        callbackContext.lastDelaySeconds = 0;
-        
-        // TODO
-        callbackContext.pid = new AsyncSshHelper(callbackContext).runOrRejoin("terraform apply ...");
-    }
-
-    private void setOutputs(ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
-        callbackContext.stepId = Steps.SET_OUTPUTS.toString();
-        callbackContext.lastDelaySeconds = 0;
-        
-        // TODO - notee this should bee synchronous
-        callbackContext.pid = new AsyncSshHelper(callbackContext).runOrRejoin("TODO get outputs");
-    }
-
 }
