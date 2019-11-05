@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class TerraformInterfaceSSH {
-    private String templateName, serverHostname;
+    private String templateName, serverHostname, sshUsername, sshServerKeyFP, sshClientSecretKeyFile;
 
     public TerraformInterfaceSSH(String serverHostname, String templateName) {
-        this.serverHostname = serverHostname;
+        this.serverHostname = "localhost";
+        this.sshServerKeyFP = "3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38";
+        this.sshUsername = "denis";
+        this.sshClientSecretKeyFile = "src/main/resources/id_rsa_java";
         this.templateName = templateName;
     }
 
@@ -38,9 +41,9 @@ public class TerraformInterfaceSSH {
 
         // FIXME: keep the fingerprint(s) in an external state instead of hardcoding
         // loadKnownHosts() has no effect even when run on the dev PC
-        ssh.addHostKeyVerifier("3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38");
+        ssh.addHostKeyVerifier(sshServerKeyFP);
 
-        ssh.connect("localhost");
+        ssh.connect(serverHostname);
         Session session = null;
         try {
             // src/main/resources/privkey works.
@@ -48,7 +51,7 @@ public class TerraformInterfaceSSH {
             // not support SSH agent, and there is no SSH agent in AWS anyway).
             // ~/.ssh/privkey does not work.
             // ~user/.ssh/privkey does not work.
-            ssh.authPublickey("denis", "src/main/resources/id_rsa_java");
+            ssh.authPublickey(sshUsername, sshClientSecretKeyFile);
 
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
