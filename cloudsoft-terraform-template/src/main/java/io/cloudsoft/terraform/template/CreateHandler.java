@@ -24,27 +24,35 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
         ResourceModel model = request.getDesiredResourceState();
-        String s1, s2;
         OperationStatus ret = OperationStatus.PENDING;
 
         try {
             final SSHClient ssh = new SSHClient();
+
             // FIXME: keep the fingerprint(s) in an external state instead of hardcoding
             ssh.loadKnownHosts(); // has no effect even when run on the dev PC
             ssh.addHostKeyVerifier("3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38");
+
             ssh.connect("localhost");
             Session session = null;
             try {
+                // src/main/resources/privkey works.
+                // /home/user/.ssh/privkey works if the file has no passphrase (sshj does
+                // not support SSH agent, and there is no SSH agent in AWS anyway).
+                // ~/.ssh/privkey does not work.
+                // ~user/.ssh/privkey does not work.
                 ssh.authPublickey("denis", "src/main/resources/id_rsa_java");
-                // ssh.authPublickey("denis", "/home/denis/.ssh/id_rsa"); // does not work (agent?)
+
                 session = ssh.startSession();
-                final Command cmd = session.exec("uname -a");
-                s1 = IOUtils.readFully(cmd.getInputStream()).toString();
+                final Command cmd = session.exec("figlet 'Here be Terraform'");
+                String s1 = IOUtils.readFully(cmd.getInputStream()).toString();
                 cmd.join(5, TimeUnit.SECONDS);
-                s2 = "exit status: " + cmd.getExitStatus(); // TBD
-                // cmd.getErrorStream() // TDB
+                String s2 = "exit status: " + cmd.getExitStatus(); // TBD
+                // cmd.getErrorStream() // TBD
                 //model.setMetricValue(s1); // does not compile
                 System.out.println(s1);
+                System.out.println(s2);
+                ret = OperationStatus.SUCCESS;
             } finally {
                 try {
                     if (session != null) {
@@ -53,11 +61,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 } catch (IOException e) {
                     // do nothing
                 }
-
                 ssh.disconnect();
             }
-            ret = OperationStatus.SUCCESS;
-
         } catch (IOException e) {
             ret = OperationStatus.FAILED;
         }
