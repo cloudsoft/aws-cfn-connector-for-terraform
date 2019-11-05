@@ -9,6 +9,8 @@ import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.DeleteMetricFilterRequest;
 
+import java.io.IOException;
+
 public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     @Override
@@ -19,6 +21,15 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             final Logger logger) {
 
         ResourceModel model = request.getDesiredResourceState();
+
+        OperationStatus ret = OperationStatus.PENDING;
+        try {
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH("localhost", "template1");
+            tfif.deleteTemplate();
+            ret = OperationStatus.SUCCESS;
+        } catch (IOException e) {
+            ret = OperationStatus.FAILED;
+        }
 
         // Convert model to a form that works with your API
         DeleteMetricFilterRequest deleteMetricFilterRequest = new
@@ -35,7 +46,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
-                .status(OperationStatus.SUCCESS)
+                .status(ret)
                 .build();
     }
 }
