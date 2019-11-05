@@ -15,16 +15,21 @@ class TerraformInterfaceSSH {
         switch (serverHostname)
         {
             case "localhost":
-                this.serverHostname = "localhost";
+                // In a Docker container loopback is in its own namespace, the client has to reach the host.
+                this.serverHostname = "192.168.101.123";
                 this.sshServerKeyFP = "3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38";
                 this.sshUsername = "denis";
-                this.sshClientSecretKeyFile = "src/main/resources/id_rsa_java";
+                // The key file ends up at the root level of the JAR, hence pay attention to the path
+                // to keep the code working in a lambda environment (in particular, SAM local tests
+                // depend on this).
+                this.sshClientSecretKeyFile = "id_rsa_java";
                 break;
             case "tf-denis":
                 this.serverHostname = "ec2-54-93-230-94.eu-central-1.compute.amazonaws.com";
                 this.sshServerKeyFP = "bb:4e:e3:73:76:a0:4e:bc:58:7a:d5:6c:0d:a8:f8:12";
                 this.sshUsername = "ubuntu";
-                this.sshClientSecretKeyFile = "src/main/resources/terraform-denis-20191104.pem";
+                // Idem.
+                this.sshClientSecretKeyFile = "terraform-denis-20191104.pem";
                 break;
             default:
                 throw new IllegalArgumentException ("Unknown Terraform server name '" + serverHostname + "'");
