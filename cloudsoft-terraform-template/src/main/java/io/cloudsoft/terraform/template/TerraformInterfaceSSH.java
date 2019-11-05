@@ -7,10 +7,10 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class TerraformInterfaceSSH {
+class TerraformInterfaceSSH {
     private String templateName, serverHostname, sshUsername, sshServerKeyFP, sshClientSecretKeyFile;
 
-    public TerraformInterfaceSSH(String serverHostname, String templateName) {
+    TerraformInterfaceSSH(String serverHostname, String templateName) {
         // FIXME: fetch parameters from a state
         switch (serverHostname)
         {
@@ -32,18 +32,18 @@ public class TerraformInterfaceSSH {
         this.templateName = templateName;
     }
 
-    public void createTemplateFromURL(String url) throws IOException {
+    void createTemplateFromURL(String url) throws IOException {
         runSSHCommand("wget " + url);
         runSSHCommand("terraform init");
         runSSHCommand("terraform apply " + templateName);
     }
 
-    public void updateTemplateFromURL(String url) throws IOException {
+    void updateTemplateFromURL(String url) throws IOException {
         runSSHCommand("wget " + url);
         runSSHCommand("terraform apply " + templateName);
     }
 
-    public void deleteTemplate() throws IOException {
+    void deleteTemplate() throws IOException {
         runSSHCommand("terraform destroy " + templateName);
     }
 
