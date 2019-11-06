@@ -1,7 +1,8 @@
 package io.cloudsoft.terraform.template;
 
 import java.io.IOException;
-import java.util.function.Function;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
@@ -10,88 +11,92 @@ import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
-
+    
     enum Steps {
         INSTALL_PLAN, APPLY_PLAN, SET_OUTPUTS
     }
-    
-    // visible for testing
-    Function<CallbackContext, AsyncSshHelper> asyncSshHelperFactory = cb -> new AsyncSshHelper(cb);
-    
+        
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
-            CallbackContext callbackContext,
+            final CallbackContext callbackContext,
             final Logger logger) {
         
-        return new Worker(request, callbackContext, logger).run();
+        return run(callbackContext, cb -> new Worker(request, cb, logger));
     }
     
-    protected class Worker {
+    class Worker extends AbstractHandlerWorker {
 
-        final ResourceHandlerRequest<ResourceModel> request;
-        private ResourceModel model;
-        final CallbackContext callbackContext;
-        final Logger logger;
-        private AsyncSshHelper asyncSshHelper;
-        
         protected Worker(
                 final ResourceHandlerRequest<ResourceModel> request,
                 final CallbackContext callbackContext,
                 final Logger logger) {
-            
-            this.request = request;
-            this.model = request.getDesiredResourceState();
-            this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
-            this.logger = logger;
-            this.asyncSshHelper = asyncSshHelperFactory.apply(this.callbackContext);
+            super(request, callbackContext, logger);
         }
         
-        public ProgressEvent<ResourceModel, CallbackContext> run() {
+        public ProgressEvent<ResourceModel, CallbackContext> call() {
+            logger.log("CreateHandler lambda starting: "+model);
+            
+            if (TEST_RETURN_SUCCESS_IMMEDIATELY) {
+                return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .resourceModel(model)
+                    .status(OperationStatus.SUCCESS)
+                    .build();
+            }
 
-            if (callbackContext.sessionId == null) {
-                // TODO better session ID
-                callbackContext.sessionId = "session"+System.currentTimeMillis();
-    
-                installPlan(request, callbackContext, logger);
-                
-            } else if (!asyncSshHelper.checkFinishedAndUpdate()) {
-                // still running last command, no op
-                
-            } else {
-                // TODO check if succeeded or failed; for now assume success
-                
-                switch (Steps.valueOf(callbackContext.stepId)) {
-                
-                case INSTALL_PLAN:
-                    // TODO check asyncSshHelper.stdout, stderr okay
+            try {
+                if (callbackContext.sessionId == null) {
+                    // TODO better session ID
+                    callbackContext.sessionId = "session"+System.currentTimeMillis();
+        
+                    installPlan(request, callbackContext, logger);
                     
-                    applyPlan();
-                    break;
+                } else if (!asyncSshHelper.checkFinishedAndUpdate()) {
+                    // still running last command, no op
                     
-                case APPLY_PLAN:
-                    // TODO check asyncSshHelper.stdout, stderr okay
-                    setOutputs();
-                    break;
+                } else {
+                    // TODO check if succeeded or failed; for now assume success
                     
-                case SET_OUTPUTS:
-                    // TODO check asyncSshHelper.stdout, stderr okay
-                    // TODO store output
-                    return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                        .resourceModel(model)
-                        .status(OperationStatus.SUCCESS)
-                        .build();
-                }
+                    switch (Steps.valueOf(callbackContext.stepId)) {
+                    
+                    case INSTALL_PLAN:
+                        // TODO check asyncSshHelper.stdout, stderr okay
+                        
+                        applyPlan();
+                        break;
+                        
+                    case APPLY_PLAN:
+                        // TODO check asyncSshHelper.stdout, stderr okay
+                        setOutputs();
+                        break;
+                        
+                    case SET_OUTPUTS:
+                        // TODO check asyncSshHelper.stdout, stderr okay
+                        // TODO store output
+                        logger.log("CreateHandler completed: success");
+                        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                            .resourceModel(model)
+                            .status(OperationStatus.SUCCESS)
+                            .build();
+                    }
+                }  
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                logger.log("CreateHandler error: "+e+"\n"+sw.toString());
+                throw e;
             }
             
+            logger.log("CreateHandler lambda exiting, callback: "+callbackContext);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .callbackContext(callbackContext)
                     .callbackDelaySeconds(nextDelay(callbackContext))
                     .status(OperationStatus.IN_PROGRESS)
                     .build();
-            }
+        }
 
         private int nextDelay(CallbackContext callbackContext) {
             if (callbackContext.lastDelaySeconds==0) {

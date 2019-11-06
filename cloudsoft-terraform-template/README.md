@@ -1,17 +1,40 @@
 # Cloudsoft::Terraform::Template
 
-Congratulations on starting development! Next steps:
+(TODO: rename Terraform::Configuration)
 
-1. Write the JSON schema describing your resource, `cloudsoft-terraform-template.json`
-2. The RPDK will automatically generate the correct resource model from the
-   schema whenever the project is built via Maven. You can also do this manually
-   with the following command: `cfn-cli generate`
-3. Implement your resource handlers
+### Quick Start
+
+1. Build with `mvn clean package`
+
+2. Register with CFN: `cfn-cli submit -v`
+
+3. Set the version to use:
+   `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 0000000N`
+   
+   If you update the codebase you must choose an `N` greater than those already installed. 
+    
+   To retrieve information about the versions of a resource provider:
+   `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Template`
+
+4. Deploy some Terraform, e.g. the file `terraform-example.cfn.yaml`:
+   `aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example`
+   
+5. Delete it when you're done:
+   `aws cloudformation delete-stack --stack-name terraform-example`
 
 
-Please don't modify files under `target/generated-sources/rpdk`, as they will be
-automatically overwritten.
+### Logging
 
-The code use [Lombok](https://projectlombok.org/), and [you may have to install
-IDE integrations](https://projectlombok.org/) to enable auto-complete for
-Lombok-annotated classes.
+aws cloudformation register-type \
+  --type-name Cloudsoft::Terraform::Template \
+  --schema-handler-package s3://denis-examples/cloudsoft-terraform-template.zip \
+  --logging-config "{\"LogRoleArn\": \"arn:aws:iam::304295633295:role/CloudFormationManagedUplo-LogAndMetricsDeliveryRol-DQU4AQ5IPTFJ\",\"LogGroupName\": \"uluru_example_test\"}" \
+  --type RESOURCE
+
+https://denis-examples.s3.eu-central-1.amazonaws.com/cloudsoft-terraform-template.zip \
+  s3://denis-examples/cloudsoft-terraform-template.zip
+  
+  
+### Debugging
+
+force-synchronous
