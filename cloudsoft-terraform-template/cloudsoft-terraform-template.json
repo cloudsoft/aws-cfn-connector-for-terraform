@@ -1,86 +1,58 @@
 {
   "typeName": "Cloudsoft::Terraform::Template",
-  "description": "An example resource schema demonstrating some basic constructs and validation rules.",
-  "sourceUrl": "https://w.amazon.com/bin/view/AWS21/Design/Uluru/Onboarding_Guide/Development_Walkthrough",
-  "definitions": {
-    "MetricTransformationProperty": {
-      "type": "object",
-      "properties": {
-        "DefaultValue": {
-          "type": "number"
-        },
-        "MetricName": {
-          "type": "string"
-        },
-        "MetricNamespace": {
-          "type": "string"
-        },
-        "MetricValue": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "MetricName",
-        "MetricNamespace",
-        "MetricValue"
-      ]
-    }
-  },
+  "description": "A Terraform resource provider for AWS CloudFormation",
+  "sourceUrl": "https://cloudsoft.io/",
   "properties": {
-    "FilterPattern": {
-      "description": "Pattern that Logs follows to interpret each entry in a log.",
+    "TFServerName": {
+      "description": "Terraform server name (hostname and other connection parameters derive from here)",
       "type": "string"
     },
-    "LogGroupName": {
-      "description": "Existing log group that you want to associate with this filter",
+    "TFInfrastructureName": {
+      "description": "Terraform infrastructure name",
       "type": "string"
     },
-    "MetricTransformations": {
-      "description": "MetricTransformation",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/MetricTransformationProperty"
-      }
-    },
-    "FilterName": {
+    "TFConfigurationURL": {
+      "description": "URL of a Terraform configuration in Terraform language (not JSON)",
       "type": "string"
     }
   },
   "required": [
-    "FilterPattern",
-    "LogGroupName",
-    "MetricTransformations"
+    "TFServerName",
+    "TFInfrastructureName",
+    "TFConfigurationURL"
   ],
   "readOnlyProperties": [
-    "/properties/FilterName"
+    "/properties/TFServerName",
+    "/properties/TFInfrastructureName"
   ],
   "primaryIdentifier": [
-    "/properties/FilterName"
+    "/properties/TFServerName",
+    "/properties/TFInfrastructureName"
   ],
   "handlers": {
     "create": {
       "permissions": [
-        "initech:CreateReport"
+        "initech:CreateInfrastructure"
       ]
     },
     "read": {
       "permissions": [
-        "initech:DescribeReport"
+        "initech:DescribeInfrastructure"
       ]
     },
     "update": {
       "permissions": [
-        "initech:UpdateReport"
+        "initech:UpdateInfrastructure"
       ]
     },
     "delete": {
       "permissions": [
-        "initech:DeleteReport"
+        "initech:DeleteInfrastructure"
       ]
     },
     "list": {
       "permissions": [
-        "initech:ListReports"
+        "initech:ListInfrastructures"
       ]
     }
   }

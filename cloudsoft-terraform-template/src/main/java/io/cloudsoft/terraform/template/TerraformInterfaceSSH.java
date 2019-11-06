@@ -7,26 +7,48 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class TerraformInterfaceSSH {
-    private String templateName, serverHostname;
+class TerraformInterfaceSSH {
+    private String templateName, serverHostname, sshUsername, sshServerKeyFP, sshClientSecretKeyFile;
 
-    public TerraformInterfaceSSH(String serverHostname, String templateName) {
-        this.serverHostname = serverHostname;
+    TerraformInterfaceSSH(String serverHostname, String templateName) {
+        // FIXME: fetch parameters from a state
+        switch (serverHostname)
+        {
+            case "localhost":
+                // In a Docker container loopback is in its own namespace, the client has to reach the host.
+                this.serverHostname = "192.168.101.123";
+                this.sshServerKeyFP = "3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38";
+                this.sshUsername = "denis";
+                // The key file ends up at the root level of the JAR, hence pay attention to the path
+                // to keep the code working in a lambda environment (in particular, SAM local tests
+                // depend on this).
+                this.sshClientSecretKeyFile = "id_rsa_java";
+                break;
+            case "tf-denis":
+                this.serverHostname = "ec2-54-93-230-94.eu-central-1.compute.amazonaws.com";
+                this.sshServerKeyFP = "bb:4e:e3:73:76:a0:4e:bc:58:7a:d5:6c:0d:a8:f8:12";
+                this.sshUsername = "ubuntu";
+                // Idem.
+                this.sshClientSecretKeyFile = "terraform-denis-20191104.pem";
+                break;
+            default:
+                throw new IllegalArgumentException ("Unknown Terraform server name '" + serverHostname + "'");
+        }
         this.templateName = templateName;
     }
 
-    public void createTemplateFromURL(String url) throws IOException {
+    void createTemplateFromURL(String url) throws IOException {
         runSSHCommand("wget " + url);
         runSSHCommand("terraform init");
         runSSHCommand("terraform apply " + templateName);
     }
 
-    public void updateTemplateFromURL(String url) throws IOException {
+    void updateTemplateFromURL(String url) throws IOException {
         runSSHCommand("wget " + url);
         runSSHCommand("terraform apply " + templateName);
     }
 
-    public void deleteTemplate() throws IOException {
+    void deleteTemplate() throws IOException {
         runSSHCommand("terraform destroy " + templateName);
     }
 
@@ -38,9 +60,9 @@ public class TerraformInterfaceSSH {
 
         // FIXME: keep the fingerprint(s) in an external state instead of hardcoding
         // loadKnownHosts() has no effect even when run on the dev PC
-        ssh.addHostKeyVerifier("3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38");
+        ssh.addHostKeyVerifier(sshServerKeyFP);
 
-        ssh.connect("localhost");
+        ssh.connect(serverHostname);
         Session session = null;
         try {
             // src/main/resources/privkey works.
@@ -48,7 +70,7 @@ public class TerraformInterfaceSSH {
             // not support SSH agent, and there is no SSH agent in AWS anyway).
             // ~/.ssh/privkey does not work.
             // ~user/.ssh/privkey does not work.
-            ssh.authPublickey("denis", "src/main/resources/id_rsa_java");
+            ssh.authPublickey(sshUsername, sshClientSecretKeyFile);
 
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);

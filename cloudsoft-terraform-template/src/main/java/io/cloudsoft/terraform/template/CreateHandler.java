@@ -1,5 +1,6 @@
 package io.cloudsoft.terraform.template;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -48,6 +49,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         }
         
         public ProgressEvent<ResourceModel, CallbackContext> run() {
+
             if (callbackContext.sessionId == null) {
                 // TODO better session ID
                 callbackContext.sessionId = "session"+System.currentTimeMillis();
@@ -119,6 +121,17 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         
         private void applyPlan() {
             advanceTo(Steps.APPLY_PLAN);
+            
+            // TODO for now keep the synchronous approach also
+            if (model.getTFConfigurationURL()!=null) {
+                try  {
+                    TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(model.getTFServerName(), model.getTFInfrastructureName());
+                    tfif.createTemplateFromURL(model.getTFConfigurationURL());
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+
             // TODO fix the command
             asyncSshHelper.runOrRejoinAndSetPid("wget xxxx");
         }

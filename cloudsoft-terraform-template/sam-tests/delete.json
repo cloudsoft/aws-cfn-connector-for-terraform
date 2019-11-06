@@ -1,24 +1,15 @@
 {
 	"credentials": {
-		"accessKeyId": "<ID>",
-		"secretAccessKey": "<SECRET>",
-		"sessionToken": "<TOKEN>"
+		"accessKeyId": "(unused)",
+		"secretAccessKey": "(unused)",
+		"sessionToken": "(unused)"
 	},
 	"action": "DELETE",
 	"request": {
 		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
 		"desiredResourceState": {
-			"FilterPattern": "",
-			"FilterName": "MyFilter",
-			"LogGroupName": "LogGroupName",
-			"MetricTransformations": [
-				{
-					"DefaultValue": 3,
-					"MetricName": "MyMetric",
-					"MetricNamespace": "MyNamespace",
-					"MetricValue": "3"
-				}
-			]
+			"TFServerName": "tf-denis",
+			"TFInfrastructureName": "example8"
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},
