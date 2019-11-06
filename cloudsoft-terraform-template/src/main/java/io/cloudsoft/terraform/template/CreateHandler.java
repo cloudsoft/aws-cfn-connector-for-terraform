@@ -16,6 +16,8 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
             final Logger logger) {
         ResourceModel model = request.getDesiredResourceState();
 
+        // TODO : put your code here
+
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)

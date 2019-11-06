@@ -1,61 +1,39 @@
 {
   "typeName": "Cloudsoft::Terraform::Template",
-  "description": "An example resource schema demonstrating some basic constructs and validation rules.",
-  "sourceUrl": "https://w.amazon.com/bin/view/AWS21/Design/Uluru/Onboarding_Guide/Development_Walkthrough",
-  "definitions": {
-    "MetricTransformationProperty": {
-      "type": "object",
-      "properties": {
-        "DefaultValue": {
-          "type": "number"
-        },
-        "MetricName": {
-          "type": "string"
-        },
-        "MetricNamespace": {
-          "type": "string"
-        },
-        "MetricValue": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "MetricName",
-        "MetricNamespace",
-        "MetricValue"
-      ]
-    }
-  },
+  "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
+  "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
-    "FilterPattern": {
-      "description": "Pattern that Logs follows to interpret each entry in a log.",
+    "ConfigurationContent": {
+      "description": "Inlined terraform configuration, passed to the terraform server.",
       "type": "string"
     },
-    "LogGroupName": {
-      "description": "Existing log group that you want to associate with this filter",
-      "type": "string"
+    "ConfigurationUrl": {
+      "description": "Public HTTP URL of a terraform configuration. This will be downloaded and used by the terraform server.",
+      "type": "string",
+      "pattern": "^https?://.+$"
     },
-    "MetricTransformations": {
-      "description": "MetricTransformation",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/MetricTransformationProperty"
-      }
-    },
-    "FilterName": {
-      "type": "string"
+    "ConfigurationS3Path": {
+      "description": "S3 path object representing a terraform configuration. The current account must have access to this resource. This will be downloaded and used by the terraform server.",
+      "type": "string",
+      "pattern": "^s3://.+$"
     }
   },
-  "required": [
-    "FilterPattern",
-    "LogGroupName",
-    "MetricTransformations"
+  "oneOf": [
+    {
+      "$ref": "#/properties/ConfigurationContent"
+    },
+    {
+      "$ref": "#/properties/ConfigurationUrl"
+    },
+    {
+      "$ref": "#/properties/ConfigurationS3Path"
+    }
   ],
-  "readOnlyProperties": [
-    "/properties/FilterName"
-  ],
+  "required": [],
   "primaryIdentifier": [
-    "/properties/FilterName"
+    "/properties/ConfigurationContent",
+    "/properties/ConfigurationUrl",
+    "/properties/ConfigurationS3Path"
   ],
   "handlers": {
     "create": {

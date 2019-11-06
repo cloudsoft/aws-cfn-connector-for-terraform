@@ -20,18 +20,7 @@ public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // Convert model to a form that works with your API
-        DeleteMetricFilterRequest deleteMetricFilterRequest = new
-                DeleteMetricFilterRequest()
-                .withFilterName(model.getFilterName())
-                .withLogGroupName(model.getLogGroupName());
-
-        // Initialize client and send request
-        AWSLogs client = AWSLogsClientBuilder.standard().withRegion("eu-central-1").build();
-        // This is a minimal example, so we've kept it easy with no error handling
-        // You should add more error handling in real-world handlers
-        proxy.injectCredentialsAndInvoke(deleteMetricFilterRequest,
-                client::deleteMetricFilter);
+        // TODO : put your code here
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)

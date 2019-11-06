@@ -23,11 +23,11 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - initech:DeleteReport
-                - initech:DescribeReport
-                - initech:UpdateReport
                 - initech:CreateReport
+                - initech:UpdateReport
+                - initech:DescribeReport
                 - initech:ListReports
+                - initech:DeleteReport
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
