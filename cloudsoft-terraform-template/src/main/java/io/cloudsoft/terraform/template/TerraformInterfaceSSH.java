@@ -53,14 +53,15 @@ class TerraformInterfaceSSH {
     }
 
     void createTemplateFromURL(String url) throws IOException {
-        runSSHCommand("wget " + url);
-        runSSHCommand("terraform init");
-        runSSHCommand("terraform apply " + templateName);
+        runSSHCommand(String.format ("mkdir -p ~/tfdata/'%s'", templateName));
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform init -lock=true -input=false -no-color", templateName));
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
     }
 
     void updateTemplateFromURL(String url) throws IOException {
-        runSSHCommand("wget " + url);
-        runSSHCommand("terraform apply " + templateName);
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
     }
 
     void createTemplateFromContents(String contents) throws IOException {
@@ -72,12 +73,12 @@ class TerraformInterfaceSSH {
     }
 
     void deleteTemplate() throws IOException {
-        runSSHCommand("terraform destroy " + templateName);
+        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform destroy -lock=true -auto-approve -no-color", templateName));
+        runSSHCommand(String.format ("rm -rf ~/tfdata/'%s'", templateName));
     }
 
     private void runSSHCommand(String command) throws IOException {
-        command = "echo " + command;
-        // System.out.println("DEBUG: " + serverHostname + " ¬ " + command);
+        System.out.println("DEBUG: @" + serverHostname + "> " + command);
 
         final SSHClient ssh = new SSHClient();
 
