@@ -6,7 +6,7 @@ import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
-public class ReadHandler extends BaseHandler<CallbackContext> {
+public class ReadHandler extends TerraformBaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(

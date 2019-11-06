@@ -26,6 +26,12 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ssm</artifactId>
+            <version>1.11.592</version>
+        </dependency>
+
         <!-- https://github.com/awslabs/aws-cloudformation-rpdk-java-plugin/ -->
         <dependency>
             <groupId>com.amazonaws.cloudformation</groupId>

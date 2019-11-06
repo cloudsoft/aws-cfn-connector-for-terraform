@@ -9,7 +9,7 @@ import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.DeleteMetricFilterRequest;
 
-public class DeleteHandler extends BaseHandler<CallbackContext> {
+public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(

@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  This CloudFormation template creates the necessary parameters for the Cloudsoft::Terraform::Template type
+
+Resources:
+  TerraformSSHHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Terraform server host to connect to for SSH connections
+      Name: cfn/terraform/ssh-host
+      Type: String
+      Value: ''
+
+  TerraformSSHPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Terraform server port to connect to for SSH connections
+      Name: cfn/terraform/ssh-port
+      Type: String
+      Value: '22'
+
+  TerraformSSHUsernameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Username of the terraform server host for SSH connections
+      Name: cfn/terraform/ssh-username
+      Type: String
+      Value: 'terraform'
+
+  TerraformSSHKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Private SSH key of the terraform server for SSH connections
+      Name: cfn/terraform/ssh-key
+      Type: String
+      Value: ''
+
+  TerraformSSHFingerprintParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Private SSH key fingerprint of the terraform server to verify SSH connections
+      Name: cfn/terraform/ssh-fingerprint
+      Type: String
+      Value: ''
