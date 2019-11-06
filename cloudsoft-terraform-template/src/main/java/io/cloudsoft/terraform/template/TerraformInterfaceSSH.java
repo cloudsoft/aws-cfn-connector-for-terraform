@@ -1,15 +1,29 @@
 package io.cloudsoft.terraform.template;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 
 class TerraformInterfaceSSH {
-    private String templateName, serverHostname, sshUsername, sshServerKeyFP, sshClientSecretKeyFile;
+    private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
+        sshClientSecretKeyContents, sshClientSecretKeyFile;
 
+    TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
+        this.serverHostname = h.getHost();
+        // TODO port
+        this.sshServerKeyFP = h.getFingerprint();
+        this.sshUsername = h.getUsername();        
+        this.sshClientSecretKeyContents = h.getSSHKey();
+        this.sshClientSecretKeyFile = null;
+        this.templateName = templateName;
+    }
+    
     TerraformInterfaceSSH(String serverHostname, String templateName) {
         // FIXME: fetch parameters from a state
         switch (serverHostname)
@@ -34,6 +48,7 @@ class TerraformInterfaceSSH {
             default:
                 throw new IllegalArgumentException ("Unknown Terraform server name '" + serverHostname + "'");
         }
+        sshClientSecretKeyContents = null;
         this.templateName = templateName;
     }
 
@@ -46,6 +61,14 @@ class TerraformInterfaceSSH {
     void updateTemplateFromURL(String url) throws IOException {
         runSSHCommand("wget " + url);
         runSSHCommand("terraform apply " + templateName);
+    }
+
+    void createTemplateFromContents(String contents) throws IOException {
+        // TODO
+    }
+    
+    void updateTemplateFromContents(String contents) throws IOException {
+        // TODO
     }
 
     void deleteTemplate() throws IOException {
@@ -65,12 +88,8 @@ class TerraformInterfaceSSH {
         ssh.connect(serverHostname);
         Session session = null;
         try {
-            // src/main/resources/privkey works.
-            // /home/user/.ssh/privkey works if the file has no passphrase (sshj does
-            // not support SSH agent, and there is no SSH agent in AWS anyway).
-            // ~/.ssh/privkey does not work.
-            // ~user/.ssh/privkey does not work.
-            ssh.authPublickey(sshUsername, sshClientSecretKeyFile);
+
+            ssh.authPublickey(sshUsername, getKeyProvider());
 
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
@@ -91,5 +110,26 @@ class TerraformInterfaceSSH {
             }
             ssh.disconnect();
         }
+    }
+    
+    private Iterable<KeyProvider> getKeyProvider() throws IOException {
+        List<KeyProvider> result = new ArrayList<KeyProvider>();
+        if (sshClientSecretKeyContents!=null && !sshClientSecretKeyContents.isEmpty()) {
+            // add key provider from contents
+            result.add(new SSHClient().loadKeys(
+                sshClientSecretKeyContents,
+                // TODO does this work, passing null for pub key? it looks like it should.
+                null, 
+                null));
+        }
+        if (sshClientSecretKeyFile!=null && !sshClientSecretKeyFile.isEmpty()) {
+            // src/main/resources/privkey works.
+            // /home/user/.ssh/privkey works if the file has no passphrase (sshj does
+            // not support SSH agent, and there is no SSH agent in AWS anyway).
+            // ~/.ssh/privkey does not work.
+            // ~user/.ssh/privkey does not work.
+            result.add(new SSHClient().loadKeys(sshClientSecretKeyFile));
+        }
+        return result;
     }
 }

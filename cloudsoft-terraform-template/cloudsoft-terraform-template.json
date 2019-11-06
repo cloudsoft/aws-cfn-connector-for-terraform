@@ -1,33 +1,48 @@
 {
   "typeName": "Cloudsoft::Terraform::Template",
-  "description": "A Terraform resource provider for AWS CloudFormation",
-  "sourceUrl": "https://cloudsoft.io/",
+  "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
+  "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
-    "TFServerName": {
-      "description": "Terraform server name (hostname and other connection parameters derive from here)",
-      "type": "string"
-    },
-    "TFInfrastructureName": {
+    "Name": {
       "description": "Terraform infrastructure name",
       "type": "string"
     },
-    "TFConfigurationURL": {
-      "description": "URL of a Terraform configuration in Terraform language (not JSON)",
+    
+    "ConfigurationContent": {
+      "description": "Inlined terraform configuration, passed to the terraform server.",
       "type": "string"
+    },
+    "ConfigurationUrl": {
+      "description": "Public HTTP URL of a terraform configuration. This will be downloaded and used by the terraform server.",
+      "type": "string",
+      "pattern": "^https?://.+$"
+    },
+    "ConfigurationS3Path": {
+      "description": "S3 path object representing a terraform configuration. The current account must have access to this resource. This will be downloaded and used by the terraform server.",
+      "type": "string",
+      "pattern": "^s3://.+$"
     }
   },
-  "required": [
-    "TFServerName",
-    "TFInfrastructureName",
-    "TFConfigurationURL"
-  ],
   "readOnlyProperties": [
-    "/properties/TFServerName",
-    "/properties/TFInfrastructureName"
+    "/properties/Name",
   ],
+  "oneOf": [
+    {
+      "$ref": "#/properties/ConfigurationContent"
+    },
+    {
+      "$ref": "#/properties/ConfigurationUrl"
+    },
+    {
+      "$ref": "#/properties/ConfigurationS3Path"
+    }
+  ],
+  "required": [],
   "primaryIdentifier": [
-    "/properties/TFServerName",
-    "/properties/TFInfrastructureName"
+    "/properties/Name",
+    "/properties/ConfigurationContent",
+    "/properties/ConfigurationUrl",
+    "/properties/ConfigurationS3Path"
   ],
   "handlers": {
     "create": {

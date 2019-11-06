@@ -9,7 +9,7 @@ import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
-public class CreateHandler extends BaseHandler<CallbackContext> {
+public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
 
     enum Steps {
         INSTALL_PLAN, APPLY_PLAN, SET_OUTPUTS
@@ -123,10 +123,13 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             advanceTo(Steps.APPLY_PLAN);
             
             // TODO for now keep the synchronous approach also
-            if (model.getTFConfigurationURL()!=null) {
+            String cfg = getConfiguration(model);
+            if (cfg!=null && !cfg.isEmpty()) {
                 try  {
-                    TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(model.getTFServerName(), model.getTFInfrastructureName());
-                    tfif.createTemplateFromURL(model.getTFConfigurationURL());
+                    TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(CreateHandler.this, model.getName());
+                    tfif.createTemplateFromURL(model.getConfigurationUrl());
+                    // TODO really should, for now, do:
+//                    tfif.createTemplateFromContents(cfg);
                 } catch (IOException e) {
                     throw new IllegalStateException(e);
                 }
@@ -142,6 +145,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             // TODO - note this should probably be synchronous
             asyncSshHelper.runOrRejoinAndSetPid("TODO get outputs");
         }
+
     }
     
 }

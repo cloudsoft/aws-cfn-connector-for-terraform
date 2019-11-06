@@ -61,6 +61,7 @@ public class CreateHandlerTest {
     
     private void run(CreateHandler handler) {
         final ResourceModel model = ResourceModel.builder().build();
+        model.setConfigurationContent("");
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)

@@ -23,11 +23,11 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - initech:CreateInfrastructure
                 - initech:DeleteInfrastructure
-                - initech:ListInfrastructures
-                - initech:UpdateInfrastructure
                 - initech:DescribeInfrastructure
+                - initech:UpdateInfrastructure
+                - initech:ListInfrastructures
+                - initech:CreateInfrastructure
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

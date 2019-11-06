@@ -8,7 +8,7 @@ import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.io.IOException;
 
-public class DeleteHandler extends BaseHandler<CallbackContext> {
+public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -21,13 +21,13 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
         OperationStatus ret = OperationStatus.PENDING;
         try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(model.getTFServerName(), model.getTFInfrastructureName());
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(DeleteHandler.this, model.getName());
             tfif.deleteTemplate();
             ret = OperationStatus.SUCCESS;
         } catch (IOException e) {
             ret = OperationStatus.FAILED;
         }
-
+        
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(ret)
