@@ -1,5 +1,5 @@
 {
-    "typeName": "AWS::Logs::MetricFilter",
+    "typeName": "AWS2::Logs::MetricFilter",
     "description": "An example resource schema demonstrating some basic constructs and validation rules.",
     "sourceUrl": "https://w.amazon.com/bin/view/AWS21/Design/Uluru/Onboarding_Guide/Development_Walkthrough",
     "definitions": {

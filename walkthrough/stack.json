@@ -6,7 +6,7 @@
 			"Type": "AWS::Logs::LogGroup"
 		},
 		"Filter": {
-			"Type": "AWS::Logs::MetricFilter",
+			"Type": "AWS2::Logs::MetricFilter",
 			"Properties": {
 				"MetricTransformations": [
 					{
