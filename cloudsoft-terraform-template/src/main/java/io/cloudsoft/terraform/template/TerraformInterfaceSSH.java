@@ -32,7 +32,7 @@ class TerraformInterfaceSSH {
                 // In a Docker container loopback is in its own namespace, the client has to reach the host.
                 this.serverHostname = "192.168.101.123";
                 this.sshServerKeyFP = "3a:87:1f:a6:d8:6a:32:b7:47:fe:2d:e1:16:3a:bc:38";
-                this.sshUsername = "denis";
+                this.sshUsername = "terraform";
                 // The key file ends up at the root level of the JAR, hence pay attention to the path
                 // to keep the code working in a lambda environment (in particular, SAM local tests
                 // depend on this).
@@ -90,7 +90,15 @@ class TerraformInterfaceSSH {
         Session session = null;
         try {
 
-            ssh.authPublickey(sshUsername, getKeyProvider());
+            // src/main/resources/privkey works.
+            // /home/user/.ssh/privkey works if the file has no passphrase (sshj does
+            // not support SSH agent, and there is no SSH agent in AWS anyway).
+            // ~/.ssh/privkey does not work.
+            // ~user/.ssh/privkey does not work.
+            ssh.authPublickey(sshUsername, 
+//                getKeyProvider()
+                new BuiltinKeyFile(sshClientSecretKeyFile)
+                );
 
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);

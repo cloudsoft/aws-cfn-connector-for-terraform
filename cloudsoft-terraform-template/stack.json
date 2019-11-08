@@ -1,26 +1,13 @@
 {
 	"AWSTemplateFormatVersion": "2010-09-09",
-	"Description": "Cloudformation to GitHub interface",
+	"Description": "CloudFormation interface to Terraform",
 	"Resources": {
-		"LogGroup": {
-			"Type": "AWS::Logs::LogGroup"
-		},
-		"Filter": {
+		"TFInfra": {
 			"Type": "Cloudsoft::Terraform::Template",
 			"Properties": {
-				"MetricTransformations": [
-					{
-						"DefaultValue": 1,
-						"MetricName": "404Count",
-						"MetricValue": "1",
-						"MetricNamespace": "WebServer/404s"
-					}
-				],
-				"FilterPattern": "ERROR",
-				"FilterName": "MyFilter",
-				"LogGroupName": {
-					"Ref": "LogGroup"
-				}
+				"TFServerName": "tf-denis",
+				"TFInfrastructureName": "example5",
+				"TFConfigurationURL": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.tf"
 			}
 		}
 	}

@@ -227,13 +227,6 @@
                     <include>cloudsoft-terraform-template.json</include>
                 </includes>
             </resource>
-            <resource>
-                <directory>${project.basedir}/src/main/resources</directory>
-                <includes>
-                    <include>terraform-denis-20191104.pem</include>
-                    <include>id_rsa_java</include>
-                </includes>
-            </resource>
         </resources>
         <pluginManagement>
           <plugins>
