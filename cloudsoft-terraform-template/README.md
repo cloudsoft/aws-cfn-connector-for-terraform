@@ -15,6 +15,9 @@
     
    To retrieve information about the versions of a resource provider:
    `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Template`
+   
+   If you have so many it gets irritating or you hit the AWS limit (15):
+   `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 00000004` 
 
 4. Deploy some Terraform, e.g. the file `terraform-example.cfn.yaml`:
    `aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example`

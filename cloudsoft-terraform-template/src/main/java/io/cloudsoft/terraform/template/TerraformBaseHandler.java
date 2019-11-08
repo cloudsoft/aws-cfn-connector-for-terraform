@@ -26,7 +26,7 @@ import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
 public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
     // TODO config for testing
-    static boolean TEST_RETURN_SUCCESS_IMMEDIATELY = false;
+    static boolean TEST_RETURN_SUCCESS_IMMEDIATELY = true;
     static boolean TEST_FORCE_SYNCHRONOUS = false;
     static boolean TEST_FORCE_SYNCHRONOUS_REAL_DELAY = false;
     

@@ -24,7 +24,7 @@
     }
   },
   "readOnlyProperties": [
-    "/properties/Name",
+    "/properties/Name"
   ],
   "oneOf": [
     {
