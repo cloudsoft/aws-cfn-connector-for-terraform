@@ -25,6 +25,30 @@
 5. Delete it when you're done:
    `aws cloudformation delete-stack --stack-name terraform-example`
 
+### Script
+
+export TYPE_NAME=Cloudsoft::Terraform::Template
+export TYPE_NAME=Cloudsoft::Terraform::Template2
+export TYPE_NAME=AWS2::Logs::MetricFilter
+
+cfn-cli generate && \
+mvn clean package && cfn-cli submit -v | tee submit.log && \
+REG_TOKEN=$(grep token: submit.log | awk '{print $NF}')
+
+while ( aws cloudformation describe-type-registration --registration-token ${REG_TOKEN} | grep Description | grep IN_PROGRESS ) ; do sleep 2 ; done
+
+aws cloudformation describe-type-registration --registration-token ${REG_TOKEN}
+
+export V=$(aws cloudformation list-type-versions --type RESOURCE --type-name $TYPE_NAME | jq -r .TypeVersionSummaries[].VersionId |  sort | tail -1)
+aws cloudformation set-type-default-version --type RESOURCE --type-name $TYPE_NAME --version-id $V && \
+  echo Set $TYPE_NAME version $V
+
+aws cloudformation list-types
+
+aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example
+aws cloudformation create-stack --template-body file://stack.json --stack-name metrics-example
+
+aws cloudformation delete-stack --stack-name terraform-example
 
 ## Detail
 

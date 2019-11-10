@@ -9,6 +9,7 @@ import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
+import com.amazonaws.cloudformation.resource.IdentifierUtils;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
     
@@ -47,8 +48,14 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
 
             try {
                 if (callbackContext.sessionId == null) {
+                    String id = IdentifierUtils.generateResourceIdentifier(
+                            request.getLogicalResourceIdentifier()!=null ? request.getLogicalResourceIdentifier() : "x", 
+                            request.getClientRequestToken()!=null ? request.getClientRequestToken() : "x", 64);
+                    if (model.getName()==null) {
+                        model.setName(id);
+                    }
                     // TODO better session ID
-                    callbackContext.sessionId = "session"+System.currentTimeMillis();
+                    callbackContext.sessionId = "session-"+id;
         
                     installPlan(request, callbackContext, logger);
                     
