@@ -14,35 +14,18 @@
     },
     "ConfigurationUrl": {
       "description": "Public HTTP URL of a terraform configuration. This will be downloaded and used by the terraform server.",
-      "type": "string",
-      "pattern": "^https?://.+$"
+      "type": "string"
     },
     "ConfigurationS3Path": {
       "description": "S3 path object representing a terraform configuration. The current account must have access to this resource. This will be downloaded and used by the terraform server.",
-      "type": "string",
-      "pattern": "^s3://.+$"
+      "type": "string"
     }
   },
-  "readOnlyProperties": [
+  "createOnlyProperties": [
     "/properties/Name"
   ],
-  "oneOf": [
-    {
-      "$ref": "#/properties/ConfigurationContent"
-    },
-    {
-      "$ref": "#/properties/ConfigurationUrl"
-    },
-    {
-      "$ref": "#/properties/ConfigurationS3Path"
-    }
-  ],
-  "required": [],
   "primaryIdentifier": [
-    "/properties/Name",
-    "/properties/ConfigurationContent",
-    "/properties/ConfigurationUrl",
-    "/properties/ConfigurationS3Path"
+    "/properties/Name"
   ],
   "handlers": {
     "create": {
