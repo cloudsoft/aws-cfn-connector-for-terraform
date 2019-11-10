@@ -92,18 +92,17 @@ Lombok-annotated classes.
 
 ## development laptop
 * OS: Ubuntu Linux 18.04
-* RPDK nightly SHA-1 sum: `af51034244c1a1f443ef4b634b30ac281a8c27bb` (cfn-cli 0.1)
+* RPDK nightly SHA-1 sum: `9c01f82abfc105036d174416c138414975150303` (cfn-cli 0.1)
 * SAM CLI, version 0.23.0 (`apt-get install python3-pip && pip3 install aws-sam-cli`)
 * Docker version 18.09.7, build 2d0083d (`apt-get install docker.io`)
 
 ```shell
 git checkout 7875a65
-cp ~/.ssh/terraform-denis-20191104.pem ./src/main/resources/
-# If you want to use your own key pair, copy the private key to the directory
-# above and declare it as a resource in pom.xml so the key gets into the
-# temporary container in the resuting JAR. Also modify TerraformInterfaceSSH.java
-# to use the new key and add the public key to ~ubuntu/.ssh/authorized_keys on
-# the Terraform server.
+# If you want to use your own key pair, hard-code the private key into
+# TerraformInterfaceSSH.java and add the public key to
+# ~ubuntu/.ssh/authorized_keys on the Terraform server. Please use a key that
+# you can afford to lose, i.e. a dedicated key for this project development
+# server, NOT a key that allows access to something else, such as your laptop!
 cfn-cli generate
 # Make sure the Terraform server is listed in TerraformInterfaceSSH.java and
 # accepts 22/tcp from the current host.
