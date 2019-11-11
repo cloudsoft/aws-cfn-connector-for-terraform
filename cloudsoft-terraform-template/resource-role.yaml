@@ -23,11 +23,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - initech:CreateReport
-                - initech:UpdateReport
-                - initech:DescribeReport
-                - initech:ListReports
-                - initech:DeleteReport
+                - "ssm:GetParameter"
+                - "s3:GetObject"
+                - "s3:GetObjectVersion"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
