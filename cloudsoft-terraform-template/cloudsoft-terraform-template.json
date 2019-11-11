@@ -30,27 +30,33 @@
   "handlers": {
     "create": {
       "permissions": [
-        "initech:CreateInfrastructure"
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
       ]
     },
     "read": {
       "permissions": [
-        "initech:DescribeInfrastructure"
+        "ssm:GetParameter"
       ]
     },
     "update": {
       "permissions": [
-        "initech:UpdateInfrastructure"
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
       ]
     },
     "delete": {
       "permissions": [
-        "initech:DeleteInfrastructure"
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
       ]
     },
     "list": {
       "permissions": [
-        "initech:ListInfrastructures"
+        "ssm:GetParameter"
       ]
     }
   }

@@ -23,11 +23,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "initech:ListInfrastructures"
-                - "initech:DescribeInfrastructure"
-                - "initech:CreateInfrastructure"
-                - "initech:UpdateInfrastructure"
-                - "initech:DeleteInfrastructure"
+                - "ssm:GetParameter"
+                - "s3:GetObject"
+                - "s3:GetObjectVersion"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
