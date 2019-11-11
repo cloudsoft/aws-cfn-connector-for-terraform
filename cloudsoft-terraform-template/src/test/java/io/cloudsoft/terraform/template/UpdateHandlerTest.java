@@ -33,6 +33,9 @@ public class UpdateHandlerTest {
     public void handleRequest_SimpleSuccess() {
 // java.lang.NullPointerException
 // 	at io.cloudsoft.terraform.template.UpdateHandlerTest.handleRequest_SimpleSuccess(UpdateHandlerTest.java:43)
+
+// com.amazonaws.services.simplesystemsmanagement.model.AWSSimpleSystemsManagementException: Parameter name: can't be prefixed with "ssm" (case-insensitive). If formed as a path, it can consist of sub-paths divided by slash symbol; each sub-path can be formed as a mix of letters, numbers and the following 3 symbols .-_ (Service: AWSSimpleSystemsManagement; Status Code: 400; Error Code: ValidationException; Request ID: d6854127-ab94-4852-8a01-7174060f4770)
+//	at io.cloudsoft.terraform.template.UpdateHandlerTest.handleRequest_SimpleSuccess(UpdateHandlerTest.java:43)
 /*
         final UpdateHandler handler = new UpdateHandler();
 

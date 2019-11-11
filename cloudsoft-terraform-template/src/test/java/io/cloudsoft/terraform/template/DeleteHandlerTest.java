@@ -33,6 +33,9 @@ public class DeleteHandlerTest {
     public void handleRequest_SimpleSuccess() {
 // java.lang.NullPointerException
 // 	at io.cloudsoft.terraform.template.DeleteHandlerTest.handleRequest_SimpleSuccess(DeleteHandlerTest.java:43)
+
+// com.amazonaws.services.simplesystemsmanagement.model.AWSSimpleSystemsManagementException: Parameter name: can't be prefixed with "ssm" (case-insensitive). If formed as a path, it can consist of sub-paths divided by slash symbol; each sub-path can be formed as a mix of letters, numbers and the following 3 symbols .-_ (Service: AWSSimpleSystemsManagement; Status Code: 400; Error Code: ValidationException; Request ID: 65a9e41f-bc44-41de-9335-2440490c86f4)
+//	at io.cloudsoft.terraform.template.DeleteHandlerTest.handleRequest_SimpleSuccess(DeleteHandlerTest.java:45)
 /*
         final DeleteHandler handler = new DeleteHandler();
 
