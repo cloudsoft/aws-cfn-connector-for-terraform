@@ -9,8 +9,8 @@
 		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
 		"desiredResourceState": {
 			"TFServerName": "tf-denis",
-			"TFInfrastructureName": "example8",
-			"TFConfigurationURL": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.2.tf"
+			"TFInfrastructureName": "example7",
+			"TFConfigurationURL": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step2.tf"
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},

@@ -79,8 +79,10 @@ Lombok-annotated classes.
 # HOW TO run synchronous SSH tests with SAM
 
 ## S3 props (public access)
-* http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.tf (one VM)
-* http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.2.tf (two VMs)
+* http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step1.tf
+  (essential: create two S3 buckets)
+* http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step2.tf
+  (optional: replace one of the buckets with a new one)
 
 ## Terraform server
 * EC2 t2.micro
@@ -108,10 +110,10 @@ cfn-cli generate
 # accepts 22/tcp from the current host.
 mvn package
 # As you run the tests below, you will see the commands sent to the server and
-# their respective stdout. It helps to look into the EC2 console to see the
+# their respective stdout. It helps to look into the S3 console to see the
 # progress within AWS and to run "watch -n 1 ls -lRA ~/tfdata" on the Terraform
 # server to see the filesystem changes as they are happening.
-sam local invoke TestEntrypoint --event sam-tests/create.json # usually 20-30 seconds
-sam local invoke TestEntrypoint --event sam-tests/update.json # usually 20-30 seconds
-sam local invoke TestEntrypoint --event sam-tests/delete.json # usually 40 seconds
+sam local invoke TestEntrypoint --event sam-tests/create.json # about 20 seconds
+sam local invoke TestEntrypoint --event sam-tests/update.json # about 20 seconds
+sam local invoke TestEntrypoint --event sam-tests/delete.json # about 15 seconds
 ```
