@@ -28,6 +28,7 @@ Resources:
       Value: 'terraform'
 
   TerraformSSHKeyParameter:
+    # TODO use Ssecure parameter store
     Type: AWS::SSM::Parameter
     Properties:
       Description: Private SSH key of the terraform server for SSH connections

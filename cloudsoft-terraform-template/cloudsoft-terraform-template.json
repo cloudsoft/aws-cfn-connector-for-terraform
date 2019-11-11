@@ -3,62 +3,54 @@
   "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
   "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
+    "Name": {
+      "description": "Terraform infrastructure name",
+      "type": "string"
+    },
+    
     "ConfigurationContent": {
       "description": "Inlined terraform configuration, passed to the terraform server.",
       "type": "string"
     },
     "ConfigurationUrl": {
       "description": "Public HTTP URL of a terraform configuration. This will be downloaded and used by the terraform server.",
-      "type": "string",
-      "pattern": "^https?://.+$"
+      "type": "string"
     },
     "ConfigurationS3Path": {
       "description": "S3 path object representing a terraform configuration. The current account must have access to this resource. This will be downloaded and used by the terraform server.",
-      "type": "string",
-      "pattern": "^s3://.+$"
+      "type": "string"
     }
   },
-  "oneOf": [
-    {
-      "$ref": "#/properties/ConfigurationContent"
-    },
-    {
-      "$ref": "#/properties/ConfigurationUrl"
-    },
-    {
-      "$ref": "#/properties/ConfigurationS3Path"
-    }
+  "createOnlyProperties": [
+    "/properties/Name"
   ],
-  "required": [],
   "primaryIdentifier": [
-    "/properties/ConfigurationContent",
-    "/properties/ConfigurationUrl",
-    "/properties/ConfigurationS3Path"
+    "/properties/Name"
   ],
   "handlers": {
     "create": {
       "permissions": [
-        "initech:CreateReport"
+        "initech:CreateInfrastructure"
       ]
     },
     "read": {
       "permissions": [
-        "initech:DescribeReport"
+        "initech:DescribeInfrastructure"
       ]
     },
     "update": {
       "permissions": [
-        "initech:UpdateReport"
+        "initech:UpdateInfrastructure"
       ]
     },
     "delete": {
       "permissions": [
-        "initech:DeleteReport"
+        "initech:DeleteInfrastructure"
       ]
     },
     "list": {
       "permissions": [
-        "initech:ListReports"
+        "initech:ListInfrastructures"
       ]
     }
   }

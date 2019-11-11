@@ -5,9 +5,8 @@ import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.services.logs.AWSLogs;
-import com.amazonaws.services.logs.AWSLogsClientBuilder;
-import com.amazonaws.services.logs.model.DeleteMetricFilterRequest;
+
+import java.io.IOException;
 
 public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
@@ -20,11 +19,18 @@ public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // TODO : put your code here
-
+        OperationStatus ret = OperationStatus.PENDING;
+        try {
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(DeleteHandler.this, model.getName());
+            tfif.deleteTemplate();
+            ret = OperationStatus.SUCCESS;
+        } catch (IOException e) {
+            ret = OperationStatus.FAILED;
+        }
+        
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
-                .status(OperationStatus.SUCCESS)
+                .status(ret)
                 .build();
     }
 }

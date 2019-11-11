@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.amazonaws.logs.metricfilter</groupId>
-    <artifactId>aws-logs-metricfilter-handler</artifactId>
-    <name>aws-logs-metricfilter-handler</name>
+    <artifactId>aws2-logs-metricfilter-handler</artifactId>
+    <name>aws2-logs-metricfilter-handler</name>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -208,7 +208,7 @@
             <resource>
                 <directory>${project.basedir}</directory>
                 <includes>
-                    <include>aws-logs-metricfilter.json</include>
+                    <include>aws2-logs-metricfilter.json</include>
                 </includes>
             </resource>
         </resources>

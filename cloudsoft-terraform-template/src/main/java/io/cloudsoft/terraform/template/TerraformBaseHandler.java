@@ -1,29 +1,44 @@
 package io.cloudsoft.terraform.template;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
+
+import com.amazonaws.cloudformation.proxy.Logger;
+import com.amazonaws.cloudformation.proxy.OperationStatus;
+import com.amazonaws.cloudformation.proxy.ProgressEvent;
+import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
+
 public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
+    // TODO config for testing
+    static boolean TEST_RETURN_SUCCESS_IMMEDIATELY = false;
+    static boolean TEST_FORCE_SYNCHRONOUS = false;
+    static boolean TEST_FORCE_SYNCHRONOUS_REAL_DELAY = false;
+    
+    
     private static final String PREFIX = "cfn/terraform";
     private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
 
     private AmazonS3 amazonS3;
     private Pattern s3Pattern;
+
+    // visible for testing
+    Function<CallbackContext, AsyncSshHelper> asyncSshHelperFactory = cb -> new AsyncSshHelper(cb);
 
     public TerraformBaseHandler(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
@@ -53,6 +68,10 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
     protected String getFingerprint() {
         return getParameterValue("ssh-fingerprint");
+    }
+
+    protected boolean getForceSynchronous() {
+        return TEST_FORCE_SYNCHRONOUS;  // TODO could allow this:  Boolean.TRUE.toString().equalsIgnoreCase(getParameterValue("force-synchronous"));
     }
 
     private String getParameterValue(String id) {
@@ -96,5 +115,53 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         }
 
         throw new IllegalStateException("Missing one of the template properties");
+    }
+    
+    protected abstract class AbstractHandlerWorker {
+
+        final ResourceHandlerRequest<ResourceModel> request;
+        final ResourceModel model;
+        final CallbackContext callbackContext;
+        final Logger logger;
+        final AsyncSshHelper asyncSshHelper;
+        
+        protected AbstractHandlerWorker(
+                final ResourceHandlerRequest<ResourceModel> request,
+                final CallbackContext callbackContext,
+                final Logger logger) {
+            
+            this.request = request;
+            this.model = request.getDesiredResourceState();
+            this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
+            this.logger = logger;
+            this.asyncSshHelper = asyncSshHelperFactory.apply(this.callbackContext);
+        }
+        
+        void log(String message) {
+            logger.log(message);
+        }
+        
+        abstract ProgressEvent<ResourceModel, CallbackContext> call();
+    }
+
+    protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext,AbstractHandlerWorker> workerFactory) {
+        // allows us to force synchronous behaviour -- especially useful when running in SAM
+        boolean forceSynchronous = getForceSynchronous();
+        while (true) {
+            AbstractHandlerWorker worker = workerFactory.apply(callback);
+            ProgressEvent<ResourceModel, CallbackContext> result = worker.call();
+            if (!forceSynchronous || !OperationStatus.IN_PROGRESS.equals(result.getStatus())) {
+                return result;
+            }
+            worker.log("Synchronous mode, will run callback after "+result.getCallbackDelaySeconds()+" seconds: "+result.getCallbackContext());
+            try {
+                if (TEST_FORCE_SYNCHRONOUS_REAL_DELAY) {
+                    Thread.sleep(1000*result.getCallbackDelaySeconds());
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Aborted due to interrupt", e);
+            }
+            callback = result.getCallbackContext();
+        }
     }
 }

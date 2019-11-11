@@ -6,6 +6,8 @@ import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.io.IOException;
+
 public class UpdateHandler extends TerraformBaseHandler<CallbackContext> {
 
     @Override
@@ -17,11 +19,19 @@ public class UpdateHandler extends TerraformBaseHandler<CallbackContext> {
 
         final ResourceModel model = request.getDesiredResourceState();
 
-        // TODO : put your code here
+        OperationStatus ret = OperationStatus.PENDING;
+        try {
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(UpdateHandler.this, model.getName());
+            // TODO update from contents 
+            tfif.updateTemplateFromURL(model.getConfigurationUrl());
+            ret = OperationStatus.SUCCESS;
+        } catch (IOException e) {
+            ret = OperationStatus.FAILED;
+        }
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
-                .status(OperationStatus.SUCCESS)
+                .status(ret)
                 .build();
     }
 }

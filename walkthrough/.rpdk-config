@@ -1,5 +1,5 @@
 {
-    "typeName": "AWS::Logs::MetricFilter",
+    "typeName": "AWS2::Logs::MetricFilter",
     "language": "java",
     "runtime": "java8",
     "entrypoint": "com.amazonaws.logs.metricfilter.HandlerWrapper::handleRequest",

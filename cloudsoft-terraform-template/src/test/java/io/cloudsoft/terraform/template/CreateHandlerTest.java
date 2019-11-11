@@ -26,29 +26,77 @@ public class CreateHandlerTest {
     @BeforeEach
     public void setup() {
         proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
+        logger = new Logger() {
+            @Override
+            public void log(String arg) {
+                System.out.println("LOG: "+arg);
+            }
+        };
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
         final CreateHandler handler = new CreateHandler();
-
+        handler.asyncSshHelperFactory = cb -> new AsyncSshHelper(cb) {
+            protected String exec(String command) {
+                // don't execute, but include markers for pid and finished so that the rest of the class works
+                return "TODO "+marker("PID")+" 999 "+marker("FINISHED")+" true";
+            }
+        };
+        run(handler);
+    }
+    
+    @Test
+    public void handleRequest_OftenNotFinished() {
+        final CreateHandler handler = new CreateHandler();
+        handler.asyncSshHelperFactory = cb -> new AsyncSshHelper(cb) {
+            protected String exec(String command) {
+                // don't execute, but include markers for pid and finished so that the rest of the class works
+                return "TODO "+marker("PID")+" 999 "+
+                    (Math.random()<0.1 ? marker("FINISHED")+" true" : "not done yet");
+            }
+        };
+        run(handler);
+    }
+    
+    private void run(CreateHandler handler) {
         final ResourceModel model = ResourceModel.builder().build();
+        model.setConfigurationContent("");
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
+        ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
+        
+        while (true) {
+            logger.log("RESPONSE: "+response);
+            assertThat(response).isNotNull();
+            
+            if (!response.isInProgress()) {
+                break;
+            }
+            
+            logger.log("CALLBACK: "+response.getCallbackContext());
+            logger.log("DELAY: "+response.getCallbackDelaySeconds());
+            assertThat(response.getCallbackContext()).isNotNull();
+            
+            response = handler.handleRequest(proxy, request, response.getCallbackContext(), logger);
+        }
+        
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+    
+    // junit misconfigured on eclipse, so workaround for IDE testing
+    public static void main(String[] args) {
+        CreateHandlerTest t = new CreateHandlerTest();
+        t.setup();
+        t.handleRequest_OftenNotFinished();
     }
 }

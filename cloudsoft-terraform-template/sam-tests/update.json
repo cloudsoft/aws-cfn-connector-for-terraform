@@ -4,12 +4,13 @@
 		"secretAccessKey": "(unused)",
 		"sessionToken": "(unused)"
 	},
-	"action": "DELETE",
+	"action": "UPDATE",
 	"request": {
 		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
 		"desiredResourceState": {
 			"TFServerName": "tf-denis",
-			"TFInfrastructureName": "example8"
+			"TFInfrastructureName": "example8",
+			"TFConfigurationURL": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example5.2.tf"
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},

@@ -1,12 +1,15 @@
 package io.cloudsoft.terraform.template;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Builder
 public class CallbackContext {
 
+    String sessionId;
+    String stepId;
+    int pid;
+    int lastDelaySeconds;
+    
 }
