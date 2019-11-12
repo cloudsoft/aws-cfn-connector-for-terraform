@@ -27,6 +27,7 @@
 
 ### Script
 
+```shell
 export TYPE_NAME=Cloudsoft::Terraform::Template
 export TYPE_NAME=Cloudsoft::Terraform::Template2
 export TYPE_NAME=AWS2::Logs::MetricFilter
@@ -49,11 +50,13 @@ aws cloudformation create-stack --template-body file://terraform-example.cfn.yam
 aws cloudformation create-stack --template-body file://stack.json --stack-name metrics-example
 
 aws cloudformation delete-stack --stack-name terraform-example
+```
 
 ## Detail
 
 ### Logging
 
+```shell
 aws cloudformation register-type \
   --type-name Cloudsoft::Terraform::Template \
   --schema-handler-package s3://denis-examples/cloudsoft-terraform-template.zip \
@@ -62,7 +65,7 @@ aws cloudformation register-type \
 
 https://denis-examples.s3.eu-central-1.amazonaws.com/cloudsoft-terraform-template.zip \
   s3://denis-examples/cloudsoft-terraform-template.zip
-  
+```
   
 ### Debugging
 
