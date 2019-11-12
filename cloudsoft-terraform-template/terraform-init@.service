@@ -1,0 +1,10 @@
+[Unit]
+Description=detached "terraform init" instance for Cloudsoft::Terraform::Template
+
+[Service]
+WorkingDirectory=%h/tfdata/%i
+ExecStart=/usr/bin/env terraform init -lock=true -no-color -input=false
+StandardOutput=syslog
+StandardError=inherit
+SyslogIdentifier=terraform-init(%i)
+Restart=no

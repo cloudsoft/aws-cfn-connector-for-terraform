@@ -137,6 +137,12 @@ aws cloudformation create-stack \
 * Terraform v0.12.13
 * AWS CLI not installed
 * temporary (MFA-based) AWS credentials in `~ubuntu/.aws/credentials`
+* Install systemd helpers:
+  ```shell
+  mkdir -p ~/.config/systemd/user
+  # Copy terraform*.service files from this repository into ~/.config/systemd/user
+  systemctl --user daemon-reload
+  ```
 
 #### development laptop
 * OS: Ubuntu Linux 18.04
