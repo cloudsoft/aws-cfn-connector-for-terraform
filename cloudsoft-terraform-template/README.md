@@ -75,16 +75,24 @@ The code use [Lombok](https://projectlombok.org/), and [you may have to install
 IDE integrations](https://projectlombok.org/) to enable auto-complete for
 Lombok-annotated classes.
 
+## HOW TO run tests
+### Create/update the parameters in the region if necessary (once per region)
 
-# HOW TO run synchronous SSH tests with SAM
+```shell
+aws cloudformation create-stack \
+--stack-name cloudsoft-terraform-template-parameters \
+--template-body file://parameters.yml
+```
 
-## S3 props (public access)
+### synchronous tests with SAM
+
+#### S3 props (public access)
 * http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step1.tf
   (essential: create two S3 buckets)
 * http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step2.tf
   (optional: replace one of the buckets with a new one)
 
-## Terraform server
+#### Terraform server
 * EC2 t2.micro
 * AMI: ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-20191002 (ami-0cc0a36f626a4fdf5)
 * SSH key pair name: terraform-denis-20191104
@@ -92,14 +100,13 @@ Lombok-annotated classes.
 * AWS CLI not installed
 * temporary (MFA-based) AWS credentials in `~ubuntu/.aws/credentials`
 
-## development laptop
+#### development laptop
 * OS: Ubuntu Linux 18.04
 * RPDK nightly SHA-1 sum: `9c01f82abfc105036d174416c138414975150303` (cfn-cli 0.1)
 * SAM CLI, version 0.23.0 (`apt-get install python3-pip && pip3 install aws-sam-cli`)
 * Docker version 18.09.7, build 2d0083d (`apt-get install docker.io`)
 
 ```shell
-git checkout 7875a65
 # If you want to use your own key pair, hard-code the private key into
 # TerraformInterfaceSSH.java and add the public key to
 # ~ubuntu/.ssh/authorized_keys on the Terraform server. Please use a key that

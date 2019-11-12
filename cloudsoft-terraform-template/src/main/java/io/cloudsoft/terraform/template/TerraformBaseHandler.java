@@ -31,7 +31,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
     static boolean TEST_FORCE_SYNCHRONOUS_REAL_DELAY = false;
     
     
-    private static final String PREFIX = "cfn/terraform";
+    private static final String PREFIX = "/cfn/terraform";
     private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
 
     private AmazonS3 amazonS3;

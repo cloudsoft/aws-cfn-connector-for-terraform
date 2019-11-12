@@ -96,8 +96,8 @@ class TerraformInterfaceSSH {
             // ~/.ssh/privkey does not work.
             // ~user/.ssh/privkey does not work.
             ssh.authPublickey(sshUsername, 
-//                getKeyProvider()
-                new BuiltinKeyFile(sshClientSecretKeyFile)
+                getKeyProvider()
+//                new BuiltinKeyFile(sshClientSecretKeyFile)
                 );
 
             session = ssh.startSession();
