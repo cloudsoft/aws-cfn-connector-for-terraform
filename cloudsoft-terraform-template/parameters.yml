@@ -42,4 +42,4 @@ Resources:
       Description: Private SSH key fingerprint of the terraform server to verify SSH connections
       Name: /cfn/terraform/ssh-fingerprint
       Type: String
-      Value: ''
+      Value: '(FIXME)'
