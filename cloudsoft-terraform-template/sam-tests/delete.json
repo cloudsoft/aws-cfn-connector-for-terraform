@@ -8,8 +8,7 @@
 	"request": {
 		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
 		"desiredResourceState": {
-			"TFServerName": "tf-denis",
-			"TFInfrastructureName": "example7"
+			"Name": "example7"
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},
