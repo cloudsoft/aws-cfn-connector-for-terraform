@@ -13,5 +13,7 @@
 		},
 		"logicalResourceIdentifier": "MyResource"
 	},
-	"callbackContext": null
+	"callbackContext": {
+		"forceSynchronous": true
+	}
 }

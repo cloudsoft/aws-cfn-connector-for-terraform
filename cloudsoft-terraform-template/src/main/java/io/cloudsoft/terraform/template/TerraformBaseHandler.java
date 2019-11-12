@@ -27,8 +27,6 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
     // TODO config for testing
     static boolean TEST_RETURN_SUCCESS_IMMEDIATELY = false;
-    static boolean TEST_FORCE_SYNCHRONOUS = false;
-    static boolean TEST_FORCE_SYNCHRONOUS_REAL_DELAY = false;
     
     
     private static final String PREFIX = "/cfn/terraform";
@@ -68,10 +66,6 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
     protected String getFingerprint() {
         return getParameterValue("ssh-fingerprint");
-    }
-
-    protected boolean getForceSynchronous() {
-        return TEST_FORCE_SYNCHRONOUS;  // TODO could allow this:  Boolean.TRUE.toString().equalsIgnoreCase(getParameterValue("force-synchronous"));
     }
 
     private String getParameterValue(String id) {
@@ -146,16 +140,21 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
     protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext,AbstractHandlerWorker> workerFactory) {
         // allows us to force synchronous behaviour -- especially useful when running in SAM
-        boolean forceSynchronous = getForceSynchronous();
+        boolean forceSynchronous = callback == null ? false : callback.forceSynchronous;
+        boolean disregardCallbackDelay = callback == null ? false : callback.disregardCallbackDelay;
+
         while (true) {
             AbstractHandlerWorker worker = workerFactory.apply(callback);
             ProgressEvent<ResourceModel, CallbackContext> result = worker.call();
             if (!forceSynchronous || !OperationStatus.IN_PROGRESS.equals(result.getStatus())) {
                 return result;
             }
-            worker.log("Synchronous mode, will run callback after "+result.getCallbackDelaySeconds()+" seconds: "+result.getCallbackContext());
+            worker.log("Synchronous mode: "+result.getCallbackContext());
             try {
-                if (TEST_FORCE_SYNCHRONOUS_REAL_DELAY) {
+                if (disregardCallbackDelay) {
+                    worker.log("Will run callback immediately");
+                } else {
+                    worker.log("Will run callback after "+result.getCallbackDelaySeconds()+" seconds");
                     Thread.sleep(1000*result.getCallbackDelaySeconds());
                 }
             } catch (InterruptedException e) {
