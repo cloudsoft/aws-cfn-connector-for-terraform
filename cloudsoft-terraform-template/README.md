@@ -151,14 +151,13 @@ aws cloudformation create-stack \
 * Docker version 18.09.7, build 2d0083d (`apt-get install docker.io`)
 
 ```shell
-# If you want to use your own key pair, hard-code the private key into
-# TerraformInterfaceSSH.java and add the public key to
-# ~ubuntu/.ssh/authorized_keys on the Terraform server. Please use a key that
-# you can afford to lose, i.e. a dedicated key for this project development
-# server, NOT a key that allows access to something else, such as your laptop!
+# Put the private key body into "/cfn/terraform/ssh-key" in Parameter Store of
+# Systems Manager. Add the public key body to ~ubuntu/.ssh/authorized_keys on
+# the Terraform server. Please use a key that you can afford to lose, i.e. a
+# dedicated key for this project development server, NOT a key that allows
+# access to something else, such as your laptop!
 cfn-cli generate
-# Make sure the Terraform server is listed in TerraformInterfaceSSH.java and
-# accepts 22/tcp from the current host.
+# Make sure the Terraform server accepts 22/tcp from the current host.
 mvn package
 # As you run the tests below, you will see the commands sent to the server and
 # their respective stdout. It helps to look into the S3 console to see the
