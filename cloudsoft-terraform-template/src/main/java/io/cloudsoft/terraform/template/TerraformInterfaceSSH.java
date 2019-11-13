@@ -13,6 +13,8 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 class TerraformInterfaceSSH {
     private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
         sshClientSecretKeyContents, sshClientSecretKeyFile;
+    protected String lastStdout, lastStderr;
+    protected int lastExitStatus;
 
     TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
         this.serverHostname = h.getHost();
@@ -24,9 +26,17 @@ class TerraformInterfaceSSH {
         this.templateName = templateName;
     }
     
-    void createTemplateFromURL(String url) throws IOException {
+    protected void onlyMkdir() throws IOException
+    {
         runSSHCommand(String.format ("mkdir -p ~/tfdata/'%s'", templateName));
+    }
+    protected void onlyDownload (String url) throws IOException
+    {
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+    }
+    void createTemplateFromURL(String url) throws IOException {
+        onlyMkdir();
+        onlyDownload (url);
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform init -lock=true -input=false -no-color", templateName));
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
     }
@@ -49,7 +59,7 @@ class TerraformInterfaceSSH {
         runSSHCommand(String.format ("rm -rf ~/tfdata/'%s'", templateName));
     }
 
-    private void runSSHCommand(String command) throws IOException {
+    protected void runSSHCommand(String command) throws IOException {
         System.out.println("DEBUG: @" + serverHostname + "> " + command);
 
         final SSHClient ssh = new SSHClient();
@@ -61,13 +71,14 @@ class TerraformInterfaceSSH {
             ssh.authPublickey(sshUsername, getKeyProvider());
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
-            String s1 = IOUtils.readFully(cmd.getInputStream()).toString();
+            lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
             cmd.join(5, TimeUnit.SECONDS);
-            String s2 = "exit status: " + cmd.getExitStatus(); // TBD
-            // cmd.getErrorStream() // TBD
+            lastExitStatus = cmd.getExitStatus();
+            lastStderr = IOUtils.readFully(cmd.getErrorStream()).toString();
             //model.setMetricValue(s1); // does not compile
-            System.out.println(s1);
-            System.out.println(s2);
+            System.out.println("stdout: " + lastStdout);
+            System.out.println("stderr: " + lastStderr);
+            System.out.println("exit status: " + lastExitStatus);
         } finally {
             try {
                 if (session != null) {

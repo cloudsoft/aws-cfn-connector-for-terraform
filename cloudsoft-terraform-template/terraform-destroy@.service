@@ -1,0 +1,10 @@
+[Unit]
+Description=detached "terraform destroy" instance for Cloudsoft::Terraform::Template
+
+[Service]
+WorkingDirectory=%h/tfdata/%i
+ExecStart=/usr/bin/env terraform destroy -lock=true -no-color -auto-approve
+StandardOutput=syslog
+StandardError=inherit
+SyslogIdentifier=terraform-destroy(%i)
+Restart=no

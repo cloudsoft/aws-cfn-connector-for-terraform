@@ -1,0 +1,10 @@
+[Unit]
+Description=detached "terraform apply" instance for Cloudsoft::Terraform::Template
+
+[Service]
+WorkingDirectory=%h/tfdata/%i
+ExecStart=/usr/bin/env terraform apply -lock=true -no-color -input=false -auto-approve
+StandardOutput=syslog
+StandardError=inherit
+SyslogIdentifier=terraform-apply(%i)
+Restart=no

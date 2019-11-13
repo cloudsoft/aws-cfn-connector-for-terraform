@@ -9,12 +9,16 @@ import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.cloudformation.resource.IdentifierUtils;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
     
     enum Steps {
-        INSTALL_PLAN, APPLY_PLAN, SET_OUTPUTS
+        INIT,
+        SYNC_MKDIR,
+        SYNC_DOWNLOAD,
+        ASYNC_TF_INIT,
+        ASYNC_TF_APPLY,
+        DONE
     }
         
     @Override
@@ -47,53 +51,61 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
             }
 
             try {
-                if (callbackContext.sessionId == null) {
-                    String id = IdentifierUtils.generateResourceIdentifier(
-                            request.getLogicalResourceIdentifier()!=null ? request.getLogicalResourceIdentifier() : "x", 
-                            request.getClientRequestToken()!=null ? request.getClientRequestToken() : "x", 64);
-                    if (model.getName()==null) {
-                        model.setName(id);
-                    }
-                    // TODO better session ID
-                    callbackContext.sessionId = "session-"+id;
-        
-                    installPlan(request, callbackContext, logger);
-                    
-                } else if (!asyncSshHelper.checkFinishedAndUpdate()) {
-                    // still running last command, no op
-                    
-                } else {
-                    // TODO check if succeeded or failed; for now assume success
-                    
-                    switch (Steps.valueOf(callbackContext.stepId)) {
-                    
-                    case INSTALL_PLAN:
-                        // TODO check asyncSshHelper.stdout, stderr okay
-                        
-                        applyPlan();
+                Steps curStep = callbackContext.stepId == null ? Steps.INIT : Steps.valueOf(callbackContext.stepId);
+                TerraformInterfaceSSH tfSync = new TerraformInterfaceSSH(CreateHandler.this, model.getName());
+                RemoteSystemdUnit tfInit = new RemoteSystemdUnit(CreateHandler.this, "terraform-init", model.getName());
+                RemoteSystemdUnit tfApply = new RemoteSystemdUnit(CreateHandler.this, "terraform-apply", model.getName());
+                switch (curStep) {
+                    case INIT:
+                        advanceTo(Steps.SYNC_MKDIR);
+                        tfSync.onlyMkdir();
                         break;
-                        
-                    case APPLY_PLAN:
-                        // TODO check asyncSshHelper.stdout, stderr okay
-                        setOutputs();
+                    case SYNC_MKDIR:
+                        advanceTo(Steps.SYNC_DOWNLOAD);
+                        tfSync.onlyDownload(model.getConfigurationUrl());
                         break;
-                        
-                    case SET_OUTPUTS:
-                        // TODO check asyncSshHelper.stdout, stderr okay
-                        // TODO store output
+                    case SYNC_DOWNLOAD:
+                        advanceTo(Steps.ASYNC_TF_INIT);
+                        tfInit.start();
+                        break;
+                    case ASYNC_TF_INIT:
+                        if (tfInit.isRunning()) {
+                            log("DEBUG: waiting in ASYNC_TF_INIT");
+                            break; // return IN_PROGRESS
+                        }
+                        if (!tfInit.wasSuccess())
+                            throw new IOException("tfInit returned errno " + tfInit.getErrno());
+                        advanceTo(Steps.ASYNC_TF_APPLY);
+                        tfApply.start();
+                        break;
+                    case ASYNC_TF_APPLY:
+                        if (tfApply.isRunning())
+                        {
+                            log("DEBUG: waiting in ASYNC_TF_APPLY");
+                            break; // return IN_PROGRESS
+                        }
+                        if (! tfApply.wasSuccess())
+                            throw new IOException ("tfApply returned errno " + tfApply.getErrno());
+                        advanceTo(Steps.DONE);
+                        break;
+                    case DONE:
                         logger.log("CreateHandler completed: success");
                         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                            .resourceModel(model)
-                            .status(OperationStatus.SUCCESS)
-                            .build();
-                    }
-                }  
+                                .resourceModel(model)
+                                .status(OperationStatus.SUCCESS)
+                                .build();
+                    default:
+                        throw new IllegalStateException("invalid step " + callbackContext.stepId);
+                }
             } catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
-                logger.log("CreateHandler error: "+e+"\n"+sw.toString());
-                throw e;
+                logger.log("CreateHandler error: " + e + "\n" + sw.toString());
+                return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                        .resourceModel(model)
+                        .status(OperationStatus.FAILED)
+                        .build();
             }
             
             logger.log("CreateHandler lambda exiting, callback: "+callbackContext);
@@ -120,44 +132,10 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
         }
     
         private void advanceTo(Steps nextStep) {
+            logger.log (String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep.toString()));
             callbackContext.stepId = nextStep.toString();
             callbackContext.lastDelaySeconds = 0;
-            callbackContext.pid = 0;
         }
-        
-        private void installPlan(ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
-            advanceTo(Steps.INSTALL_PLAN);
-            // TODO fix the command
-            asyncSshHelper.runOrRejoinAndSetPid("wget xxxx");
-        }
-        
-        private void applyPlan() {
-            advanceTo(Steps.APPLY_PLAN);
-            
-            // TODO for now keep the synchronous approach also
-            String cfg = getConfiguration(model);
-            if (cfg!=null && !cfg.isEmpty()) {
-                try  {
-                    TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(CreateHandler.this, model.getName());
-                    tfif.createTemplateFromURL(model.getConfigurationUrl());
-                    // TODO really should, for now, do:
-//                    tfif.createTemplateFromContents(cfg);
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-
-            // TODO fix the command
-            asyncSshHelper.runOrRejoinAndSetPid("wget xxxx");
-        }
-    
-        private void setOutputs() {
-            advanceTo(Steps.SET_OUTPUTS);
-            // TODO fix the command
-            // TODO - note this should probably be synchronous
-            asyncSshHelper.runOrRejoinAndSetPid("TODO get outputs");
-        }
-
     }
     
 }

@@ -137,6 +137,12 @@ aws cloudformation create-stack \
 * Terraform v0.12.13
 * AWS CLI not installed
 * temporary (MFA-based) AWS credentials in `~ubuntu/.aws/credentials`
+* Install systemd helpers:
+  ```shell
+  mkdir -p ~/.config/systemd/user
+  # Copy terraform*.service files from this repository into ~/.config/systemd/user
+  systemctl --user daemon-reload
+  ```
 
 #### development laptop
 * OS: Ubuntu Linux 18.04
@@ -145,18 +151,17 @@ aws cloudformation create-stack \
 * Docker version 18.09.7, build 2d0083d (`apt-get install docker.io`)
 
 ```shell
-# If you want to use your own key pair, hard-code the private key into
-# TerraformInterfaceSSH.java and add the public key to
-# ~ubuntu/.ssh/authorized_keys on the Terraform server. Please use a key that
-# you can afford to lose, i.e. a dedicated key for this project development
-# server, NOT a key that allows access to something else, such as your laptop!
+# Put the private key body into "/cfn/terraform/ssh-key" in Parameter Store of
+# Systems Manager. Add the public key body to ~ubuntu/.ssh/authorized_keys on
+# the Terraform server. Please use a key that you can afford to lose, i.e. a
+# dedicated key for this project development server, NOT a key that allows
+# access to something else, such as your laptop!
 cfn-cli generate
-# Make sure the Terraform server is listed in TerraformInterfaceSSH.java and
-# accepts 22/tcp from the current host.
+# Make sure the Terraform server accepts 22/tcp from the current host.
 mvn package
 # As you run the tests below, you will see the commands sent to the server and
 # their respective stdout. It helps to look into the S3 console to see the
-# progress within AWS and to run "watch -n 1 ls -lRA ~/tfdata" on the Terraform
+# progress within AWS and to run "watch -n 1 find ~/tfdata" on the Terraform
 # server to see the filesystem changes as they are happening.
 sam local invoke TestEntrypoint --event sam-tests/create.json # about 20 seconds
 sam local invoke TestEntrypoint --event sam-tests/update.json # about 20 seconds
