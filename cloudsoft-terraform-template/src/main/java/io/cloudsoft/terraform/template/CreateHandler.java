@@ -9,7 +9,6 @@ import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.cloudformation.resource.IdentifierUtils;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
     
@@ -136,7 +135,6 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
             logger.log (String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep.toString()));
             callbackContext.stepId = nextStep.toString();
             callbackContext.lastDelaySeconds = 0;
-            callbackContext.pid = 0;
         }
     }
     

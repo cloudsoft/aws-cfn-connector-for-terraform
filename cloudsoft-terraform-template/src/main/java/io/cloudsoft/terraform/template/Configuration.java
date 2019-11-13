@@ -1,6 +1,5 @@
 package io.cloudsoft.terraform.template;
 
-import java.io.InputStream;
 import java.util.Map;
 
 import org.json.JSONObject;

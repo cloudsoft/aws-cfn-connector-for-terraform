@@ -35,9 +35,6 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
     private AmazonS3 amazonS3;
     private Pattern s3Pattern;
 
-    // visible for testing
-    Function<CallbackContext, AsyncSshHelper> asyncSshHelperFactory = cb -> new AsyncSshHelper(cb);
-
     public TerraformBaseHandler(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
         s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
@@ -117,8 +114,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         final ResourceModel model;
         final CallbackContext callbackContext;
         final Logger logger;
-        final AsyncSshHelper asyncSshHelper;
-        
+
         protected AbstractHandlerWorker(
                 final ResourceHandlerRequest<ResourceModel> request,
                 final CallbackContext callbackContext,
@@ -128,7 +124,6 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
             this.model = request.getDesiredResourceState();
             this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
             this.logger = logger;
-            this.asyncSshHelper = asyncSshHelperFactory.apply(this.callbackContext);
         }
         
         void log(String message) {
