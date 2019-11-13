@@ -161,7 +161,7 @@ cfn-cli generate
 mvn package
 # As you run the tests below, you will see the commands sent to the server and
 # their respective stdout. It helps to look into the S3 console to see the
-# progress within AWS and to run "watch -n 1 ls -lRA ~/tfdata" on the Terraform
+# progress within AWS and to run "watch -n 1 find ~/tfdata" on the Terraform
 # server to see the filesystem changes as they are happening.
 sam local invoke TestEntrypoint --event sam-tests/create.json # about 20 seconds
 sam local invoke TestEntrypoint --event sam-tests/update.json # about 20 seconds
