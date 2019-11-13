@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  This CloudFormation template creates the necessary resources or the Cloudsoft::Terraform::Template to work
+  as expected. For instance, this creates:
+  - a role assumed by CloudFormation during CRUDL operations to ship logs to CloudWatch.
+  - a log group were the log will be ship to.
+  - parameters for the SSH connection to the Terraform server
+
+Resources:
+  LoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: LogAndMetricsDeliveryRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - cloudwatch:ListMetrics
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: cloudsoft-terraform-template-logs
+      RetentionInDays: 7
+
+  TerraformSSHHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Terraform server host to connect to for SSH connections
+      Name: /cfn/terraform/ssh-host
+      Type: String
+      Value: 'host.example.com'
+  TerraformSSHPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Terraform server port to connect to for SSH connections
+      Name: /cfn/terraform/ssh-port
+      Type: String
+      Value: '22'
+  TerraformSSHUsernameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Username of the terraform server host for SSH connections
+      Name: /cfn/terraform/ssh-username
+      Type: String
+      Value: 'terraform'
+  TerraformSSHKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Private SSH key of the terraform server for SSH connections
+      Name: /cfn/terraform/ssh-key
+      Type: String
+      Value: '(FIXME)'
+  TerraformSSHFingerprintParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Private SSH key fingerprint of the terraform server to verify SSH connections
+      Name: /cfn/terraform/ssh-fingerprint
+      Type: String
+      Value: '(FIXME)'
+
+Outputs:
+  LoggingRoleArn:
+    Value:
+      Fn::GetAtt: LoggingRole.Arn
+  LogGroup:
+    Value:
+      Ref: LogGroup
+  TerraformSSHHostParameter:
+    Value:
+      Ref: TerraformSSHHostParameter
+  TerraformSSHPortParameter:
+    Value:
+      Ref: TerraformSSHPortParameter
+  TerraformSSHUsernameParameter:
+    Value:
+      Ref: TerraformSSHUsernameParameter
+  TerraformSSHKeyParameter:
+    Value:
+      Ref: TerraformSSHKeyParameter
+  TerraformSSHFingerprintParameter:
+    Value:
+      Ref: TerraformSSHFingerprintParameter
