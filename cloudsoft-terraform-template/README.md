@@ -2,13 +2,45 @@
 
 (TODO: rename Terraform::Configuration)
 
+# Usage
+
+Once built and installed to CloudFormation, you can deploy CFN including Terraform as follows:
+
+```
+AWSTemplateFormatVersion: 2010-09-09
+Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
+Resources:
+  TerraformEc2Example:
+    Type: Cloudsoft::Terraform::Template
+    Properties:
+      ConfigurationContent: |
+      
+        resource "aws_instance" "my-test-instance" {
+          ami             = "XXXXXXX"
+          instance_type   = "t2.micro"
+        }
+```
+
+The TFM does not need to be in-lined; you can instead use `ConfigurationUrl` or `ConfigurationS3Path` to point at a TFM configuration or a ZIP.
+
+You can then:
+
+* [TODO] View outputs
+* [TODO] Update in the usual CFN way
+* Delete when done
+
+In short, this lets you re-use your Terraform with CloudFormation!
+
+
+# Build and Install
+
 ### Quick Start
 
 1. Build with `mvn clean package`
 
 2. Register with CFN: `cfn-cli submit -v`
 
-3. Set the version to use:
+3. [only if updating] Set the version to use:
    `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 0000000N`
    
    If you update the codebase you must choose an `N` greater than those already installed. 
@@ -19,11 +51,14 @@
    If you have so many it gets irritating or you hit the AWS limit (15):
    `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 00000004` 
 
-4. Deploy some Terraform, e.g. the file `terraform-example.cfn.yaml`:
+4. Set parameters in AWS Parameter Store letting the resource provider know how to connect to Terraform.
+
+5. Deploy some Terraform, e.g. the file `terraform-example.cfn.yaml`:
    `aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example`
    
-5. Delete it when you're done:
+6. Delete it when you're done:
    `aws cloudformation delete-stack --stack-name terraform-example`
+
 
 ### Script
 
