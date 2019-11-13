@@ -132,6 +132,8 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         }
         
         void log(String message) {
+            System.out.println(message);
+            System.out.println("<EOL>");
             logger.log(message);
         }
         
