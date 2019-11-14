@@ -48,7 +48,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         log("DEBUG: waiting in ASYNC_TF_INIT");
                         break; // return IN_PROGRESS
                     }
-                    if (!tfInit.wasSuccess())
+                    if (tfInit.wasFailure())
                         throw new IOException("tfInit returned errno " + tfInit.getErrno());
                     advanceTo(CreateHandler.Steps.ASYNC_TF_APPLY);
                     tfApply.start();
@@ -58,7 +58,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         log("DEBUG: waiting in ASYNC_TF_APPLY");
                         break; // return IN_PROGRESS
                     }
-                    if (!tfApply.wasSuccess())
+                    if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
                     advanceTo(CreateHandler.Steps.DONE);
                     break;
