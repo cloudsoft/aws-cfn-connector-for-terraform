@@ -21,7 +21,7 @@ public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
 
         OperationStatus ret = OperationStatus.PENDING;
         try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(DeleteHandler.this, model.getName());
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(DeleteHandler.this, proxy, model.getName());
             tfif.deleteTemplate();
             ret = OperationStatus.SUCCESS;
         } catch (IOException e) {

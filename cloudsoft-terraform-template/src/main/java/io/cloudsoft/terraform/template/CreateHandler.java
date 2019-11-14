@@ -4,14 +4,14 @@ import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import io.cloudsoft.terraform.template.worker.CreateHandlerWorker;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
 
-    public CreateHandler(AWSSimpleSystemsManagement awsSimpleSystemsManagement, AmazonS3 amazonS3) {
-        super(awsSimpleSystemsManagement, amazonS3);
+    public CreateHandler(SsmClient ssmClient, S3Client s3Client) {
+        super(ssmClient, s3Client);
     }
 
     public CreateHandler() {
@@ -25,7 +25,7 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        return run(callbackContext, cb -> new CreateHandlerWorker(request, cb, logger, this));
+        return run(callbackContext, cb -> new CreateHandlerWorker(proxy, request, cb, logger, this));
     }
 
     public enum Steps {

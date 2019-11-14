@@ -1,12 +1,14 @@
 package io.cloudsoft.terraform.template;
 
+import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
+
 import java.io.IOException;
 
 public class RemoteSystemdUnit extends TerraformInterfaceSSH {
     private String unitName;
 
-    public RemoteSystemdUnit(TerraformBaseHandler<?> h, String unitName, String configurationName) {
-        super(h, configurationName);
+    public RemoteSystemdUnit(TerraformBaseHandler<?> h, AmazonWebServicesClientProxy proxy, String unitName, String configurationName) {
+        super(h, proxy, configurationName);
         this.unitName = String.format("%s@%s", unitName, configurationName);
     }
 

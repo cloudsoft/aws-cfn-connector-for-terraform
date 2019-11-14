@@ -21,7 +21,7 @@ public class UpdateHandler extends TerraformBaseHandler<CallbackContext> {
 
         OperationStatus ret = OperationStatus.PENDING;
         try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(UpdateHandler.this, model.getName());
+            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(UpdateHandler.this, proxy, model.getName());
             // TODO update from contents 
             tfif.updateTemplateFromURL(model.getConfigurationUrl());
             ret = OperationStatus.SUCCESS;
