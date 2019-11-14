@@ -12,7 +12,7 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 
 public class TerraformInterfaceSSH {
     private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
-        sshClientSecretKeyContents, sshClientSecretKeyFile;
+        sshClientSecretKeyContents;
     private final int sshPort;
     protected String lastStdout, lastStderr;
     protected int lastExitStatus;
@@ -23,7 +23,6 @@ public class TerraformInterfaceSSH {
         this.sshServerKeyFP = h.getFingerprint();
         this.sshUsername = h.getUsername();        
         this.sshClientSecretKeyContents = h.getSSHKey();
-        this.sshClientSecretKeyFile = null;
         this.templateName = templateName;
     }
     
@@ -91,14 +90,6 @@ public class TerraformInterfaceSSH {
                 // TODO does this work, passing null for pub key? it looks like it should.
                 null, 
                 null));
-        }
-        if (sshClientSecretKeyFile!=null && !sshClientSecretKeyFile.isEmpty()) {
-            // src/main/resources/privkey works.
-            // /home/user/.ssh/privkey works if the file has no passphrase (sshj does
-            // not support SSH agent, and there is no SSH agent in AWS anyway).
-            // ~/.ssh/privkey does not work.
-            // ~user/.ssh/privkey does not work.
-            result.add(new SSHClient().loadKeys(sshClientSecretKeyFile));
         }
         return result;
     }
