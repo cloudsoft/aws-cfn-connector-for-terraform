@@ -23,8 +23,8 @@ public class RemoteSystemdUnit extends TerraformInterfaceSSH {
         return getRemotePropertyValue("ActiveState").equals("active");
     }
 
-    public boolean wasSuccess() throws IOException {
-        return getRemotePropertyValue("Result").equals("success");
+    public boolean wasFailure() throws IOException {
+        return ! getRemotePropertyValue("Result").equals("success");
     }
 
     public String getErrno() throws IOException {
