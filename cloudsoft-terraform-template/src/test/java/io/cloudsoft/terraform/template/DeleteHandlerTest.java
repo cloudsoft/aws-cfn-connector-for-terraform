@@ -31,31 +31,6 @@ public class DeleteHandlerTest {
 
     @Test
     public void handleRequest_SimpleSuccess() {
-// java.lang.NullPointerException
-// 	at io.cloudsoft.terraform.template.DeleteHandlerTest.handleRequest_SimpleSuccess(DeleteHandlerTest.java:43)
-
-// com.amazonaws.services.simplesystemsmanagement.model.AWSSimpleSystemsManagementException: Parameter name: can't be prefixed with "ssm" (case-insensitive). If formed as a path, it can consist of sub-paths divided by slash symbol; each sub-path can be formed as a mix of letters, numbers and the following 3 symbols .-_ (Service: AWSSimpleSystemsManagement; Status Code: 400; Error Code: ValidationException; Request ID: 65a9e41f-bc44-41de-9335-2440490c86f4)
-//	at io.cloudsoft.terraform.template.DeleteHandlerTest.handleRequest_SimpleSuccess(DeleteHandlerTest.java:45)
-/*
-        final DeleteHandler handler = new DeleteHandler();
-
-        final ResourceModel model = ResourceModel.builder().build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(model)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-*/
+        // TODO: Cannot test this simply for now. Will come when the DeleteHandler will be using the AbtractWorkerHandler
     }
 }
