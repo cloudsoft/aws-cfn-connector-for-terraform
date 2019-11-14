@@ -41,8 +41,7 @@ public class TerraformInterfaceSSH {
         // TODO
     }
 
-    void deleteTemplate() throws IOException {
-        runSSHCommand(String.format("cd ~/tfdata/'%s' && terraform destroy -lock=true -auto-approve -no-color", templateName));
+    public void onlyRmdir() throws IOException {
         runSSHCommand(String.format("rm -rf ~/tfdata/'%s'", templateName));
     }
 
