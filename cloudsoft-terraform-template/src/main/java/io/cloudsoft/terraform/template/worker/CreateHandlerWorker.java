@@ -26,7 +26,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
     }
 
     public ProgressEvent<ResourceModel, CallbackContext> call() {
-        logger.log("CreateHandler lambda starting: " + model);
+        logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
             CreateHandler.Steps curStep = callbackContext.stepId == null ? CreateHandler.Steps.INIT : CreateHandler.Steps.valueOf(callbackContext.stepId);
@@ -65,7 +65,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     advanceTo(CreateHandler.Steps.DONE);
                     break;
                 case DONE:
-                    logger.log("CreateHandler completed: success");
+                    logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)
                             .status(OperationStatus.SUCCESS)
@@ -77,14 +77,14 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            logger.log("CreateHandler error: " + e + "\n" + sw.toString());
+            logger.log(getClass().getName() + " error: " + e + "\n" + sw.toString());
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.FAILED)
                     .build();
         }
 
-        logger.log("CreateHandler lambda exiting, callback: " + callbackContext);
+        logger.log(getClass().getName() + " lambda exiting, callback: " + callbackContext);
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .callbackContext(callbackContext)
