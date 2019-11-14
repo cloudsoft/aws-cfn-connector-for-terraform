@@ -1,40 +1,40 @@
 package io.cloudsoft.terraform.template;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
+import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 public class TerraformInterfaceSSH {
-    private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
-        sshClientSecretKeyContents;
+    private final String templateName, serverHostname, sshUsername, sshServerKeyFP,
+            sshClientSecretKeyContents;
     private final int sshPort;
     protected String lastStdout, lastStderr;
     protected int lastExitStatus;
 
-    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
-        this.serverHostname = h.getHost();
-        this.sshPort = h.getPort();
-        this.sshServerKeyFP = h.getFingerprint();
-        this.sshUsername = h.getUsername();        
-        this.sshClientSecretKeyContents = h.getSSHKey();
+    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, AmazonWebServicesClientProxy proxy, String templateName) {
+        this.serverHostname = h.getHost(proxy);
+        this.sshPort = h.getPort(proxy);
+        this.sshServerKeyFP = h.getFingerprint(proxy);
+        this.sshUsername = h.getUsername(proxy);
+        this.sshClientSecretKeyContents = h.getSSHKey(proxy);
         this.templateName = templateName;
     }
-    
-    public void onlyMkdir() throws IOException
-    {
-        runSSHCommand(String.format ("mkdir -p ~/tfdata/'%s'", templateName));
+
+    public void onlyMkdir() throws IOException {
+        runSSHCommand(String.format("mkdir -p ~/tfdata/'%s'", templateName));
     }
-    public void onlyDownload (String url) throws IOException
-    {
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+
+    public void onlyDownload(String url) throws IOException {
+        runSSHCommand(String.format("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
     }
 
     void updateTemplateFromURL(String url) throws IOException {
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
+        runSSHCommand(String.format("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+        runSSHCommand(String.format("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
     }
 
     void updateTemplateFromContents(String contents) throws IOException {
@@ -42,8 +42,8 @@ public class TerraformInterfaceSSH {
     }
 
     void deleteTemplate() throws IOException {
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform destroy -lock=true -auto-approve -no-color", templateName));
-        runSSHCommand(String.format ("rm -rf ~/tfdata/'%s'", templateName));
+        runSSHCommand(String.format("cd ~/tfdata/'%s' && terraform destroy -lock=true -auto-approve -no-color", templateName));
+        runSSHCommand(String.format("rm -rf ~/tfdata/'%s'", templateName));
     }
 
     protected void runSSHCommand(String command) throws IOException {
@@ -55,7 +55,7 @@ public class TerraformInterfaceSSH {
         ssh.connect(serverHostname, sshPort);
         Session session = null;
         try {
-            ssh.authPublickey(sshUsername, new SSHClient().loadKeys (sshClientSecretKeyContents, null, null));
+            ssh.authPublickey(sshUsername, new SSHClient().loadKeys(sshClientSecretKeyContents, null, null));
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
             lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();

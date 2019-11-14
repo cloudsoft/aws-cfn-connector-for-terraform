@@ -1,5 +1,6 @@
 package io.cloudsoft.terraform.template.worker;
 
+import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
@@ -16,11 +17,12 @@ import java.io.StringWriter;
 public class CreateHandlerWorker extends AbstractHandlerWorker {
 
     public CreateHandlerWorker(
+            final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger,
             final CreateHandler createHandler) {
-        super(request, callbackContext, logger, createHandler);
+        super(proxy, request, callbackContext, logger, createHandler);
     }
 
     public ProgressEvent<ResourceModel, CallbackContext> call() {
@@ -28,8 +30,8 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
 
         try {
             CreateHandler.Steps curStep = callbackContext.stepId == null ? CreateHandler.Steps.INIT : CreateHandler.Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler, "terraform-init", model.getName());
-            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, "terraform-apply", model.getName());
+            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());
+            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case INIT:
                     advanceTo(CreateHandler.Steps.SYNC_MKDIR);

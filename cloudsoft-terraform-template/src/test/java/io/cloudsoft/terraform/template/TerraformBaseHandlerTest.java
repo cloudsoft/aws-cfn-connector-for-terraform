@@ -4,82 +4,100 @@ import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
-import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 public class TerraformBaseHandlerTest {
 
     @Mock
-    private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
+    private AmazonWebServicesClientProxy proxy;
 
     @Mock
-    private AmazonS3 amazonS3;
+    private SsmClient ssmClient;
+
+    @Mock
+    private S3Client s3Client;
 
     @BeforeEach
     public void setup() {
-        awsSimpleSystemsManagement = mock(AWSSimpleSystemsManagement.class);
-        amazonS3 = mock(AmazonS3.class);
+        proxy = mock(AmazonWebServicesClientProxy.class);
+        ssmClient = mock(SsmClient.class);
+        s3Client = mock(S3Client.class);
     }
 
     @Test
     public void getConfigurationReturnConfigurationContentProperty() {
-        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest();
+        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(ssmClient, s3Client);
         final String configurationContent = "Hello world";
         final ResourceModel model = ResourceModel.builder().configurationContent(configurationContent).build();
 
-        String result = handler.getConfiguration(model);
+        String result = handler.getConfiguration(proxy, model);
         assertEquals(configurationContent, result);
     }
 
     @Test
     public void getConfigurationReturnsDownloadedConfigurationFromUrlProperty() {
-        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest();
+        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(ssmClient, s3Client);
         final String configurationUrl = "http://www.mocky.io/v2/5dc19cab33000051e91a5437";
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         String expected = "Hello world";
-        String result = handler.getConfiguration(model);
+        String result = handler.getConfiguration(proxy, model);
 
         assertEquals(expected, result);
     }
 
     @Test
     public void getConfigurationThrowsIfUrlDoesNotExistProperty() {
-        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest();
+        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(ssmClient, s3Client);
         final String configurationUrl = "http://acme.com/does/not/exist";
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(model);
+            handler.getConfiguration(proxy, model);
         });
     }
 
     @Test
     public void getConfigurationReturnsDownloadedConfigurationFromS3PathProperty() {
-        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(awsSimpleSystemsManagement, amazonS3);
-        final String configurationS3Path = "s3://my-bucket/hello-world.txt";
+        final String expectedBucket = "my-bucket";
+        final String expectedKey = "hello-world.txt";
+        final String expectedContent = "Hello world";
+        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(ssmClient, s3Client);
+        final String configurationS3Path = String.format("s3://%s/%s", expectedBucket, expectedKey);
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
-        final String expected = "Hello world";
-        final S3Object s3Object = new S3Object();
-        s3Object.setObjectContent(new ByteArrayInputStream(expected.getBytes()));
-        when(amazonS3.getObject(any())).thenReturn(s3Object);
+        when(proxy.injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any())).then(InvocationOnMock::callRealMethod);
+        when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).then(invocationOnMock -> {
+            Path path = invocationOnMock.getArgument(1);
+            FileUtils.write(path.toFile(), expectedContent, StandardCharsets.UTF_8);
+            return null;
+        });
 
-        String result = handler.getConfiguration(model);
+        String result = handler.getConfiguration(proxy, model);
+        verify(proxy, times(1)).injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any());
+        ArgumentCaptor<GetObjectRequest> argument = ArgumentCaptor.forClass(GetObjectRequest.class);
+        verify(s3Client, times(1)).getObject(argument.capture(), any(Path.class));
 
-        assertEquals(expected, result);
+        assertEquals(expectedContent, result);
+        assertEquals(expectedBucket, argument.getValue().bucket());
+        assertEquals(expectedKey, argument.getValue().key());
     }
 
     @Test
@@ -88,8 +106,10 @@ public class TerraformBaseHandlerTest {
         final String configurationS3Path = "http://acme.com/does/not/exist";
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
+        when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
+
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(model);
+            handler.getConfiguration(proxy, model);
         });
     }
 
@@ -99,8 +119,10 @@ public class TerraformBaseHandlerTest {
         final String configurationS3Path = "s3://bucket/does/not/exist";
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
+        when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
+
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(model);
+            handler.getConfiguration(proxy, model);
         });
     }
 
@@ -109,8 +131,10 @@ public class TerraformBaseHandlerTest {
         final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest();
         final ResourceModel model = ResourceModel.builder().build();
 
+        when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
+
         assertThrows(IllegalStateException.class, () -> {
-            handler.getConfiguration(model);
+            handler.getConfiguration(proxy, model);
         });
     }
 
@@ -120,7 +144,7 @@ public class TerraformBaseHandlerTest {
             super();
         }
 
-        public TerraformBaseHandlerUnderTest(AWSSimpleSystemsManagement awsSimpleSystemsManagement, AmazonS3 amazonS3) {
+        public TerraformBaseHandlerUnderTest(SsmClient awsSimpleSystemsManagement, S3Client amazonS3) {
             super(awsSimpleSystemsManagement, amazonS3);
         }
 

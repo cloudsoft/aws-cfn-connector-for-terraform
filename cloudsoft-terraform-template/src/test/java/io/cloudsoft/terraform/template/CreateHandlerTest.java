@@ -5,15 +5,14 @@ import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,10 +22,10 @@ public class CreateHandlerTest {
     private AmazonWebServicesClientProxy proxy;
 
     @Mock
-    private AmazonS3Client s3Client;
+    private S3Client s3Client;
 
     @Mock
-    private AWSSimpleSystemsManagementClient ssmClient;
+    private SsmClient ssmClient;
 
     @Mock
     private Logger logger;

@@ -23,12 +23,6 @@ public class UpdateHandlerTest {
     @Mock
     private Logger logger;
 
-    @BeforeEach
-    public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-    }
-
     @Test
     public void handleRequest_SimpleSuccess() {
         // TODO: Cannot test this simply for now. Will come when the UpdateHandler will be using the AbtractWorkerHandler

@@ -31,7 +31,7 @@ public class AbstractHandlerWorkerTest {
     @Test
     public void throwsIfRequestIsNull() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new AbstractHandlerWorker(null, null, logger, handler) {
+            new AbstractHandlerWorker(null, null, null, logger, handler) {
                 @Override
                 public ProgressEvent<ResourceModel, CallbackContext> call() {
                     return null;
@@ -46,7 +46,7 @@ public class AbstractHandlerWorkerTest {
             final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                     .build();
 
-            new AbstractHandlerWorker(request, null, logger, handler) {
+            new AbstractHandlerWorker(null, request, null, logger, handler) {
                 @Override
                 public ProgressEvent<ResourceModel, CallbackContext> call() {
                     return null;
@@ -63,7 +63,7 @@ public class AbstractHandlerWorkerTest {
                 .build();
         final CallbackContext callbackContext = new CallbackContext();
 
-        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(request, callbackContext, logger, handler) {
+        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(null, request, callbackContext, logger, handler) {
             @Override
             public ProgressEvent<ResourceModel, CallbackContext> call() {
                 return null;
@@ -82,7 +82,7 @@ public class AbstractHandlerWorkerTest {
                 .build();
         final CallbackContext callbackContext = new CallbackContext();
 
-        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(request, callbackContext, logger, handler) {
+        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(null, request, callbackContext, logger, handler) {
             @Override
             public ProgressEvent<ResourceModel, CallbackContext> call() {
                 return null;

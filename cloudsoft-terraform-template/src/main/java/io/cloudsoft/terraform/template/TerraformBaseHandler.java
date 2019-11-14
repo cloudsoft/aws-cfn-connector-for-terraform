@@ -1,5 +1,6 @@
 package io.cloudsoft.terraform.template;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -8,44 +9,43 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 
 public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
     private static final String PREFIX = "/cfn/terraform";
-    private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
-    private AmazonS3 amazonS3;
+    private SsmClient ssmClient;
+    private S3Client s3Client;
     private Pattern s3Pattern;
 
-    public TerraformBaseHandler(AWSSimpleSystemsManagement awsSimpleSystemsManagement, AmazonS3 amazonS3) {
-        this.awsSimpleSystemsManagement = awsSimpleSystemsManagement;
-        this.amazonS3 = amazonS3;
+    public TerraformBaseHandler(SsmClient ssmClient, S3Client s3Client) {
+        this.ssmClient = ssmClient;
+        this.s3Client = s3Client;
         s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
     }
 
     public TerraformBaseHandler() {
-        this(AWSSimpleSystemsManagementClientBuilder.defaultClient(), AmazonS3ClientBuilder.defaultClient());
+        this(SsmClient.create(), S3Client.create());
     }
 
-    protected String getHost() {
-        return getParameterValue("ssh-host");
+    protected String getHost(AmazonWebServicesClientProxy proxy) {
+        return getParameterValue(proxy, "ssh-host");
     }
 
-    protected int getPort() {
+    protected int getPort(AmazonWebServicesClientProxy proxy) {
         int ret;
         try {
-            ret = Integer.parseInt(getParameterValue("ssh-port").trim());
+            ret = Integer.parseInt(getParameterValue(proxy, "ssh-port").trim());
         }
         catch (NumberFormatException e) {
             ret = 22;
@@ -53,27 +53,31 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         return ret;
     }
 
-    protected String getUsername() {
-        return getParameterValue("ssh-username");
+    protected String getUsername(AmazonWebServicesClientProxy proxy) {
+        return getParameterValue(proxy, "ssh-username");
     }
 
-    protected String getSSHKey() {
-        return getParameterValue("ssh-key");
+    protected String getSSHKey(AmazonWebServicesClientProxy proxy) {
+        return getParameterValue(proxy, "ssh-key");
     }
 
-    protected String getFingerprint() {
-        return getParameterValue("ssh-fingerprint");
+    protected String getFingerprint(AmazonWebServicesClientProxy proxy) {
+        return getParameterValue(proxy, "ssh-fingerprint");
     }
 
-    private String getParameterValue(String id) {
-        GetParameterResult getParameterResult = awsSimpleSystemsManagement.getParameter(new GetParameterRequest()
-                .withName(String.format("%s/%s", PREFIX, id))
-                .withWithDecryption(true));
+    private String getParameterValue(AmazonWebServicesClientProxy proxy, String id) {
+        GetParameterRequest getParameterRequest = GetParameterRequest.builder()
+                .name(String.format("%s/%s", PREFIX, id))
+                .withDecryption(true)
+                .build();
 
-        return getParameterResult.getParameter().getValue();
+        GetParameterResponse getParameterResponse = proxy.injectCredentialsAndInvokeV2(getParameterRequest,
+                ssmClient::getParameter);
+
+        return getParameterResponse.parameter().value();
     }
 
-    protected String getConfiguration(ResourceModel model) {
+    protected String getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
         if (model.getConfigurationContent() != null) {
             return model.getConfigurationContent();
         }
@@ -98,8 +102,13 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
             String key = matcher.group(2);
 
             try {
-                S3Object templateObject = amazonS3.getObject(new GetObjectRequest(bucket, key));
-                return IOUtils.toString(templateObject.getObjectContent(), StandardCharsets.UTF_8);
+                File tmpFile = File.createTempFile("configuration-", ".tf");
+                GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .build();
+                proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
+                return FileUtils.readFileToString(tmpFile, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 throw new IllegalArgumentException(String.format("Failed to get S3 file at %s", model.getConfigurationS3Path()), e);
             }

@@ -1,18 +1,13 @@
 {
-	"credentials": {
-		"accessKeyId": "(unused)",
-		"secretAccessKey": "(unused)",
-		"sessionToken": "(unused)"
-	},
-	"action": "DELETE",
-	"request": {
-		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
-		"desiredResourceState": {
-			"Name": "example7"
-		},
-		"logicalResourceIdentifier": "MyResource"
-	},
-	"callbackContext": {
-		"forceSynchronous": true
-	}
+  "action": "DELETE",
+  "request": {
+    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
+    "desiredResourceState": {
+      "Name": "example7"
+    },
+    "logicalResourceIdentifier": "MyResource"
+  },
+  "callbackContext": {
+    "forceSynchronous": true
+  }
 }
