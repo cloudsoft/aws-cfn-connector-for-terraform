@@ -2,11 +2,11 @@
 
 (TODO: rename Terraform::Configuration)
 
-## Usage
+## Quick start
 
 First, you need to install the custom type into CloudFomation. See the [installation guide](./docs/installation-guide.md) documentation.
 
-Once done, you can use the new type in CloudFormation template as follows:
+Once done, you can use the new type in CloudFormation template. For example:
 
 ```
 AWSTemplateFormatVersion: 2010-09-09
@@ -26,11 +26,11 @@ The Terraform configuration does not need to be in-lined; you can instead use `C
 
 You can then:
 
-* [TODO] View outputs
+* [TODO] View Terraform outputs as CloudFormation outputs
 * [TODO] Update in the usual CloudFormation way
 * Delete when done
 
-In short, this lets you re-use your Terraform with CloudFormation!
+For more information on how to use the custom type, see the [user guide](./docs/user-guide.md) documentation.
 
 ## Development
 

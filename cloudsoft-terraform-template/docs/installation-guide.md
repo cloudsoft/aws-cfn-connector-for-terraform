@@ -12,13 +12,13 @@ The connector requires a *running* Terraform server that:
 - is publicly SSH'able
 - is configured with the correct credentials for the target clouds
 
-TODO: If you don't already have a Terraform server, you can use this CloudFormation template to set one up
-
 ### AWS CLI
 
 You will need to have the AWS CLI installed and configured on your local machine. Please [see the documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) how to achieve this.
 
 ## Installation
+
+**Important: registering custom types is available only in region `eu-central-1` and `us-west-2`.**
 
 1. [Download](https://github.com/cloudsoft/aws-cfn-connector-for-terraform/releases) the latest release of the connector
 2. Download the [`resource-role.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 3:
