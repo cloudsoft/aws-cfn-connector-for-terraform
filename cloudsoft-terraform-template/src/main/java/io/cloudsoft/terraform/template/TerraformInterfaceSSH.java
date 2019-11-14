@@ -1,14 +1,11 @@
 package io.cloudsoft.terraform.template;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
-import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 
 public class TerraformInterfaceSSH {
     private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
@@ -58,7 +55,7 @@ public class TerraformInterfaceSSH {
         ssh.connect(serverHostname, sshPort);
         Session session = null;
         try {
-            ssh.authPublickey(sshUsername, getKeyProvider());
+            ssh.authPublickey(sshUsername, new SSHClient().loadKeys (sshClientSecretKeyContents, null, null));
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
             lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
@@ -79,18 +76,5 @@ public class TerraformInterfaceSSH {
             }
             ssh.disconnect();
         }
-    }
-    
-    private Iterable<KeyProvider> getKeyProvider() throws IOException {
-        List<KeyProvider> result = new ArrayList<KeyProvider>();
-        if (sshClientSecretKeyContents!=null && !sshClientSecretKeyContents.isEmpty()) {
-            // add key provider from contents
-            result.add(new SSHClient().loadKeys(
-                sshClientSecretKeyContents,
-                // TODO does this work, passing null for pub key? it looks like it should.
-                null, 
-                null));
-        }
-        return result;
     }
 }
