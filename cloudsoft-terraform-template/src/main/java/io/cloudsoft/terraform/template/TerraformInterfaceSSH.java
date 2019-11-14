@@ -10,13 +10,13 @@ import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 
-class TerraformInterfaceSSH {
+public class TerraformInterfaceSSH {
     private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
         sshClientSecretKeyContents, sshClientSecretKeyFile;
     protected String lastStdout, lastStderr;
     protected int lastExitStatus;
 
-    TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
+    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
         this.serverHostname = h.getHost();
         // TODO port
         this.sshServerKeyFP = h.getFingerprint();
@@ -26,11 +26,11 @@ class TerraformInterfaceSSH {
         this.templateName = templateName;
     }
     
-    protected void onlyMkdir() throws IOException
+    public void onlyMkdir() throws IOException
     {
         runSSHCommand(String.format ("mkdir -p ~/tfdata/'%s'", templateName));
     }
-    protected void onlyDownload (String url) throws IOException
+    public void onlyDownload (String url) throws IOException
     {
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
     }

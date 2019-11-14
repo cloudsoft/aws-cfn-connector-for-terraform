@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CallbackContext {
 
-    String stepId;
-    int lastDelaySeconds;
-    boolean forceSynchronous = false;
-    boolean disregardCallbackDelay = false; // Call the worker again ASAP (it is not a good idea).
+    public String stepId;
+    public int lastDelaySeconds;
+    public boolean forceSynchronous = false;
+    public boolean disregardCallbackDelay = false; // Call the worker again ASAP (it is not a good idea).
     
 }

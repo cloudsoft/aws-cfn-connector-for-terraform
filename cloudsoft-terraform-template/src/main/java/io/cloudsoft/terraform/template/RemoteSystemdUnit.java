@@ -2,10 +2,10 @@ package io.cloudsoft.terraform.template;
 
 import java.io.IOException;
 
-class RemoteSystemdUnit extends TerraformInterfaceSSH {
+public class RemoteSystemdUnit extends TerraformInterfaceSSH {
     private String unitName;
 
-    RemoteSystemdUnit(TerraformBaseHandler<?> h, String unitName, String configurationName) {
+    public RemoteSystemdUnit(TerraformBaseHandler<?> h, String unitName, String configurationName) {
         super(h, configurationName);
         this.unitName = String.format("%s@%s", unitName, configurationName);
     }
@@ -15,19 +15,19 @@ class RemoteSystemdUnit extends TerraformInterfaceSSH {
         return lastStdout.replaceAll("\n", "");
     }
 
-    void start() throws IOException {
+    public void start() throws IOException {
         runSSHCommand(String.format("systemctl --user start %s", unitName));
     }
 
-    boolean isRunning() throws IOException {
+    public boolean isRunning() throws IOException {
         return getRemotePropertyValue("ActiveState").equals("active");
     }
 
-    boolean wasSuccess() throws IOException {
+    public boolean wasSuccess() throws IOException {
         return getRemotePropertyValue("Result").equals("success");
     }
 
-    String getErrno() throws IOException {
+    public String getErrno() throws IOException {
         return getRemotePropertyValue("StatusErrno");
     }
 }

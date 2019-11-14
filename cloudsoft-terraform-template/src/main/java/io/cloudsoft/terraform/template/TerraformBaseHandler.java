@@ -8,12 +8,11 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
 import org.apache.commons.io.IOUtils;
 
-import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -105,33 +104,6 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         }
 
         throw new IllegalStateException("Missing one of the template properties");
-    }
-
-    protected abstract class AbstractHandlerWorker {
-
-        final ResourceHandlerRequest<ResourceModel> request;
-        final ResourceModel model;
-        final CallbackContext callbackContext;
-        final Logger logger;
-
-        protected AbstractHandlerWorker(
-                final ResourceHandlerRequest<ResourceModel> request,
-                final CallbackContext callbackContext,
-                final Logger logger) {
-
-            this.request = request;
-            this.model = request.getDesiredResourceState();
-            this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
-            this.logger = logger;
-        }
-
-        void log(String message) {
-            System.out.println(message);
-            System.out.println("<EOL>");
-            logger.log(message);
-        }
-
-        abstract ProgressEvent<ResourceModel, CallbackContext> call();
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext,AbstractHandlerWorker> workerFactory) {
