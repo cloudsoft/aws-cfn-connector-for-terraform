@@ -35,22 +35,12 @@ public class TerraformInterfaceSSH {
     {
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
     }
-    void createTemplateFromURL(String url) throws IOException {
-        onlyMkdir();
-        onlyDownload (url);
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform init -lock=true -input=false -no-color", templateName));
-        runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
-    }
 
     void updateTemplateFromURL(String url) throws IOException {
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
         runSSHCommand(String.format ("cd ~/tfdata/'%s' && terraform apply -lock=true -input=false -auto-approve -no-color", templateName));
     }
 
-    void createTemplateFromContents(String contents) throws IOException {
-        // TODO
-    }
-    
     void updateTemplateFromContents(String contents) throws IOException {
         // TODO
     }
