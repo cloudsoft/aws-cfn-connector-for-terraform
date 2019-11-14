@@ -2,9 +2,11 @@
 
 (TODO: rename Terraform::Configuration)
 
-# Usage
+## Usage
 
-Once built and installed to CloudFormation, you can deploy CFN including Terraform as follows:
+First, you need to install the custom type into CloudFomation. See the [installation guide](./docs/installation-guide.md) documentation.
+
+Once done, you can use the new type in CloudFormation template as follows:
 
 ```
 AWSTemplateFormatVersion: 2010-09-09
@@ -14,27 +16,23 @@ Resources:
     Type: Cloudsoft::Terraform::Template
     Properties:
       ConfigurationContent: |
-      
         resource "aws_instance" "my-test-instance" {
           ami             = "XXXXXXX"
           instance_type   = "t2.micro"
         }
 ```
 
-The TFM does not need to be in-lined; you can instead use `ConfigurationUrl` or `ConfigurationS3Path` to point at a TFM configuration or a ZIP.
+The Terraform configuration does not need to be in-lined; you can instead use `ConfigurationUrl` or `ConfigurationS3Path` to point at a configuration.
 
 You can then:
 
 * [TODO] View outputs
-* [TODO] Update in the usual CFN way
+* [TODO] Update in the usual CloudFormation way
 * Delete when done
 
 In short, this lets you re-use your Terraform with CloudFormation!
 
-
-# Build and Install
-
-### Quick Start
+## Development
 
 1. Build with `mvn clean package`
 
@@ -87,9 +85,9 @@ aws cloudformation create-stack --template-body file://stack.json --stack-name m
 aws cloudformation delete-stack --stack-name terraform-example
 ```
 
-## Detail
+### Detail
 
-### Logging
+#### Logging
 
 ```shell
 aws cloudformation register-type \
@@ -102,19 +100,19 @@ https://denis-examples.s3.eu-central-1.amazonaws.com/cloudsoft-terraform-templat
   s3://denis-examples/cloudsoft-terraform-template.zip
 ```
   
-### Debugging
+### #Debugging
 
 * force-synchronous
 
 
-### IDE
+#### IDE
 
 The code use [Lombok](https://projectlombok.org/), and [you may have to install
 IDE integrations](https://projectlombok.org/) to enable auto-complete for
 Lombok-annotated classes.
 
-## HOW TO run tests
-### Create/update the parameters in the region if necessary (once per region)
+### Testing
+#### Create/update the parameters in the region if necessary (once per region)
 
 ```shell
 aws cloudformation create-stack \
@@ -122,15 +120,15 @@ aws cloudformation create-stack \
 --template-body file://parameters.yml
 ```
 
-### synchronous tests with SAM
+#### synchronous tests with SAM
 
-#### S3 props (public access)
+##### S3 props (public access)
 * http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step1.tf
   (essential: create two S3 buckets)
 * http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step2.tf
   (optional: replace one of the buckets with a new one)
 
-#### Terraform server
+##### Terraform server
 * EC2 t2.micro
 * AMI: ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-20191002 (ami-0cc0a36f626a4fdf5)
 * SSH key pair name: terraform-denis-20191104
@@ -144,7 +142,7 @@ aws cloudformation create-stack \
   systemctl --user daemon-reload
   ```
 
-#### development laptop
+##### development laptop
 * OS: Ubuntu Linux 18.04
 * RPDK nightly SHA-1 sum: `9c01f82abfc105036d174416c138414975150303` (cfn-cli 0.1)
 * SAM CLI, version 0.23.0 (`apt-get install python3-pip && pip3 install aws-sam-cli`)
