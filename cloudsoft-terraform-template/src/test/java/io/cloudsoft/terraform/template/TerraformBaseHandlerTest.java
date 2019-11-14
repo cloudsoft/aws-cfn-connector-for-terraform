@@ -6,6 +6,7 @@ import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -15,17 +16,20 @@ import java.io.ByteArrayInputStream;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TerraformBaseHandlerTest {
 
     @Mock
+    private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
+
+    @Mock
     private AmazonS3 amazonS3;
 
     @BeforeEach
     public void setup() {
+        awsSimpleSystemsManagement = mock(AWSSimpleSystemsManagement.class);
         amazonS3 = mock(AmazonS3.class);
     }
 
@@ -64,7 +68,7 @@ public class TerraformBaseHandlerTest {
 
     @Test
     public void getConfigurationReturnsDownloadedConfigurationFromS3PathProperty() {
-        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(amazonS3);
+        final TerraformBaseHandlerUnderTest handler = new TerraformBaseHandlerUnderTest(awsSimpleSystemsManagement, amazonS3);
         final String configurationS3Path = "s3://my-bucket/hello-world.txt";
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
@@ -116,8 +120,8 @@ public class TerraformBaseHandlerTest {
             super();
         }
 
-        public TerraformBaseHandlerUnderTest(AmazonS3 amazonS3) {
-            super(amazonS3);
+        public TerraformBaseHandlerUnderTest(AWSSimpleSystemsManagement awsSimpleSystemsManagement, AmazonS3 amazonS3) {
+            super(awsSimpleSystemsManagement, amazonS3);
         }
 
         @Override
@@ -127,4 +131,7 @@ public class TerraformBaseHandlerTest {
             return null;
         }
     }
+
+    // TODO: Add tests about getParameters
+    // TODO: Add tests for run()
 }

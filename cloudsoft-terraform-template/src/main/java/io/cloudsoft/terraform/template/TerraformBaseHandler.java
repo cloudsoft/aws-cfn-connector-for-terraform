@@ -31,18 +31,17 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
     
     private static final String PREFIX = "/cfn/terraform";
     private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
-
     private AmazonS3 amazonS3;
     private Pattern s3Pattern;
 
-    public TerraformBaseHandler(AmazonS3 amazonS3) {
+    public TerraformBaseHandler(AWSSimpleSystemsManagement awsSimpleSystemsManagement, AmazonS3 amazonS3) {
+        this.awsSimpleSystemsManagement = awsSimpleSystemsManagement;
         this.amazonS3 = amazonS3;
         s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
-        awsSimpleSystemsManagement = AWSSimpleSystemsManagementClientBuilder.defaultClient();
     }
 
     public TerraformBaseHandler() {
-        this(AmazonS3ClientBuilder.defaultClient());
+        this(AWSSimpleSystemsManagementClientBuilder.defaultClient(), AmazonS3ClientBuilder.defaultClient());
     }
 
     protected String getHost() {
@@ -107,7 +106,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
 
         throw new IllegalStateException("Missing one of the template properties");
     }
-    
+
     protected abstract class AbstractHandlerWorker {
 
         final ResourceHandlerRequest<ResourceModel> request;
@@ -119,19 +118,19 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
                 final ResourceHandlerRequest<ResourceModel> request,
                 final CallbackContext callbackContext,
                 final Logger logger) {
-            
+
             this.request = request;
             this.model = request.getDesiredResourceState();
             this.callbackContext = callbackContext==null ? new CallbackContext() : callbackContext;
             this.logger = logger;
         }
-        
+
         void log(String message) {
             System.out.println(message);
             System.out.println("<EOL>");
             logger.log(message);
         }
-        
+
         abstract ProgressEvent<ResourceModel, CallbackContext> call();
     }
 
