@@ -23,11 +23,6 @@ import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
 
 public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
-
-    // TODO config for testing
-    static boolean TEST_RETURN_SUCCESS_IMMEDIATELY = false;
-    
-    
     private static final String PREFIX = "/cfn/terraform";
     private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
     private AmazonS3 amazonS3;

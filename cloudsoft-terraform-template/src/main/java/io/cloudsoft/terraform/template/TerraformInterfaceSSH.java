@@ -62,7 +62,6 @@ public class TerraformInterfaceSSH {
             cmd.join(5, TimeUnit.SECONDS);
             lastExitStatus = cmd.getExitStatus();
             lastStderr = IOUtils.readFully(cmd.getErrorStream()).toString();
-            //model.setMetricValue(s1); // does not compile
             System.out.println("stdout: " + lastStdout);
             System.out.println("stderr: " + lastStderr);
             System.out.println("exit status: " + lastExitStatus);
