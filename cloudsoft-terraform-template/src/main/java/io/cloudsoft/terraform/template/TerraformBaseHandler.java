@@ -47,8 +47,15 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         return getParameterValue("ssh-host");
     }
 
-    protected String getPort() {
-        return getParameterValue("ssh-port");
+    protected int getPort() {
+        int ret;
+        try {
+            ret = Integer.parseInt(getParameterValue("ssh-port").trim());
+        }
+        catch (NumberFormatException e) {
+            ret = 22;
+        }
+        return ret;
     }
 
     protected String getUsername() {

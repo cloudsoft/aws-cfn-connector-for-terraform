@@ -13,12 +13,13 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 public class TerraformInterfaceSSH {
     private final String templateName, serverHostname, sshUsername, sshServerKeyFP, 
         sshClientSecretKeyContents, sshClientSecretKeyFile;
+    private final int sshPort;
     protected String lastStdout, lastStderr;
     protected int lastExitStatus;
 
     public TerraformInterfaceSSH(TerraformBaseHandler<?> h, String templateName) {
         this.serverHostname = h.getHost();
-        // TODO port
+        this.sshPort = h.getPort();
         this.sshServerKeyFP = h.getFingerprint();
         this.sshUsername = h.getUsername();        
         this.sshClientSecretKeyContents = h.getSSHKey();
@@ -65,7 +66,7 @@ public class TerraformInterfaceSSH {
         final SSHClient ssh = new SSHClient();
 
         ssh.addHostKeyVerifier(sshServerKeyFP);
-        ssh.connect(serverHostname);
+        ssh.connect(serverHostname, sshPort);
         Session session = null;
         try {
             ssh.authPublickey(sshUsername, getKeyProvider());
