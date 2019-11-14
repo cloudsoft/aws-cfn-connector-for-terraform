@@ -27,13 +27,4 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
 
         return run(callbackContext, cb -> new CreateHandlerWorker(proxy, request, cb, logger, this));
     }
-
-    public enum Steps {
-        INIT,
-        SYNC_MKDIR,
-        SYNC_DOWNLOAD,
-        ASYNC_TF_INIT,
-        ASYNC_TF_APPLY,
-        DONE
-    }
 }

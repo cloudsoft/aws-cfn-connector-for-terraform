@@ -11,10 +11,16 @@ import io.cloudsoft.terraform.template.RemoteSystemdUnit;
 import io.cloudsoft.terraform.template.ResourceModel;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 public class CreateHandlerWorker extends AbstractHandlerWorker {
+    public enum Steps {
+        CREATE_INIT,
+        CREATE_SYNC_MKDIR,
+        CREATE_SYNC_DOWNLOAD,
+        CREATE_ASYNC_TF_INIT,
+        CREATE_ASYNC_TF_APPLY,
+        CREATE_DONE
+    }
 
     public CreateHandlerWorker(
             final AmazonWebServicesClientProxy proxy,
@@ -29,38 +35,38 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
-            CreateHandler.Steps curStep = callbackContext.stepId == null ? CreateHandler.Steps.INIT : CreateHandler.Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());
+            Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
+            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-init", model.getName());
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
-                case INIT:
-                    advanceTo(CreateHandler.Steps.SYNC_MKDIR);
+                case CREATE_INIT:
+                    advanceTo(Steps.CREATE_SYNC_MKDIR.toString());
                     tfSync.onlyMkdir();
                     break;
-                case SYNC_MKDIR:
-                    advanceTo(CreateHandler.Steps.SYNC_DOWNLOAD);
+                case CREATE_SYNC_MKDIR:
+                    advanceTo(Steps.CREATE_SYNC_DOWNLOAD.toString());
                     tfSync.onlyDownload(model.getConfigurationUrl());
                     break;
-                case SYNC_DOWNLOAD:
-                    advanceTo(CreateHandler.Steps.ASYNC_TF_INIT);
+                case CREATE_SYNC_DOWNLOAD:
+                    advanceTo(Steps.CREATE_ASYNC_TF_INIT.toString());
                     tfInit.start();
                     break;
-                case ASYNC_TF_INIT:
+                case CREATE_ASYNC_TF_INIT:
                     if (tfInit.isRunning())
                         break; // return IN_PROGRESS
                     if (tfInit.wasFailure())
                         throw new IOException("tfInit returned errno " + tfInit.getErrno());
-                    advanceTo(CreateHandler.Steps.ASYNC_TF_APPLY);
+                    advanceTo(Steps.CREATE_ASYNC_TF_APPLY.toString());
                     tfApply.start();
                     break;
-                case ASYNC_TF_APPLY:
+                case CREATE_ASYNC_TF_APPLY:
                     if (tfApply.isRunning())
                         break; // return IN_PROGRESS
                     if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
-                    advanceTo(CreateHandler.Steps.DONE);
+                    advanceTo(Steps.CREATE_DONE.toString());
                     break;
-                case DONE:
+                case CREATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)
@@ -70,10 +76,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     throw new IllegalStateException("invalid step " + callbackContext.stepId);
             }
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            logger.log(getClass().getName() + " error: " + e + "\n" + sw.toString());
+            logException (getClass().getName(), e);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.FAILED)
@@ -87,25 +90,5 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
                 .build();
-    }
-
-    private int nextDelay(CallbackContext callbackContext) {
-        if (callbackContext.lastDelaySeconds == 0) {
-            callbackContext.lastDelaySeconds = 1;
-        } else {
-            if (callbackContext.lastDelaySeconds < 60) {
-                // exponential backoff from 1 second up to 1 minute
-                callbackContext.lastDelaySeconds *= 2;
-            } else {
-                callbackContext.lastDelaySeconds = 60;
-            }
-        }
-        return callbackContext.lastDelaySeconds;
-    }
-
-    private void advanceTo(CreateHandler.Steps nextStep) {
-        logger.log(String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep.toString()));
-        callbackContext.stepId = nextStep.toString();
-        callbackContext.lastDelaySeconds = 0;
     }
 }

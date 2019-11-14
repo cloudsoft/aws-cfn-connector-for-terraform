@@ -4,10 +4,10 @@ import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import io.cloudsoft.terraform.template.CallbackContext;
-import io.cloudsoft.terraform.template.ResourceModel;
-import io.cloudsoft.terraform.template.TerraformBaseHandler;
-import io.cloudsoft.terraform.template.TerraformInterfaceSSH;
+import io.cloudsoft.terraform.template.*;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public abstract class AbstractHandlerWorker {
 
@@ -48,4 +48,31 @@ public abstract class AbstractHandlerWorker {
     }
 
     public abstract ProgressEvent<ResourceModel, CallbackContext> call();
+
+    int nextDelay(CallbackContext callbackContext) {
+        if (callbackContext.lastDelaySeconds == 0) {
+            callbackContext.lastDelaySeconds = 1;
+        } else {
+            if (callbackContext.lastDelaySeconds < 60) {
+                // exponential backoff from 1 second up to 1 minute
+                callbackContext.lastDelaySeconds *= 2;
+            } else {
+                callbackContext.lastDelaySeconds = 60;
+            }
+        }
+        return callbackContext.lastDelaySeconds;
+    }
+
+    void advanceTo(String nextStep) {
+        logger.log(String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep));
+        callbackContext.stepId = nextStep;
+        callbackContext.lastDelaySeconds = 0;
+    }
+
+    void logException (String origin, Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.log(origin + " error: " + e + "\n" + sw.toString());
+    }
 }
