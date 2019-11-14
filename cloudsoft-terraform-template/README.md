@@ -163,7 +163,11 @@ mvn package
 # their respective stdout. It helps to look into the S3 console to see the
 # progress within AWS and to run "watch -n 1 find ~/tfdata" on the Terraform
 # server to see the filesystem changes as they are happening.
-sam local invoke TestEntrypoint --event sam-tests/create.json # about 20 seconds
-sam local invoke TestEntrypoint --event sam-tests/update.json # about 20 seconds
-sam local invoke TestEntrypoint --event sam-tests/delete.json # about 15 seconds
+./sam-tests/run.sh --event ./sam-tests/create.json # about 20 seconds
+./sam-tests/run.sh --event ./sam-tests/update.json # about 20 seconds
+./sam-tests/run.sh --event ./sam-tests/delete.json # about 15 seconds
+
+# Note that you can specify --profile to get credentials from a specific
+# profile (defaults to "default") and --region to run the test in a specific
+# region (defaults to "eu-central-1") 
 ```

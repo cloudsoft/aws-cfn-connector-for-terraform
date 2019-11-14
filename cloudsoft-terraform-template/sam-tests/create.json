@@ -1,19 +1,14 @@
 {
-	"credentials": {
-		"accessKeyId": "(unused)",
-		"secretAccessKey": "(unused)",
-		"sessionToken": "(unused)"
-	},
-	"action": "CREATE",
-	"request": {
-		"clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
-		"desiredResourceState": {
-			"Name": "example7",
-			"ConfigurationUrl": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step1.tf"
-		},
-		"logicalResourceIdentifier": "MyResource"
-	},
-	"callbackContext": {
-		"forceSynchronous": true
-	}
+  "action": "CREATE",
+  "request": {
+    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
+    "desiredResourceState": {
+      "Name": "example7",
+      "ConfigurationUrl": "http://denis-examples.s3-website.eu-central-1.amazonaws.com/example7-step1.tf"
+    },
+    "logicalResourceIdentifier": "MyResource"
+  },
+  "callbackContext": {
+    "forceSynchronous": true
+  }
 }
