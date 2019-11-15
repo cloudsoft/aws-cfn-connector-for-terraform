@@ -1,6 +1,8 @@
 package io.cloudsoft.terraform.template;
 
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
+import com.amazonaws.cloudformation.proxy.Logger;
+
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -12,12 +14,14 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 public class TerraformInterfaceSSH {
-    private final String templateName, serverHostname, sshUsername, sshServerKeyFP,
+    protected final Logger logger;
+    protected final String templateName, serverHostname, sshUsername, sshServerKeyFP,
             sshClientSecretKeyContents;
-    private final int sshPort;
+    protected final int sshPort;
     protected String lastStdout, lastStderr;
-    protected int lastExitStatus;
-    // Convert these constants to parameters later if necessary (more likely to be
+    protected Integer lastExitStatusOrNull;
+
+    // TODO Convert these constants to parameters later if necessary (more likely to be
     // useful after parameters can be specified separately for each server).
     private static final String
             // TF_DATADIR must match the contents of the files in server-side-systemd/
@@ -29,7 +33,9 @@ public class TerraformInterfaceSSH {
             TF_DATADIR = "/home/ubuntu/tfdata",
             TF_CONFFILENAME = "configuration.tf";
 
-    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, AmazonWebServicesClientProxy proxy, String templateName) {
+
+    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
+        this.logger = logger;
         this.serverHostname = h.getHost(proxy);
         this.sshPort = h.getPort(proxy);
         this.sshServerKeyFP = h.getFingerprint(proxy);
@@ -67,12 +73,17 @@ public class TerraformInterfaceSSH {
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
             cmd.join(30, TimeUnit.SECONDS);
-            lastExitStatus = cmd.getExitStatus();
+            lastExitStatusOrNull = cmd.getExitStatus();
             lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
             lastStderr = IOUtils.readFully(cmd.getErrorStream()).toString();
             System.out.println("stdout: " + lastStdout);
             System.out.println("stderr: " + lastStderr);
-            System.out.println("exit status: " + lastExitStatus);
+            System.out.println("exit status: " + lastExitStatusOrNull);
+            if (!((Integer)0).equals(lastExitStatusOrNull) || !lastStderr.isEmpty()) {
+                logger.log("Unexpected result/output from command '"+command+"': "+lastExitStatusOrNull+"\n"
+                        + "  stderr: "+lastStderr+"\n"
+                        + "  stdout: "+lastStdout);
+            }
         } finally {
             try {
                 if (session != null) {
@@ -98,8 +109,8 @@ public class TerraformInterfaceSSH {
         return lastStderr;
     }
 
-    public int getLastExitStatus() {
-        return lastExitStatus;
+    public Integer getLastExitStatusOrNull() {
+        return lastExitStatusOrNull;
     }
 
     public void uploadConfiguration (String contents) throws IOException {

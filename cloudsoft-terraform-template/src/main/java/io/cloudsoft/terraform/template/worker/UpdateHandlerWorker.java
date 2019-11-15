@@ -34,7 +34,7 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
 
         try {
             Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
+            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, logger, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case UPDATE_INIT:
                     advanceTo(Steps.UPDATE_SYNC_UPLOAD);

@@ -12,13 +12,13 @@ public class TerraformOutputsCommand extends TerraformInterfaceSSH {
 
     private final ObjectMapper objectMapper;
 
-    public TerraformOutputsCommand(TerraformBaseHandler<?> h, AmazonWebServicesClientProxy proxy, String templateName) {
-        super(h, proxy, templateName);
+    public TerraformOutputsCommand(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
+        super(h, logger, proxy, templateName);
         this.objectMapper = new ObjectMapper();
     }
 
     public Map<String, Object> run(Logger logger) throws IOException {
-        runSSHCommand("terraform output -json");
+        runSSHCommand(String.format("cd ~/tfdata/'%s' && terraform output -json", templateName));
         String outputJsonStringized = getLastStdout();
         logger.log("Outputs from TF: '"+outputJsonStringized+"'");
         if (outputJsonStringized==null || outputJsonStringized.isEmpty()) {

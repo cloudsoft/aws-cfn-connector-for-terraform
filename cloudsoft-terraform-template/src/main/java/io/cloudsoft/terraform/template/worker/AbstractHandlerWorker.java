@@ -42,7 +42,7 @@ public abstract class AbstractHandlerWorker {
         this.callbackContext = callbackContext == null ? new CallbackContext() : callbackContext;
         this.logger = logger;
         this.handler = terraformBaseHandler;
-        this.tfSync = new TerraformInterfaceSSH(terraformBaseHandler, proxy, model.getName());
+        this.tfSync = new TerraformInterfaceSSH(terraformBaseHandler, logger, proxy, model.getIdentifier());
     }
 
     public void log(String message) {

@@ -34,7 +34,7 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
 
         try {
             Steps curStep = callbackContext.stepId == null ? Steps.DELETE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfDestroy = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-destroy", model.getName());
+            RemoteSystemdUnit tfDestroy = new RemoteSystemdUnit(this.handler, logger, this.proxy, "terraform-destroy", model.getName());
             switch (curStep) {
                 case DELETE_INIT:
                     advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);

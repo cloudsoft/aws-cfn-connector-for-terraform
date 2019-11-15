@@ -41,9 +41,9 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                 model.setIdentifier("xxx-"+System.currentTimeMillis());  // TODO name + UUID ?
             }
             Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
-            TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, model.getName());
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());
-            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
+            TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, logger, this.proxy, model.getName());
+            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler, logger, this.proxy, "terraform-init", model.getName());
+            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, logger, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case CREATE_INIT:
                     advanceTo(Steps.CREATE_SYNC_MKDIR);
@@ -57,26 +57,31 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     advanceTo(Steps.CREATE_ASYNC_TF_INIT);
                     tfInit.start();
                     break;
+                    
                 case CREATE_ASYNC_TF_INIT:
                     if (tfInit.isRunning())
                         break; // return IN_PROGRESS
-                    if (tfInit.wasFailure())
-                        throw new IOException("tfInit returned errno " + tfInit.getErrno());
+                    if (tfInit.wasFailure()) {
+                        // TODO log stdout/stderr 
+                        throw new IOException("tfInit returned errno " + tfInit.getErrno() + " / "+tfApply.getResult());
+                    }
                     advanceTo(Steps.CREATE_ASYNC_TF_APPLY);
                     tfApply.start();
                     break;
+                    
                 case CREATE_ASYNC_TF_APPLY:
                     if (tfApply.isRunning())
                         break; // return IN_PROGRESS
-                    if (tfApply.wasFailure())
-                        throw new IOException("tfApply returned errno " + tfApply.getErrno());
+                    if (tfApply.wasFailure()) {
+                        // TODO log stdout/stderr 
+                        throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / "+tfApply.getResult());
+                    }
                     advanceTo(Steps.GET_OUTPUTS);
-                    break;
+//                    break;
                 case GET_OUTPUTS:
-                    log("DEBUG: getting terraform outputs in GET_OUTPUTS");
                     model.setOutputs(tfOutputsCommand.run(logger));
                     advanceTo(Steps.CREATE_DONE);
-                    break;
+//                    break;
                 case CREATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()

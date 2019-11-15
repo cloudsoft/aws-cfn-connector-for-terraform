@@ -22,7 +22,7 @@ public class ReadHandlerWorker extends AbstractHandlerWorker {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> call() {
-        TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, this.model.getName());
+        TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, logger, this.proxy, this.model.getName());
         OperationStatus status = OperationStatus.SUCCESS;
 
         logger.log("ReadHandlerWorker desired model = "+model+"; prevModel = "+prevModel);
