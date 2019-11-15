@@ -9,6 +9,7 @@ import io.cloudsoft.terraform.template.CallbackContext;
 import io.cloudsoft.terraform.template.CreateHandler;
 import io.cloudsoft.terraform.template.RemoteSystemdUnit;
 import io.cloudsoft.terraform.template.ResourceModel;
+import io.cloudsoft.terraform.template.TerraformOutputsCommand;
 
 import java.io.IOException;
 
@@ -19,6 +20,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         CREATE_SYNC_DOWNLOAD,
         CREATE_ASYNC_TF_INIT,
         CREATE_ASYNC_TF_APPLY,
+        GET_OUTPUTS,
         CREATE_DONE
     }
 
@@ -36,7 +38,8 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
 
         try {
             Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-init", model.getName());
+            TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, model.getName());
+            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case CREATE_INIT:
@@ -64,6 +67,11 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         break; // return IN_PROGRESS
                     if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
+                    advanceTo(Steps.GET_OUTPUTS);
+                    break;
+                case GET_OUTPUTS:
+                    log("DEBUG: getting terraform outputs in GET_OUTPUTS");
+                    model.setOutputs(tfOutputsCommand.run());
                     advanceTo(Steps.CREATE_DONE);
                     break;
                 case CREATE_DONE:

@@ -3,8 +3,8 @@ package io.cloudsoft.terraform.template;
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
+import io.cloudsoft.terraform.template.worker.ReadHandlerWorker;
 
 public class ReadHandler extends TerraformBaseHandler<CallbackContext> {
 
@@ -15,13 +15,6 @@ public class ReadHandler extends TerraformBaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        final ResourceModel model = request.getDesiredResourceState();
-
-        // TODO : put your code here
-
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(OperationStatus.SUCCESS)
-                .build();
+        return run(callbackContext, cb -> new ReadHandlerWorker(proxy, request, cb, logger, this));
     }
 }
