@@ -3,12 +3,20 @@ package io.cloudsoft.terraform.template;
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.io.IOException;
+import io.cloudsoft.terraform.template.worker.DeleteHandlerWorker;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
+
+    public DeleteHandler(SsmClient ssmClient, S3Client s3Client) {
+        super(ssmClient, s3Client);
+    }
+
+    public DeleteHandler() {
+        super();
+    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -17,20 +25,6 @@ public class DeleteHandler extends TerraformBaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        ResourceModel model = request.getDesiredResourceState();
-
-        OperationStatus ret = OperationStatus.PENDING;
-        try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(DeleteHandler.this, proxy, model.getName());
-            tfif.deleteTemplate();
-            ret = OperationStatus.SUCCESS;
-        } catch (IOException e) {
-            ret = OperationStatus.FAILED;
-        }
-        
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(ret)
-                .build();
+        return run(callbackContext, cb -> new DeleteHandlerWorker(proxy, request, cb, logger, this));
     }
 }

@@ -6,67 +6,52 @@ import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import io.cloudsoft.terraform.template.CallbackContext;
-import io.cloudsoft.terraform.template.CreateHandler;
+import io.cloudsoft.terraform.template.UpdateHandler;
 import io.cloudsoft.terraform.template.RemoteSystemdUnit;
 import io.cloudsoft.terraform.template.ResourceModel;
 
 import java.io.IOException;
 
-public class CreateHandlerWorker extends AbstractHandlerWorker {
+public class UpdateHandlerWorker extends AbstractHandlerWorker {
     public enum Steps {
-        CREATE_INIT,
-        CREATE_SYNC_MKDIR,
-        CREATE_SYNC_DOWNLOAD,
-        CREATE_ASYNC_TF_INIT,
-        CREATE_ASYNC_TF_APPLY,
-        CREATE_DONE
+        UPDATE_INIT,
+        UPDATE_SYNC_DOWNLOAD,
+        UPDATE_ASYNC_TF_APPLY,
+        UPDATE_DONE
     }
 
-    public CreateHandlerWorker(
+    public UpdateHandlerWorker(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger,
-            final CreateHandler createHandler) {
-        super(proxy, request, callbackContext, logger, createHandler);
+            final UpdateHandler updateHandler) {
+        super(proxy, request, callbackContext, logger, updateHandler);
     }
 
     public ProgressEvent<ResourceModel, CallbackContext> call() {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
-            Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-init", model.getName());
+            Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_INIT : Steps.valueOf(callbackContext.stepId);
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
-                case CREATE_INIT:
-                    advanceTo(Steps.CREATE_SYNC_MKDIR);
-                    tfSync.onlyMkdir();
-                    break;
-                case CREATE_SYNC_MKDIR:
-                    advanceTo(Steps.CREATE_SYNC_DOWNLOAD);
+                case UPDATE_INIT:
+                    advanceTo(Steps.UPDATE_SYNC_DOWNLOAD);
                     tfSync.onlyDownload(model.getConfigurationUrl());
                     break;
-                case CREATE_SYNC_DOWNLOAD:
-                    advanceTo(Steps.CREATE_ASYNC_TF_INIT);
-                    tfInit.start();
-                    break;
-                case CREATE_ASYNC_TF_INIT:
-                    if (tfInit.isRunning())
-                        break; // return IN_PROGRESS
-                    if (tfInit.wasFailure())
-                        throw new IOException("tfInit returned errno " + tfInit.getErrno());
-                    advanceTo(Steps.CREATE_ASYNC_TF_APPLY);
+                case UPDATE_SYNC_DOWNLOAD:
+                    advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
                     break;
-                case CREATE_ASYNC_TF_APPLY:
+                case UPDATE_ASYNC_TF_APPLY:
                     if (tfApply.isRunning())
                         break; // return IN_PROGRESS
                     if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
-                    advanceTo(Steps.CREATE_DONE);
+                    advanceTo(Steps.UPDATE_DONE);
                     break;
-                case CREATE_DONE:
+                case UPDATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)

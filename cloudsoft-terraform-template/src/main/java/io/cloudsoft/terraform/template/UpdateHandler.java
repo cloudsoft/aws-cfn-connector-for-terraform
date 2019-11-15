@@ -3,12 +3,20 @@ package io.cloudsoft.terraform.template;
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.OperationStatus;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.io.IOException;
+import io.cloudsoft.terraform.template.worker.UpdateHandlerWorker;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 public class UpdateHandler extends TerraformBaseHandler<CallbackContext> {
+
+    public UpdateHandler(SsmClient ssmClient, S3Client s3Client) {
+        super(ssmClient, s3Client);
+    }
+
+    public UpdateHandler() {
+        super();
+    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -17,21 +25,6 @@ public class UpdateHandler extends TerraformBaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        final ResourceModel model = request.getDesiredResourceState();
-
-        OperationStatus ret = OperationStatus.PENDING;
-        try {
-            TerraformInterfaceSSH tfif = new TerraformInterfaceSSH(UpdateHandler.this, proxy, model.getName());
-            // TODO update from contents 
-            tfif.updateTemplateFromURL(model.getConfigurationUrl());
-            ret = OperationStatus.SUCCESS;
-        } catch (IOException e) {
-            ret = OperationStatus.FAILED;
-        }
-
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(ret)
-                .build();
+        return run(callbackContext, cb -> new UpdateHandlerWorker(proxy, request, cb, logger, this));
     }
 }
