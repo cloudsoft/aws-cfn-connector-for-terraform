@@ -18,6 +18,8 @@ public abstract class AbstractHandlerWorker {
     final Logger logger;
     final TerraformBaseHandler<CallbackContext> handler;
     final TerraformInterfaceSSH tfSync;
+    // Terraform checks its state once per 10 seconds when working on long jobs.
+    private static final int MAX_CHECK_INTERVAL = 8;
 
     AbstractHandlerWorker(
             final AmazonWebServicesClientProxy proxy,
@@ -52,13 +54,9 @@ public abstract class AbstractHandlerWorker {
     int nextDelay(CallbackContext callbackContext) {
         if (callbackContext.lastDelaySeconds == 0) {
             callbackContext.lastDelaySeconds = 1;
-        } else {
-            if (callbackContext.lastDelaySeconds < 60) {
-                // exponential backoff from 1 second up to 1 minute
+        } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL) {
+                // exponential backoff
                 callbackContext.lastDelaySeconds *= 2;
-            } else {
-                callbackContext.lastDelaySeconds = 60;
-            }
         }
         return callbackContext.lastDelaySeconds;
     }
