@@ -37,6 +37,9 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
+            if (model.getIdentifier()==null) {
+                model.setIdentifier("xxx-"+System.currentTimeMillis());  // TODO name + UUID ?
+            }
             Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
             TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, model.getName());
             RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());

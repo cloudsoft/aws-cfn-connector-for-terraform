@@ -7,6 +7,10 @@
       "description": "Terraform infrastructure name",
       "type": "string"
     },
+    "Identifier": {
+      "description": "UID for this deployment",
+      "type": "string"
+    },
     "Outputs": {
       "description": "Outputs produced by the Terraform configuration",
       "type": "object"
@@ -24,13 +28,11 @@
       "type": "string"
     }
   },
-  "createOnlyProperties": [
-    "/properties/Name"
-  ],
   "primaryIdentifier": [
-    "/properties/Name"
+    "/properties/Identifier"
   ],
   "readOnlyProperties": [
+    "/properties/Identifier",
     "/properties/Outputs"
   ],
   "handlers": {
