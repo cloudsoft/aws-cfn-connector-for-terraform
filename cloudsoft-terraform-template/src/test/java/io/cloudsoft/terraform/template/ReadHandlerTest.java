@@ -11,8 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
@@ -30,25 +31,23 @@ public class ReadHandlerTest {
     }
 
     @Test
-    public void handleRequest_SimpleSuccess() {
-        final ReadHandler handler = new ReadHandler();
-
+    public void handleRequestCallWorkerRun() {
         final ResourceModel model = ResourceModel.builder().build();
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
                 .build();
+        final CallbackContext callbackContext = new CallbackContext();
+        final ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.SUCCESS)
+                .build();
+        final ReadHandler handler = new ReadHandler();
+        ReadHandler spy = spy(handler);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
+        doReturn(progressEvent).when(spy).run(any(), any());
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
+        spy.handleRequest(proxy, request, callbackContext, logger);
+
+        verify(spy, times(1)).run(eq(callbackContext), any());
     }
 }

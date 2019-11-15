@@ -66,4 +66,16 @@ public class TerraformInterfaceSSH {
             ssh.disconnect();
         }
     }
+
+    public String getLastStdout() {
+        return lastStdout;
+    }
+
+    public String getLastStderr() {
+        return lastStderr;
+    }
+
+    public int getLastExitStatus() {
+        return lastExitStatus;
+    }
 }
