@@ -1,11 +1,12 @@
 package io.cloudsoft.terraform.template;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.util.Map;
+
+import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
+import com.amazonaws.cloudformation.proxy.Logger;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TerraformOutputsCommand extends TerraformInterfaceSSH {
 
@@ -16,9 +17,13 @@ public class TerraformOutputsCommand extends TerraformInterfaceSSH {
         this.objectMapper = new ObjectMapper();
     }
 
-    public Map<String, Object> run() throws IOException {
-        Map<String, Object> output = null;
+    public Map<String, Object> run(Logger logger) throws IOException {
         runSSHCommand("terraform output -json");
-        return objectMapper.readValue(getLastStdout(), new TypeReference<Map<String, Object>>() {});
+        String outputJsonStringized = getLastStdout();
+        logger.log("Outputs from TF: '"+outputJsonStringized+"'");
+        if (outputJsonStringized==null || outputJsonStringized.isEmpty()) {
+            outputJsonStringized = "{}";
+        }
+        return objectMapper.readValue(outputJsonStringized, new TypeReference<Map<String, Object>>() {});
     }
 }

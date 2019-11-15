@@ -71,7 +71,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     break;
                 case GET_OUTPUTS:
                     log("DEBUG: getting terraform outputs in GET_OUTPUTS");
-                    model.setOutputs(tfOutputsCommand.run());
+                    model.setOutputs(tfOutputsCommand.run(logger));
                     advanceTo(Steps.CREATE_DONE);
                     break;
                 case CREATE_DONE:

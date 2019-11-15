@@ -45,12 +45,12 @@ public class TerraformInterfaceSSH {
         ssh.connect(serverHostname, sshPort);
         Session session = null;
         try {
-            ssh.authPublickey(sshUsername, new SSHClient().loadKeys(sshClientSecretKeyContents, null, null));
+            ssh.authPublickey(sshUsername, ssh.loadKeys(sshClientSecretKeyContents, null, null));
             session = ssh.startSession();
             final Session.Command cmd = session.exec(command);
-            lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
-            cmd.join(5, TimeUnit.SECONDS);
+            cmd.join(30, TimeUnit.SECONDS);
             lastExitStatus = cmd.getExitStatus();
+            lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
             lastStderr = IOUtils.readFully(cmd.getErrorStream()).toString();
             System.out.println("stdout: " + lastStdout);
             System.out.println("stderr: " + lastStderr);
@@ -63,7 +63,12 @@ public class TerraformInterfaceSSH {
             } catch (IOException e) {
                 // do nothing
             }
-            ssh.disconnect();
+            try {
+                ssh.disconnect();
+                ssh.close();
+            } catch (IOException e) {
+                // do nothing
+            }
         }
     }
 

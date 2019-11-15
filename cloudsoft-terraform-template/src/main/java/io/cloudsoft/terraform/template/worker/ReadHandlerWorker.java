@@ -25,8 +25,10 @@ public class ReadHandlerWorker extends AbstractHandlerWorker {
         TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, this.model.getName());
         OperationStatus status = OperationStatus.SUCCESS;
 
+        logger.log("ReadHandlerWorker desired model = "+model+"; prevModel = "+prevModel);
+        
         try {
-            this.model.setOutputs(tfOutputsCommand.run());
+            this.model.setOutputs(tfOutputsCommand.run(logger));
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);

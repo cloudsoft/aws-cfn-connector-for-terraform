@@ -13,7 +13,7 @@ public abstract class AbstractHandlerWorker {
 
     final AmazonWebServicesClientProxy proxy;
     final ResourceHandlerRequest<ResourceModel> request;
-    final ResourceModel model;
+    final ResourceModel model, prevModel;
     final CallbackContext callbackContext;
     final Logger logger;
     final TerraformBaseHandler<CallbackContext> handler;
@@ -37,6 +37,7 @@ public abstract class AbstractHandlerWorker {
         this.proxy = proxy;
         this.request = request;
         this.model = request.getDesiredResourceState();
+        this.prevModel = request.getPreviousResourceState();
         this.callbackContext = callbackContext == null ? new CallbackContext() : callbackContext;
         this.logger = logger;
         this.handler = terraformBaseHandler;
