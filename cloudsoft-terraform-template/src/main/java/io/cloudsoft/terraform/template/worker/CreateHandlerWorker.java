@@ -40,15 +40,15 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case CREATE_INIT:
-                    advanceTo(Steps.CREATE_SYNC_MKDIR.toString());
+                    advanceTo(Steps.CREATE_SYNC_MKDIR);
                     tfSync.onlyMkdir();
                     break;
                 case CREATE_SYNC_MKDIR:
-                    advanceTo(Steps.CREATE_SYNC_DOWNLOAD.toString());
+                    advanceTo(Steps.CREATE_SYNC_DOWNLOAD);
                     tfSync.onlyDownload(model.getConfigurationUrl());
                     break;
                 case CREATE_SYNC_DOWNLOAD:
-                    advanceTo(Steps.CREATE_ASYNC_TF_INIT.toString());
+                    advanceTo(Steps.CREATE_ASYNC_TF_INIT);
                     tfInit.start();
                     break;
                 case CREATE_ASYNC_TF_INIT:
@@ -56,7 +56,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         break; // return IN_PROGRESS
                     if (tfInit.wasFailure())
                         throw new IOException("tfInit returned errno " + tfInit.getErrno());
-                    advanceTo(Steps.CREATE_ASYNC_TF_APPLY.toString());
+                    advanceTo(Steps.CREATE_ASYNC_TF_APPLY);
                     tfApply.start();
                     break;
                 case CREATE_ASYNC_TF_APPLY:
@@ -64,7 +64,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         break; // return IN_PROGRESS
                     if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
-                    advanceTo(Steps.CREATE_DONE.toString());
+                    advanceTo(Steps.CREATE_DONE);
                     break;
                 case CREATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
@@ -90,5 +90,9 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
                 .build();
+    }
+
+    private void advanceTo(Steps nextStep) {
+        super.advanceTo(nextStep.toString());
     }
 }

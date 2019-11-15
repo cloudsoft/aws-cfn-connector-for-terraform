@@ -37,7 +37,7 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
             RemoteSystemdUnit tfDestroy = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-destroy", model.getName());
             switch (curStep) {
                 case DELETE_INIT:
-                    advanceTo(Steps.DELETE_ASYNC_TF_DESTROY.toString());
+                    advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);
                     tfDestroy.start();
                     break;
                 case DELETE_ASYNC_TF_DESTROY:
@@ -45,10 +45,10 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                         break; // return IN_PROGRESS
                     if (tfDestroy.wasFailure())
                         throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno());
-                    advanceTo(Steps.DELETE_SYNC_RMDIR.toString());
+                    advanceTo(Steps.DELETE_SYNC_RMDIR);
                     break;
                 case DELETE_SYNC_RMDIR:
-                    advanceTo(Steps.DELETE_DONE.toString());
+                    advanceTo(Steps.DELETE_DONE);
                     tfSync.onlyRmdir();
                     break;
                 case DELETE_DONE:
@@ -75,5 +75,9 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
                 .build();
+    }
+
+    private void advanceTo(Steps nextStep) {
+        super.advanceTo(nextStep.toString());
     }
 }

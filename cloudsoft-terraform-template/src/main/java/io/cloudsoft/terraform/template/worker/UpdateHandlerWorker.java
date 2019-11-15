@@ -37,11 +37,11 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case UPDATE_INIT:
-                    advanceTo(Steps.UPDATE_SYNC_DOWNLOAD.toString());
+                    advanceTo(Steps.UPDATE_SYNC_DOWNLOAD);
                     tfSync.onlyDownload(model.getConfigurationUrl());
                     break;
                 case UPDATE_SYNC_DOWNLOAD:
-                    advanceTo(Steps.UPDATE_ASYNC_TF_APPLY.toString());
+                    advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
                     break;
                 case UPDATE_ASYNC_TF_APPLY:
@@ -49,7 +49,7 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                         break; // return IN_PROGRESS
                     if (tfApply.wasFailure())
                         throw new IOException("tfApply returned errno " + tfApply.getErrno());
-                    advanceTo(Steps.UPDATE_DONE.toString());
+                    advanceTo(Steps.UPDATE_DONE);
                     break;
                 case UPDATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
@@ -75,5 +75,9 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
                 .build();
+    }
+
+    private void advanceTo(Steps nextStep) {
+        super.advanceTo(nextStep.toString());
     }
 }
