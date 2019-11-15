@@ -14,6 +14,12 @@ public class TerraformInterfaceSSH {
     private final int sshPort;
     protected String lastStdout, lastStderr;
     protected int lastExitStatus;
+    // Convert these constants to parameters later if necessary (more likely to be
+    // useful after parameters can be specified separately for each server).
+    private static final String
+            // TF_DATADIR must match the contents of the files in server-side-systemd/
+            TF_DATADIR = "~/tfdata",
+            TF_CONFFILENAME = "configuration.tf";
 
     public TerraformInterfaceSSH(TerraformBaseHandler<?> h, AmazonWebServicesClientProxy proxy, String templateName) {
         this.serverHostname = h.getHost(proxy);
@@ -24,16 +30,20 @@ public class TerraformInterfaceSSH {
         this.templateName = templateName;
     }
 
+    protected String getWorkdir() {
+        return String.format("%s/'%s'", TF_DATADIR, templateName);
+    }
+
     public void onlyMkdir() throws IOException {
-        runSSHCommand(String.format("mkdir -p ~/tfdata/'%s'", templateName));
+        runSSHCommand("mkdir -p " + getWorkdir());
     }
 
     public void onlyDownload(String url) throws IOException {
-        runSSHCommand(String.format("cd ~/tfdata/'%s' && wget --output-document=configuration.tf '%s'", templateName, url));
+        runSSHCommand(String.format("cd %s && wget --output-document='%s' '%s'", getWorkdir(), TF_CONFFILENAME, url));
     }
 
     public void onlyRmdir() throws IOException {
-        runSSHCommand(String.format("rm -rf ~/tfdata/'%s'", templateName));
+        runSSHCommand("rm -rf " + getWorkdir());
     }
 
     protected void runSSHCommand(String command) throws IOException {
