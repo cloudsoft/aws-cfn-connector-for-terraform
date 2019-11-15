@@ -26,7 +26,7 @@ The Terraform configuration does not need to be in-lined; you can instead use `C
 
 You can then:
 
-* [TODO] View Terraform outputs as CloudFormation outputs
+* View Terraform outputs as CloudFormation outputs
 * [TODO] Update in the usual CloudFormation way
 * Delete when done
 

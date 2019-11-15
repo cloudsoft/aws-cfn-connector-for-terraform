@@ -45,4 +45,8 @@ When you pass the logical ID of this resource to the intrinsic `Ref` function, `
 
 ### Fn::GetAtt
 
-[TODO]
+The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `Outputs` | Object | Any output coming from the Terraform configuration. Each output can be accessed by using the dot syntax.<br/><br/>For example, if the configuration exposes `bucket1-arn` as output, you can get it in CloudFormation with `!GetAtt <logical-id>.Outputs.bucket1-arn`. |
