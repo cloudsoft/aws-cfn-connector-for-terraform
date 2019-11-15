@@ -56,7 +56,7 @@ You will need to have the AWS CLI installed and configured on your local machine
    wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/server-side-systemd/terraform-destroy%40.service
    wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/server-side-systemd/terraform-init%40.service
    popd
-   sudo systemctl --user daemon-reload
+   systemctl --user daemon-reload
    ```
 6. Update as required in parameter store the following parameters:
    - `/cfn/terraform/ssh-host`
