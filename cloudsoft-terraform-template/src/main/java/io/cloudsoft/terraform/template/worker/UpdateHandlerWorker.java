@@ -34,21 +34,28 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
 
         try {
             Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, logger, this.proxy, "terraform-apply", model.getName());
+            RemoteSystemdUnit tfApply = RemoteSystemdUnit.of(this, "terraform-apply");
             switch (curStep) {
                 case UPDATE_INIT:
                     advanceTo(Steps.UPDATE_SYNC_UPLOAD);
                     getAndUploadConfiguration();
-                    break;
+//                    break;
+                    
                 case UPDATE_SYNC_UPLOAD:
                     advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
-                    break;
+//                    break;
+                    
                 case UPDATE_ASYNC_TF_APPLY:
-                    if (tfApply.isRunning())
+                    if (tfApply.isRunning()) {
                         break; // return IN_PROGRESS
-                    if (tfApply.wasFailure())
-                        throw new IOException("tfApply returned errno " + tfApply.getErrno());
+                    }
+                    if (tfApply.wasFailure()) {
+                        // TODO log stdout/stderr
+                        logger.log("ERROR: "+tfApply.getLog());
+                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
+                        throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '"+tfApply.getResult()+"'");
+                    }
                     advanceTo(Steps.UPDATE_DONE);
                     break;
                 case UPDATE_DONE:

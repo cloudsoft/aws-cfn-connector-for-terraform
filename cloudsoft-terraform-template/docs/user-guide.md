@@ -49,4 +49,5 @@ The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `Outputs` | Object | Any output coming from the Terraform configuration. Each output can be accessed by using the dot syntax.<br/><br/>For example, if the configuration exposes `bucket1-arn` as output, you can get it in CloudFormation with `!GetAtt <logical-id>.Outputs.bucket1-arn`. |
+| `Outputs` | Object | Any output coming from the Terraform configuration, as a map. |
+| `OutputsStringified` | Object | Any output coming from the Terraform configuration, as a JSON string of the map. |

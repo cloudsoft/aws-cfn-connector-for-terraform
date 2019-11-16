@@ -71,7 +71,6 @@ public class AbstractHandlerWorkerTest {
         };
 
         assertEquals(model, abstractHandlerWorker.model);
-        assertNotNull(abstractHandlerWorker.tfSync);
     }
 
     @Test

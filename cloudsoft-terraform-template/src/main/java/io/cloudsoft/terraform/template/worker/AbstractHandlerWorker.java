@@ -12,13 +12,13 @@ import java.io.StringWriter;
 
 public abstract class AbstractHandlerWorker {
 
-    final AmazonWebServicesClientProxy proxy;
-    final ResourceHandlerRequest<ResourceModel> request;
-    final ResourceModel model, prevModel;
-    final CallbackContext callbackContext;
-    final Logger logger;
-    final TerraformBaseHandler<CallbackContext> handler;
-    final TerraformInterfaceSSH tfSync;
+    // TODO accessors or other tidy, rather than public
+    public final AmazonWebServicesClientProxy proxy;
+    public final ResourceHandlerRequest<ResourceModel> request;
+    public final ResourceModel model, prevModel;
+    public final CallbackContext callbackContext;
+    public final Logger logger;
+    public final TerraformBaseHandler<CallbackContext> handler;
     // Terraform checks its state once per 10 seconds when working on long jobs.
     private static final int MAX_CHECK_INTERVAL = 8;
 
@@ -42,7 +42,6 @@ public abstract class AbstractHandlerWorker {
         this.callbackContext = callbackContext == null ? new CallbackContext() : callbackContext;
         this.logger = logger;
         this.handler = terraformBaseHandler;
-        this.tfSync = new TerraformInterfaceSSH(terraformBaseHandler, logger, proxy, model.getIdentifier());
     }
 
     public void log(String message) {
@@ -51,6 +50,10 @@ public abstract class AbstractHandlerWorker {
         logger.log(message);
     }
 
+    public final TerraformInterfaceSSH tfSync() {
+        return TerraformInterfaceSSH.of(this);
+    }
+    
     public abstract ProgressEvent<ResourceModel, CallbackContext> call();
 
     int nextDelay(CallbackContext callbackContext) {
@@ -77,6 +80,6 @@ public abstract class AbstractHandlerWorker {
     }
 
     void getAndUploadConfiguration() throws IOException {
-        tfSync.uploadConfiguration(handler.getConfiguration(proxy, model));
+        tfSync().uploadConfiguration(handler.getConfiguration(proxy, model));
     }
 }

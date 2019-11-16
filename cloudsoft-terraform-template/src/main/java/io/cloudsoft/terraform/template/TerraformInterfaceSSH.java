@@ -3,6 +3,7 @@ package io.cloudsoft.terraform.template;
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
 
+import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -21,7 +22,7 @@ public class TerraformInterfaceSSH {
     protected String lastStdout, lastStderr;
     protected Integer lastExitStatusOrNull;
 
-    // TODO Convert these constants to parameters later if necessary (more likely to be
+    // Convert these constants to parameters later if necessary (more likely to be
     // useful after parameters can be specified separately for each server).
     private static final String
             // TF_DATADIR must match the contents of the files in server-side-systemd/
@@ -33,8 +34,7 @@ public class TerraformInterfaceSSH {
             TF_DATADIR = "/home/ubuntu/tfdata",
             TF_CONFFILENAME = "configuration.tf";
 
-
-    public TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
+    protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
         this.logger = logger;
         this.serverHostname = h.getHost(proxy);
         this.sshPort = h.getPort(proxy);
@@ -44,7 +44,7 @@ public class TerraformInterfaceSSH {
         this.templateName = templateName;
     }
 
-    private String getWorkdir() {
+    public String getWorkdir() {
         return String.format("%s/%s", TF_DATADIR, templateName);
     }
 
@@ -60,8 +60,13 @@ public class TerraformInterfaceSSH {
         runSSHCommand("rm -rf " + getWorkdir());
     }
 
+    protected void debug(String message) {
+        System.out.println(message);
+//        logger.log(message);
+    }
+    
     protected void runSSHCommand(String command) throws IOException {
-        System.out.println("DEBUG: @" + serverHostname + "> " + command);
+        debug("DEBUG: @" + serverHostname + "> " + command);
 
         final SSHClient ssh = new SSHClient();
 
@@ -76,9 +81,9 @@ public class TerraformInterfaceSSH {
             lastExitStatusOrNull = cmd.getExitStatus();
             lastStdout = IOUtils.readFully(cmd.getInputStream()).toString();
             lastStderr = IOUtils.readFully(cmd.getErrorStream()).toString();
-            System.out.println("stdout: " + lastStdout);
-            System.out.println("stderr: " + lastStderr);
-            System.out.println("exit status: " + lastExitStatusOrNull);
+            debug("stdout: " + lastStdout);
+            debug("stderr: " + lastStderr);
+            debug("exit status: " + lastExitStatusOrNull);
             if (!((Integer)0).equals(lastExitStatusOrNull) || !lastStderr.isEmpty()) {
                 logger.log("Unexpected result/output from command '"+command+"': "+lastExitStatusOrNull+"\n"
                         + "  stderr: "+lastStderr+"\n"
@@ -119,14 +124,19 @@ public class TerraformInterfaceSSH {
         ssh.addHostKeyVerifier(sshServerKeyFP);
         ssh.connect(serverHostname, sshPort);
         try {
-            ssh.authPublickey(sshUsername, new SSHClient().loadKeys(sshClientSecretKeyContents, null, null));
-            ssh.newSCPFileTransfer().upload(src, getWorkdir());
+            ssh.authPublickey(sshUsername, ssh.loadKeys(sshClientSecretKeyContents, null, null));
+            ssh.newSCPFileTransfer().upload(src, getWorkdir()+"/"+src.getName());
         } finally {
-            ssh.disconnect();
+            try {
+                ssh.disconnect();
+                ssh.close();
+            } catch (Exception ee) {
+                // ignore
+            }
         }
     }
 
-    private class StringSourceFile extends InMemorySourceFile {
+    private static class StringSourceFile extends InMemorySourceFile {
         private String name, contents;
 
         StringSourceFile (String name, String contents){
@@ -145,6 +155,9 @@ public class TerraformInterfaceSSH {
         public InputStream getInputStream() {
             return new StringInputStream(contents);
         }
->>>>>>> upstream/pr/14
+    }
+
+    public static TerraformInterfaceSSH of(AbstractHandlerWorker w) {
+        return new TerraformInterfaceSSH(w.handler, w.logger, w.proxy, w.model.getIdentifier());
     }
 }

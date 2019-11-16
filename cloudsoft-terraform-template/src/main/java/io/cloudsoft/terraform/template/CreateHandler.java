@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 
 public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
 
+    // for tests
     public CreateHandler(SsmClient ssmClient, S3Client s3Client) {
         super(ssmClient, s3Client);
     }
@@ -24,7 +25,7 @@ public class CreateHandler extends TerraformBaseHandler<CallbackContext> {
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger) {
-
+        
         return run(callbackContext, cb -> new CreateHandlerWorker(proxy, request, cb, logger, this));
     }
 }
