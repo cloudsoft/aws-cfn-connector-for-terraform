@@ -17,7 +17,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
     public enum Steps {
         CREATE_INIT,
         CREATE_SYNC_MKDIR,
-        CREATE_SYNC_DOWNLOAD,
+        CREATE_SYNC_UPLOAD,
         CREATE_ASYNC_TF_INIT,
         CREATE_ASYNC_TF_APPLY,
         GET_OUTPUTS,
@@ -47,10 +47,10 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     tfSync.onlyMkdir();
                     break;
                 case CREATE_SYNC_MKDIR:
-                    advanceTo(Steps.CREATE_SYNC_DOWNLOAD);
-                    tfSync.onlyDownload(model.getConfigurationUrl());
+                    advanceTo(Steps.CREATE_SYNC_UPLOAD);
+                    getAndUploadConfiguration();
                     break;
-                case CREATE_SYNC_DOWNLOAD:
+                case CREATE_SYNC_UPLOAD:
                     advanceTo(Steps.CREATE_ASYNC_TF_INIT);
                     tfInit.start();
                     break;

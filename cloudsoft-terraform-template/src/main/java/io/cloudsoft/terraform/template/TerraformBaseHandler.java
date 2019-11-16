@@ -77,7 +77,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         return getParameterResponse.parameter().value();
     }
 
-    protected String getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
+    public String getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
         if (model.getConfigurationContent() != null) {
             return model.getConfigurationContent();
         }

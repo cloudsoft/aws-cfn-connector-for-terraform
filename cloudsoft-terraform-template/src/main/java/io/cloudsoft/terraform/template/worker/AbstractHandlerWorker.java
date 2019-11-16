@@ -6,6 +6,7 @@ import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import io.cloudsoft.terraform.template.*;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -73,5 +74,9 @@ public abstract class AbstractHandlerWorker {
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         logger.log(origin + " error: " + e + "\n" + sw.toString());
+    }
+
+    void getAndUploadConfiguration() throws IOException {
+        tfSync.uploadConfiguration(handler.getConfiguration(proxy, model));
     }
 }

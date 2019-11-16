@@ -15,7 +15,7 @@ import java.io.IOException;
 public class UpdateHandlerWorker extends AbstractHandlerWorker {
     public enum Steps {
         UPDATE_INIT,
-        UPDATE_SYNC_DOWNLOAD,
+        UPDATE_SYNC_UPLOAD,
         UPDATE_ASYNC_TF_APPLY,
         UPDATE_DONE
     }
@@ -37,10 +37,10 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
             RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
             switch (curStep) {
                 case UPDATE_INIT:
-                    advanceTo(Steps.UPDATE_SYNC_DOWNLOAD);
-                    tfSync.onlyDownload(model.getConfigurationUrl());
+                    advanceTo(Steps.UPDATE_SYNC_UPLOAD);
+                    getAndUploadConfiguration();
                     break;
-                case UPDATE_SYNC_DOWNLOAD:
+                case UPDATE_SYNC_UPLOAD:
                     advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
                     break;
