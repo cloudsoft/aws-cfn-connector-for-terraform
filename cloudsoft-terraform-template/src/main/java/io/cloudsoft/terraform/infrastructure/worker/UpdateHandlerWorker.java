@@ -13,7 +13,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import java.io.IOException;
 
 public class UpdateHandlerWorker extends AbstractHandlerWorker {
-    public enum Steps {
+    private enum Steps {
         UPDATE_INIT,
         UPDATE_SYNC_UPLOAD,
         UPDATE_ASYNC_TF_APPLY,
