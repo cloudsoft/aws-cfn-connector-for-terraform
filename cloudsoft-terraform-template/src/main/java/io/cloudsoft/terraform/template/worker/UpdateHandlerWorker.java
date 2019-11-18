@@ -39,13 +39,13 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                 case UPDATE_INIT:
                     advanceTo(Steps.UPDATE_SYNC_UPLOAD);
                     getAndUploadConfiguration();
-//                    break;
+                    break;   // optional break, as per CreateHandlerWorker
                     
                 case UPDATE_SYNC_UPLOAD:
                     advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
-//                    break;
-                    
+                    break;   // optional break, as per CreateHandlerWorker
+
                 case UPDATE_ASYNC_TF_APPLY:
                     if (tfApply.isRunning()) {
                         break; // return IN_PROGRESS
@@ -57,7 +57,8 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                         throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '"+tfApply.getResult()+"'");
                     }
                     advanceTo(Steps.UPDATE_DONE);
-                    break;
+                    // no need to break
+
                 case UPDATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()

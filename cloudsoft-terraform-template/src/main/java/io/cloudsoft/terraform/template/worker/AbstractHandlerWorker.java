@@ -19,8 +19,9 @@ public abstract class AbstractHandlerWorker {
     public final CallbackContext callbackContext;
     public final Logger logger;
     public final TerraformBaseHandler<CallbackContext> handler;
-    // Terraform checks its state once per 10 seconds when working on long jobs.
-    private static final int MAX_CHECK_INTERVAL = 8;
+    
+    // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
+    private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
 
     AbstractHandlerWorker(
             final AmazonWebServicesClientProxy proxy,
@@ -57,11 +58,14 @@ public abstract class AbstractHandlerWorker {
     public abstract ProgressEvent<ResourceModel, CallbackContext> call();
 
     int nextDelay(CallbackContext callbackContext) {
-        if (callbackContext.lastDelaySeconds == 0) {
+        if (callbackContext.lastDelaySeconds < 0) {
+            callbackContext.lastDelaySeconds = 0;
+        } else if (callbackContext.lastDelaySeconds == 0) {
             callbackContext.lastDelaySeconds = 1;
-        } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL) {
+        } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL_SECONDS) {
                 // exponential backoff
-                callbackContext.lastDelaySeconds *= 2;
+                callbackContext.lastDelaySeconds = 
+                    Math.min(MAX_CHECK_INTERVAL_SECONDS, 2 * callbackContext.lastDelaySeconds);
         }
         return callbackContext.lastDelaySeconds;
     }
@@ -69,7 +73,7 @@ public abstract class AbstractHandlerWorker {
     void advanceTo(String nextStep) {
         logger.log(String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep));
         callbackContext.stepId = nextStep;
-        callbackContext.lastDelaySeconds = 0;
+        callbackContext.lastDelaySeconds = -1;
     }
 
     void logException (String origin, Exception e) {

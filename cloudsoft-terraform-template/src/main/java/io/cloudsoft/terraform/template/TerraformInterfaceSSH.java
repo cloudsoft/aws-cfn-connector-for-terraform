@@ -31,7 +31,9 @@ public class TerraformInterfaceSSH {
             // (OpenSSH scp does that). Also neither any directory components nor the
             // file name can be quoted (as in "/some/'work dir'/otherdir") because sshj
             // fails to escape the quotes properly (again, works in OpenSSH).
+            // TODO make this configurable
             TF_DATADIR = "/home/ubuntu/tfdata",
+            // TODO support ZIPs
             TF_CONFFILENAME = "configuration.tf";
 
     protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {

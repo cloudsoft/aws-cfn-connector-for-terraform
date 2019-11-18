@@ -3,10 +3,6 @@
   "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
   "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
-    "Name": {
-      "description": "Terraform infrastructure name",
-      "type": "string"
-    },
     "Identifier": {
       "description": "UID for this deployment",
       "type": "string"

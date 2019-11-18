@@ -39,7 +39,8 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                 case DELETE_INIT:
                     advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);
                     tfDestroy.start();
-//                    break;
+                    break;   // optional break, as per CreateHandlerWorker
+
                 case DELETE_ASYNC_TF_DESTROY:
                     if (tfDestroy.isRunning()) {
                         break; // return IN_PROGRESS
@@ -51,11 +52,13 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                         throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '"+tfDestroy.getResult()+"' / "+tfDestroy.getLastExitStatusOrNull());
                     }
                     advanceTo(Steps.DELETE_SYNC_RMDIR);
-                    break;
+                    break;   // optional break, as per CreateHandlerWorker
+                    
                 case DELETE_SYNC_RMDIR:
                     advanceTo(Steps.DELETE_DONE);
                     tfSync().onlyRmdir();
-                    break;
+                    // no need to break
+                    
                 case DELETE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
