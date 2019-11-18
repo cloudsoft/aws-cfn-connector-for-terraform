@@ -21,7 +21,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         CREATE_SYNC_UPLOAD,
         CREATE_ASYNC_TF_INIT,
         CREATE_ASYNC_TF_APPLY,
-        GET_OUTPUTS,
+        CREATE_GET_OUTPUTS,
         CREATE_DONE
     }
 
@@ -84,10 +84,10 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
                         throw new IOException("tfDestroy returned errno " + tfApply.getErrno() + " / '" + tfApply.getResult() + "' / " + tfApply.getLastExitStatusOrNull());
                     }
-                    advanceTo(Steps.GET_OUTPUTS);
+                    advanceTo(Steps.CREATE_GET_OUTPUTS);
                     break;   // optional break, as above
 
-                case GET_OUTPUTS:
+                case CREATE_GET_OUTPUTS:
                     TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
                     outputCmd.run();
                     model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
