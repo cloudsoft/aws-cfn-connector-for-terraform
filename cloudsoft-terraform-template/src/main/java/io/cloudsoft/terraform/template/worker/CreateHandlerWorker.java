@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class CreateHandlerWorker extends AbstractHandlerWorker {
-    public enum Steps {
+    private enum Steps {
         CREATE_INIT,
         CREATE_SYNC_MKDIR,
         CREATE_SYNC_UPLOAD,

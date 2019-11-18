@@ -13,7 +13,7 @@ import io.cloudsoft.terraform.template.ResourceModel;
 import java.io.IOException;
 
 public class DeleteHandlerWorker extends AbstractHandlerWorker {
-    public enum Steps {
+    private enum Steps {
         DELETE_INIT,
         DELETE_ASYNC_TF_DESTROY,
         DELETE_SYNC_RMDIR,
