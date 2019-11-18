@@ -3,7 +3,6 @@
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
     "desiredResourceState": {
-      "Name": "example-s3",
       "ConfigurationUrl": "https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/sam-tests/s3-step2.tf"
     },
     "logicalResourceIdentifier": "MyResource"
