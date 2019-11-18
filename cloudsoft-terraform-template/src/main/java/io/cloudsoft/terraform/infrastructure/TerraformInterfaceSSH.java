@@ -65,10 +65,6 @@ public class TerraformInterfaceSSH {
         runSSHCommand(String.format("mv %s %s", source, target));
     }
 
-    public void onlyDownload(String url) throws IOException {
-        runSSHCommand(String.format("cd %s && wget --output-document='%s' '%s'", getWorkdir(), TF_CONFFILENAME, url));
-    }
-
     public void onlyRmdir() throws IOException {
         onlyRmdir(getWorkdir());
     }
