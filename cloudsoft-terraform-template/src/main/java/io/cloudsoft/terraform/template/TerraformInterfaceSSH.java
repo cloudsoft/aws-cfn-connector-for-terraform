@@ -8,8 +8,8 @@ import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
-import software.amazon.awssdk.utils.StringInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -132,8 +132,8 @@ public class TerraformInterfaceSSH {
         return lastExitStatusOrNull;
     }
 
-    public void uploadConfiguration (String contents) throws IOException {
-        StringSourceFile src = new StringSourceFile(TF_CONFFILENAME, contents);
+    public void uploadConfiguration (byte[] contents) throws IOException {
+        BytesSourceFile src = new BytesSourceFile(TF_CONFFILENAME, contents);
         SSHClient ssh = new SSHClient();
         ssh.addHostKeyVerifier(sshServerKeyFP);
         ssh.connect(serverHostname, sshPort);
@@ -154,10 +154,11 @@ public class TerraformInterfaceSSH {
         }
     }
 
-    private static class StringSourceFile extends InMemorySourceFile {
-        private String name, contents;
+    private static class BytesSourceFile extends InMemorySourceFile {
+        private String name;
+        private byte[] contents;
 
-        StringSourceFile (String name, String contents){
+        BytesSourceFile (String name, byte[] contents){
             this.name = name;
             this.contents = contents;
         }
@@ -167,11 +168,11 @@ public class TerraformInterfaceSSH {
         }
 
         public long getLength() {
-            return contents.length();
+            return contents.length;
         }
 
         public InputStream getInputStream() {
-            return new StringInputStream(contents);
+            return new ByteArrayInputStream(contents);
         }
     }
 

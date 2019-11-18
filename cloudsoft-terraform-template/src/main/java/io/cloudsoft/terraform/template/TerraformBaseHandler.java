@@ -2,7 +2,6 @@ package io.cloudsoft.terraform.template;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
@@ -78,16 +77,14 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         return getParameterResponse.parameter().value();
     }
 
-    public String getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
+    public byte[] getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
         if (model.getConfigurationContent() != null) {
-            return model.getConfigurationContent();
+            return model.getConfigurationContent().getBytes(StandardCharsets.UTF_8);
         }
 
         if (model.getConfigurationUrl() != null) {
             try {
-                InputStream inputStream = null;
-                inputStream = new URL(model.getConfigurationUrl()).openStream();
-                return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                return IOUtils.toByteArray(new URL(model.getConfigurationUrl()));
             } catch (IOException e) {
                 throw new IllegalArgumentException(String.format("Failed to download file at %s", model.getConfigurationUrl()), e);
             }
@@ -109,7 +106,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
                         .key(key)
                         .build();
                 proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
-                return FileUtils.readFileToString(tmpFile, StandardCharsets.UTF_8);
+                return FileUtils.readFileToByteArray(tmpFile);
             } catch (Exception e) {
                 throw new IllegalArgumentException(String.format("Failed to get S3 file at %s", model.getConfigurationS3Path()), e);
             }

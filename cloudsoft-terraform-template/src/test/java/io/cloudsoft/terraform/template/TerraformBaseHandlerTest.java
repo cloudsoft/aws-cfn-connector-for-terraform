@@ -47,8 +47,8 @@ public class TerraformBaseHandlerTest {
         final String configurationContent = "Hello world";
         final ResourceModel model = ResourceModel.builder().configurationContent(configurationContent).build();
 
-        String result = handler.getConfiguration(proxy, model);
-        assertEquals(configurationContent, result);
+        byte[] result = handler.getConfiguration(proxy, model);
+        assertEquals(configurationContent.getBytes(StandardCharsets.UTF_8), result);
     }
 
     @Test
@@ -58,9 +58,9 @@ public class TerraformBaseHandlerTest {
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         String expected = "Hello world";
-        String result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getConfiguration(proxy, model);
 
-        assertEquals(expected, result);
+        assertEquals(expected.getBytes(StandardCharsets.UTF_8), result);
     }
 
     @Test
@@ -90,12 +90,12 @@ public class TerraformBaseHandlerTest {
             return null;
         });
 
-        String result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getConfiguration(proxy, model);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any());
         ArgumentCaptor<GetObjectRequest> argument = ArgumentCaptor.forClass(GetObjectRequest.class);
         verify(s3Client, times(1)).getObject(argument.capture(), any(Path.class));
 
-        assertEquals(expectedContent, result);
+        assertEquals(expectedContent.getBytes(StandardCharsets.UTF_8), result);
         assertEquals(expectedBucket, argument.getValue().bucket());
         assertEquals(expectedKey, argument.getValue().key());
     }
