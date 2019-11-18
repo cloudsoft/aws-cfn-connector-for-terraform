@@ -31,8 +31,8 @@ public class TerraformInterfaceSSH {
             // (OpenSSH scp does that). Also neither any directory components nor the
             // file name can be quoted (as in "/some/'work dir'/otherdir") because sshj
             // fails to escape the quotes properly (again, works in OpenSSH).
-            // TODO make this configurable
-            TF_DATADIR = "/home/ubuntu/tfdata",
+            TF_DATADIR = "~/tfdata",
+            TF_SCPDIR = "/tmp",
             // TODO support ZIPs
             TF_CONFFILENAME = "configuration.tf";
 
@@ -50,8 +50,20 @@ public class TerraformInterfaceSSH {
         return String.format("%s/%s", TF_DATADIR, templateName);
     }
 
+    private String getScpDir() {
+        return String.format("%s/%s", TF_SCPDIR, templateName);
+    }
+
     public void onlyMkdir() throws IOException {
-        runSSHCommand("mkdir -p " + getWorkdir());
+        onlyMkdir(getWorkdir());
+    }
+
+    public void onlyMkdir(String dir) throws IOException {
+        runSSHCommand("mkdir -p " + dir);
+    }
+
+    public void onlyMv(String source, String target) throws IOException {
+        runSSHCommand(String.format("mv %s %s", source, target));
     }
 
     public void onlyDownload(String url) throws IOException {
@@ -59,14 +71,18 @@ public class TerraformInterfaceSSH {
     }
 
     public void onlyRmdir() throws IOException {
-        runSSHCommand("rm -rf " + getWorkdir());
+        onlyRmdir(getWorkdir());
+    }
+
+    public void onlyRmdir(String dir) throws IOException {
+        runSSHCommand("rm -rf " + dir);
     }
 
     protected void debug(String message) {
         System.out.println(message);
 //        logger.log(message);
     }
-    
+
     protected void runSSHCommand(String command) throws IOException {
         debug("DEBUG: @" + serverHostname + "> " + command);
 
@@ -126,8 +142,12 @@ public class TerraformInterfaceSSH {
         ssh.addHostKeyVerifier(sshServerKeyFP);
         ssh.connect(serverHostname, sshPort);
         try {
+            onlyMkdir(getScpDir());
             ssh.authPublickey(sshUsername, ssh.loadKeys(sshClientSecretKeyContents, null, null));
-            ssh.newSCPFileTransfer().upload(src, getWorkdir()+"/"+src.getName());
+            ssh.newSCPFileTransfer().upload(src, getScpDir());
+            // TODO: If ZIP or TAR archive, then expand in getScpDir(). The move will take care of the rest
+            onlyMv(getScpDir() + "/*", getWorkdir() + "/" + src.getName());
+            onlyRmdir(getScpDir());
         } finally {
             try {
                 ssh.disconnect();
