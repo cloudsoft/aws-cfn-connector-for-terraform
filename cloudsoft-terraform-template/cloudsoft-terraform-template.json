@@ -4,7 +4,7 @@
   "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
     "Identifier": {
-      "description": "UID for this deployment",
+      "description": "UUID for this deployment",
       "type": "string"
     },
     "Outputs": {
