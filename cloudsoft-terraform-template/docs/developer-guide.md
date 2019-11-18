@@ -33,7 +33,6 @@ Alternatively, you can use the script below to perform the tasks described above
 
 export TYPE_NAME=Cloudsoft::Terraform::Template
 
-cfn-cli generate && \
 mvn clean package && cfn-cli submit -v | tee submit.log && \
 REG_TOKEN=$(grep token: submit.log | awk '{print $NF}')
 

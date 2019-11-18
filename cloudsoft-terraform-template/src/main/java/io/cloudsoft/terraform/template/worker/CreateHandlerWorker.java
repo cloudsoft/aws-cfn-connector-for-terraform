@@ -12,6 +12,7 @@ import io.cloudsoft.terraform.template.ResourceModel;
 import io.cloudsoft.terraform.template.TerraformOutputsCommand;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class CreateHandlerWorker extends AbstractHandlerWorker {
     public enum Steps {
@@ -37,43 +38,63 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
+            if (model.getIdentifier()==null) {
+                model.setIdentifier(UUID.randomUUID().toString());
+            }
             Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
-            TerraformOutputsCommand tfOutputsCommand = new TerraformOutputsCommand(this.handler, this.proxy, model.getName());
-            RemoteSystemdUnit tfInit = new RemoteSystemdUnit(this.handler,  this.proxy, "terraform-init", model.getName());
-            RemoteSystemdUnit tfApply = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-apply", model.getName());
+            RemoteSystemdUnit tfInit = RemoteSystemdUnit.of(this, "terraform-init");
+            RemoteSystemdUnit tfApply = RemoteSystemdUnit.of(this, "terraform-apply");
             switch (curStep) {
                 case CREATE_INIT:
                     advanceTo(Steps.CREATE_SYNC_MKDIR);
-                    tfSync.onlyMkdir();
-                    break;
+                    tfSync().onlyMkdir();
+                    break;   // don't _need_ to break here, but improves readability,
+                             // helps us maximize the time for each step (avoid timeout), and
+                             // in any case the framework calls back quickly 
                 case CREATE_SYNC_MKDIR:
                     advanceTo(Steps.CREATE_SYNC_UPLOAD);
                     getAndUploadConfiguration();
-                    break;
+                    break;   // optional break, as above
                 case CREATE_SYNC_UPLOAD:
                     advanceTo(Steps.CREATE_ASYNC_TF_INIT);
                     tfInit.start();
-                    break;
+                    break;   // optional break, as above
+                    
                 case CREATE_ASYNC_TF_INIT:
-                    if (tfInit.isRunning())
+                    if (tfInit.isRunning()) {
                         break; // return IN_PROGRESS
-                    if (tfInit.wasFailure())
-                        throw new IOException("tfInit returned errno " + tfInit.getErrno());
+                    }
+                    if (tfInit.wasFailure()) {
+                        // TODO log stdout/stderr
+                        logger.log("ERROR: "+tfInit.getLog());
+                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
+                        throw new IOException("tfInit returned errno " + tfInit.getErrno() + " / '"+tfInit.getResult()+"' / "+tfInit.getLastExitStatusOrNull());
+                    }
                     advanceTo(Steps.CREATE_ASYNC_TF_APPLY);
                     tfApply.start();
-                    break;
+                    break;   // optional break, as above
+                    
                 case CREATE_ASYNC_TF_APPLY:
-                    if (tfApply.isRunning())
+                    if (tfApply.isRunning()) {
                         break; // return IN_PROGRESS
-                    if (tfApply.wasFailure())
-                        throw new IOException("tfApply returned errno " + tfApply.getErrno());
+                    }
+                    if (tfApply.wasFailure()) {
+                        // TODO log stdout/stderr
+                        logger.log("ERROR: "+tfApply.getLog());
+                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
+                        throw new IOException("tfDestroy returned errno " + tfApply.getErrno() + " / '"+tfApply.getResult()+"' / "+tfApply.getLastExitStatusOrNull());
+                    }
                     advanceTo(Steps.GET_OUTPUTS);
-                    break;
+                    break;   // optional break, as above
+                    
                 case GET_OUTPUTS:
-                    log("DEBUG: getting terraform outputs in GET_OUTPUTS");
-                    model.setOutputs(tfOutputsCommand.run(logger));
+                    TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
+                    outputCmd.run();
+                    model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
+                    model.setOutputs(outputCmd.getOutputAsMap());
                     advanceTo(Steps.CREATE_DONE);
-                    break;
+                    // no need to break
+                    
                 case CREATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()

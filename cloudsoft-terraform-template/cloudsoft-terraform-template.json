@@ -3,34 +3,37 @@
   "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
   "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
   "properties": {
-    "Name": {
-      "description": "Terraform infrastructure name",
+    "Identifier": {
+      "description": "UUID for this deployment",
       "type": "string"
     },
     "Outputs": {
-      "description": "Outputs produced by the Terraform configuration",
+      "description": "Outputs produced by the Terraform configuration, as a map",
       "type": "object"
     },
+    "OutputsStringified": {
+      "description": "Outputs produced by the Terraform configuration, as a JSON-stringified representation of the Outputs map",
+      "type": "string"
+    },
     "ConfigurationContent": {
-      "description": "Inlined terraform configuration, passed to the terraform server.",
+      "description": "Inlined Terraform Configuration, passed to the Terraform server",
       "type": "string"
     },
     "ConfigurationUrl": {
-      "description": "Public HTTP URL of a terraform configuration. This will be downloaded and used by the terraform server.",
+      "description": "Public HTTP URL of a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server",
       "type": "string"
     },
     "ConfigurationS3Path": {
-      "description": "S3 path object representing a terraform configuration. The current account must have access to this resource. This will be downloaded and used by the terraform server.",
+      "description": "S3 path object representing a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server (the current account must have access to this resource)",
       "type": "string"
     }
   },
-  "createOnlyProperties": [
-    "/properties/Name"
-  ],
   "primaryIdentifier": [
-    "/properties/Name"
+    "/properties/Identifier"
   ],
   "readOnlyProperties": [
+    "/properties/Identifier",
+    "/properties/OutputsStringified",
     "/properties/Outputs"
   ],
   "handlers": {

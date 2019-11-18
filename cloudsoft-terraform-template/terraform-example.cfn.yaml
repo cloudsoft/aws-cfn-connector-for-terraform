@@ -4,9 +4,11 @@ Resources:
   TerraformEc2Example:
     Type: Cloudsoft::Terraform::Template
     Properties:
-      ConfigurationUrl: https://gist.githubusercontent.com/tbouron/928036a909bc2b03f111e4db9a503337/raw/f965914c3f9515fe08ffa308bb3a6daeb889440b/s3-step1.tf
+      ConfigurationUrl: https://gist.githubusercontent.com/ahgittin/f736f893168070f450d2f8ca2794e7f0/raw/e29d0dfb96066c4066c65647dbe6ed458e19e2f9/bucket.tf
 
 Outputs:
   Bucket1Arn:
     Description: ARN of the bucket1
-    Value: !GetAtt TerraformEc2Example.Outputs.bucket1-arn
+    Value: !GetAtt TerraformEc2Example.OutputsStringified
+# TODO the below is what we want to work! but it doesn't...
+#    Value: !GetAtt TerraformEc2Example.Outputs.bucket1arn.value

@@ -46,8 +46,9 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         int ret;
         try {
             ret = Integer.parseInt(getParameterValue(proxy, "ssh-port").trim());
-        }
-        catch (NumberFormatException e) {
+        } catch (Exception e) {
+            // if not set or not an integer
+            // TODO if the exception is anything other than whatever is returned for a missing parameter, log it
             ret = 22;
         }
         return ret;

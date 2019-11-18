@@ -34,23 +34,31 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
 
         try {
             Steps curStep = callbackContext.stepId == null ? Steps.DELETE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfDestroy = new RemoteSystemdUnit(this.handler, this.proxy, "terraform-destroy", model.getName());
+            RemoteSystemdUnit tfDestroy = RemoteSystemdUnit.of(this, "terraform-destroy");
             switch (curStep) {
                 case DELETE_INIT:
                     advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);
                     tfDestroy.start();
-                    break;
+                    break;   // optional break, as per CreateHandlerWorker
+
                 case DELETE_ASYNC_TF_DESTROY:
-                    if (tfDestroy.isRunning())
+                    if (tfDestroy.isRunning()) {
                         break; // return IN_PROGRESS
-                    if (tfDestroy.wasFailure())
-                        throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno());
+                    }
+                    if (tfDestroy.wasFailure()) {
+                        // TODO log stdout/stderr
+                        logger.log("ERROR: "+tfDestroy.getLog());
+                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
+                        throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '"+tfDestroy.getResult()+"' / "+tfDestroy.getLastExitStatusOrNull());
+                    }
                     advanceTo(Steps.DELETE_SYNC_RMDIR);
-                    break;
+                    break;   // optional break, as per CreateHandlerWorker
+                    
                 case DELETE_SYNC_RMDIR:
                     advanceTo(Steps.DELETE_DONE);
-                    tfSync.onlyRmdir();
-                    break;
+                    tfSync().onlyRmdir();
+                    // no need to break
+                    
                 case DELETE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
