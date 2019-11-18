@@ -18,37 +18,7 @@ You will need to have the AWS CLI installed and configured on your local machine
 
 ## Installation
 
-**Important: registering custom types is available only in region `eu-central-1` and `us-west-2`.**
-
-1. [Download](https://github.com/cloudsoft/aws-cfn-connector-for-terraform/releases) the latest release of the connector
-2. Download the [`resource-role.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 3:
-   ```sh
-   aws cloudformation create-stack \
-     --region us-west-2 \
-     --template-body "file://resource-role.yaml" \
-     --stack-name CloudsoftTerraformTemplateExecutionRole
-   ```
-3. Download the [`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 3:
-   ```sh
-   aws cloudformation create-stack \
-     --region us-west-2 \
-     --template-body "file://setup.yaml" \
-     --stack-name CloudsoftTerraformTemplateSetup
-   ```
-4. Register the `Cloudsoft::Terraform::Infrastructure` CloudFormation type, using the command below:
-   ```sh
-    EXECUTION_ROLE_ARN=...
-    LOGGING_ROLE_ARN=...
-    LOG_GROUP_NAME=...
-
-    aws cloudformation register-type \
-      --type-name Cloudsoft::Terraform::Infrastructure
-      --schema-handler-package s3://my-bucket/aws-logs-metricfilter.zip
-      --execution-role-arn $EXECUTION_ROLE_ARN
-      --logging-config "{\"LogRoleArn\":\"$LOGGING_ROLE_ARN\",\"LogGroupName\": \"$LOG_GROUP_NAME\"}"
- 
-   ```
-5. Download the 3 systemd helper and install them onto your Terraform server:
+1. Download the 3 systemd helper and install them onto your Terraform server:
    ```sh
    mkdir -p ~/.config/systemd/user
    pushd ~/.config/systemd/user
@@ -58,7 +28,39 @@ You will need to have the AWS CLI installed and configured on your local machine
    popd
    systemctl --user daemon-reload
    ```
-6. Update as required in parameter store the following parameters:
+1. Download the [`resource-role.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+   ```sh
+   aws cloudformation create-stack \
+     --template-body "file://resource-role.yaml" \
+     --stack-name CloudsoftTerraformTemplateExecutionRole \
+     --capabilities CAPABILITY_IAM
+   ```
+1. Download the [`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+   ```sh
+   aws cloudformation create-stack \
+     --template-body "file://setup.yaml" \
+     --stack-name CloudsoftTerraformTemplateSetup \
+     --capabilities CAPABILITY_IAM
+   ```
+1. Register the `Cloudsoft::Terraform::Infrastructure` CloudFormation type, using the command below:
+   ```sh
+    EXECUTION_ROLE_ARN=...
+    LOGGING_ROLE_ARN=...
+    LOG_GROUP_NAME=...
+
+    aws cloudformation register-type \
+      --type RESOURCE \
+      --type-name Cloudsoft::Terraform::Infrastructure \
+      --schema-handler-package https://github.com/cloudsoft/aws-cfn-connector-for-terraform/releases/download/latest/cloudsoft-terraform-infrastructure.zip \
+      --execution-role-arn $EXECUTION_ROLE_ARN \
+      --logging-config "{\"LogRoleArn\":\"$LOGGING_ROLE_ARN\",\"LogGroupName\": \"$LOG_GROUP_NAME\"}"
+   ```
+   
+   If you are updating the connector, note the version number and use the following command to set the default version:
+   ```sh
+   aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 0000000N
+   ```
+1. Update as required in parameter store the following parameters:
    - `/cfn/terraform/ssh-host`
    - `/cfn/terraform/ssh-port`
    - `/cfn/terraform/ssh-username`
