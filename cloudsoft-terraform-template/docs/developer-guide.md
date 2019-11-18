@@ -23,7 +23,7 @@ Once this repository is clone:
    To retrieve information about the versions of a resource provider:
    `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure`
    
-   If you have so many it gets irritating or you hit the AWS limit (15):
+   If you have so many it gets irritating or you hit the AWS limit (10):
    `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 00000004` 
 
 Alternatively, you can use the script below to perform the tasks described above
