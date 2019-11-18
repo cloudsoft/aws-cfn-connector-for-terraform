@@ -71,7 +71,11 @@ public class TerraformInterfaceSSH {
     }
 
     public void onlyRmdir() throws IOException {
-        runSSHCommand("rm -rf " + getWorkdir());
+        onlyRmdir(getWorkdir());
+    }
+
+    public void onlyRmdir(String dir) throws IOException {
+        runSSHCommand("rm -rf " + dir);
     }
 
     protected void debug(String message) {
@@ -143,6 +147,7 @@ public class TerraformInterfaceSSH {
             ssh.newSCPFileTransfer().upload(src, getScpDir());
             // TODO: If ZIP or TAR archive, then expand in getScpDir(). The move will take care of the rest
             onlyMv(getScpDir() + "/*", getWorkdir() + "/" + src.getName());
+            onlyRmdir(getScpDir());
         } finally {
             try {
                 ssh.disconnect();
