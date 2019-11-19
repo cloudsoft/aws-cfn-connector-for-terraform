@@ -2,6 +2,20 @@
   "typeName": "Cloudsoft::Terraform::Template",
   "description": "The Cloudsoft::Terraform::Template resource creates and manages a terraform template, through an existing terraform server",
   "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
+  "definitions": {
+    "ConfigurationContent": {
+      "description": "Inlined Terraform Configuration, passed to the Terraform server",
+      "type": "string"
+    },
+    "ConfigurationUrl": {
+      "description": "Public HTTP URL of a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server",
+      "type": "string"
+    },
+    "ConfigurationS3Path": {
+      "description": "S3 path object representing a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server (the current account must have access to this resource)",
+      "type": "string"
+    }
+  },
   "properties": {
     "Identifier": {
       "description": "UUID for this deployment",
@@ -16,18 +30,27 @@
       "type": "string"
     },
     "ConfigurationContent": {
-      "description": "Inlined Terraform Configuration, passed to the Terraform server",
-      "type": "string"
+      "$ref": "#/definitions/ConfigurationContent"
     },
     "ConfigurationUrl": {
-      "description": "Public HTTP URL of a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server",
-      "type": "string"
+      "$ref": "#/definitions/ConfigurationUrl"
     },
     "ConfigurationS3Path": {
-      "description": "S3 path object representing a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server (the current account must have access to this resource)",
-      "type": "string"
+      "$ref": "#/definitions/ConfigurationS3Path"
     }
   },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "$ref": "#/definitions/ConfigurationContent"
+    },
+    {
+      "$ref": "#/definitions/ConfigurationUrl"
+    },
+    {
+      "$ref": "#/definitions/ConfigurationS3Path"
+    }
+  ],
   "primaryIdentifier": [
     "/properties/Identifier"
   ],
