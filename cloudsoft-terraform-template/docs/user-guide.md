@@ -1,7 +1,7 @@
 # User guide
 
 Once the CloudFormation connector for Terraform [is installed](installation-guide.md), you can begin to use the new custom type
-`Cloudsoft::Terraform::Template` to deploy Terraform configuration. This can be added along side any other CloudFormation 
+`Cloudsoft::Terraform::Infrastructure` to deploy Terraform configuration. This can be added along side any other CloudFormation 
 resources.
 
 ## Syntax
@@ -11,7 +11,7 @@ To declare this type in your CloudFormation template, use the following syntax
 ### JSON
 ```json
 {
-  "Type" : "Cloudsoft::Terraform::Template",
+  "Type" : "Cloudsoft::Terraform::Infrastructure",
   "Properties" : {
       "ConfigurationContent": String,
       "ConfigurationUrl": String,
@@ -22,7 +22,7 @@ To declare this type in your CloudFormation template, use the following syntax
 
 ### YAML
 ```yaml
-Type: Cloudsoft::Terraform::Template
+Type: Cloudsoft::Terraform::Infrastructure
 Properties:
   ConfigurationContent: String,
   ConfigurationUrl: String,

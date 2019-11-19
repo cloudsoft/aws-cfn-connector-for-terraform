@@ -16,22 +16,22 @@ Once this repository is clone:
 2. Build with: `mvn clean package`
 3. Register with CFN: `cfn-cli submit -v`
 4. [only if updating] Set the version to use:
-   `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 0000000N`
+   `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 0000000N`
    
    If you update the codebase you must choose an `N` greater than those already installed. 
     
    To retrieve information about the versions of a resource provider:
-   `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Template`
+   `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure`
    
    If you have so many it gets irritating or you hit the AWS limit (15):
-   `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 00000004` 
+   `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 00000004` 
 
 Alternatively, you can use the script below to perform the tasks described above
 
 ```shell
 #!/bin/bash
 
-export TYPE_NAME=Cloudsoft::Terraform::Template
+export TYPE_NAME=Cloudsoft::Terraform::Infrastructure
 
 mvn clean package && cfn-cli submit -v | tee submit.log && \
 REG_TOKEN=$(grep token: submit.log | awk '{print $NF}')
@@ -64,7 +64,7 @@ mvn clean test
 Integration test uses SAM local to simulate handlers execution of the connector by CloudFormation. These are triggered by
 passing an event in a form of JSON payload to the `TestEntrypoint`, which will tell the connector which handler to use.
 
-The JSON payload must contain the `Cloudsoft::Terraform::Template` properties within `desiredResourceState`. Provided events
+The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` properties within `desiredResourceState`. Provided events
  (i.e. `create.json`, `update.json` and `delete.json`) all use the `ConfigurationUrl` but you can use any property defined
  in the [user guide](./user-guide.md#syntax).
  
@@ -88,7 +88,7 @@ See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the in
 
 Once the connector is built and submitted to AWS:
 
-1. Deploy some `Cloudsoft::Terraform::Template` resource, e.g. the file `terraform-example.cfn.yaml`:
+1. Deploy some `Cloudsoft::Terraform::Infrastructure` resource, e.g. the file `terraform-example.cfn.yaml`:
    `aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example`
 2. Delete it when you're done:
    `aws cloudformation delete-stack --stack-name terraform-example`

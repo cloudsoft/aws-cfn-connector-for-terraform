@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  This CloudFormation template creates the necessary resources or the Cloudsoft::Terraform::Template to work
+  This CloudFormation template creates the necessary resources or the Cloudsoft::Terraform::Infrastructure to work
   as expected. For instance, this creates:
   - a role assumed by CloudFormation during CRUDL operations to ship logs to CloudWatch.
   - a log group were the log will be ship to.

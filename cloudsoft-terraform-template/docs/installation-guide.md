@@ -35,14 +35,14 @@ You will need to have the AWS CLI installed and configured on your local machine
      --template-body "file://setup.yaml" \
      --stack-name CloudsoftTerraformTemplateSetup
    ```
-4. Register the `Cloudsoft::Terraform::Template` CloudFormation type, using the command below:
+4. Register the `Cloudsoft::Terraform::Infrastructure` CloudFormation type, using the command below:
    ```sh
     EXECUTION_ROLE_ARN=...
     LOGGING_ROLE_ARN=...
     LOG_GROUP_NAME=...
 
     aws cloudformation register-type \
-      --type-name Cloudsoft::Terraform::Template
+      --type-name Cloudsoft::Terraform::Infrastructure
       --schema-handler-package s3://my-bucket/aws-logs-metricfilter.zip
       --execution-role-arn $EXECUTION_ROLE_ARN
       --logging-config "{\"LogRoleArn\":\"$LOGGING_ROLE_ARN\",\"LogGroupName\": \"$LOG_GROUP_NAME\"}"

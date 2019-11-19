@@ -1,5 +1,5 @@
 {
-    "typeName": "Cloudsoft::Terraform::Template",
+    "typeName": "Cloudsoft::Terraform::Infrastructure",
     "language": "java",
     "runtime": "java8",
     "entrypoint": "io.cloudsoft.terraform.template.HandlerWrapper::handleRequest",

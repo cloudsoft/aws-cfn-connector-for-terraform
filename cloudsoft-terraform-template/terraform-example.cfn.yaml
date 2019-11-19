@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
 Resources:
   TerraformEc2Example:
-    Type: Cloudsoft::Terraform::Template
+    Type: Cloudsoft::Terraform::Infrastructure
     Properties:
       ConfigurationUrl: https://gist.githubusercontent.com/ahgittin/f736f893168070f450d2f8ca2794e7f0/raw/e29d0dfb96066c4066c65647dbe6ed458e19e2f9/bucket.tf
 

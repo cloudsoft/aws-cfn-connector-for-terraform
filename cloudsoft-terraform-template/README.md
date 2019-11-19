@@ -1,4 +1,4 @@
-# Cloudsoft::Terraform::Template
+# Cloudsoft::Terraform::Infrastructure
 
 (TODO: rename Terraform::Configuration)
 
@@ -13,7 +13,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
 Resources:
   TerraformEc2Example:
-    Type: Cloudsoft::Terraform::Template
+    Type: Cloudsoft::Terraform::Infrastructure
     Properties:
       ConfigurationContent: |
         resource "aws_instance" "my-test-instance" {

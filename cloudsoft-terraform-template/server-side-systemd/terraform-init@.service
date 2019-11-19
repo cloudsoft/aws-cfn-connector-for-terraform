@@ -1,5 +1,5 @@
 [Unit]
-Description=detached "terraform init" instance for Cloudsoft::Terraform::Template
+Description=detached "terraform init" instance for Cloudsoft::Terraform::Infrastructure
 
 [Service]
 WorkingDirectory=%h/tfdata/%i

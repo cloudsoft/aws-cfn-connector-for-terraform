@@ -3,7 +3,7 @@
 	"Description": "CloudFormation interface to Terraform",
 	"Resources": {
 		"TFInfra": {
-			"Type": "Cloudsoft::Terraform::Template",
+			"Type": "Cloudsoft::Terraform::Infrastructure",
 			"Properties": {
 				"TFServerName": "tf-denis",
 				"TFInfrastructureName": "example7",

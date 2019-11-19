@@ -5,9 +5,9 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.cloudsoft.terraform.template</groupId>
-    <artifactId>cloudsoft-terraform-template-handler</artifactId>
-    <name>cloudsoft-terraform-template-handler</name>
+    <groupId>io.cloudsoft.terraform.infrastructure</groupId>
+    <artifactId>cloudsoft-terraform-infrastructure-handler</artifactId>
+    <name>cloudsoft-terraform-infrastructure-handler</name>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
