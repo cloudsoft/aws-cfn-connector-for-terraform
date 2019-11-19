@@ -86,6 +86,10 @@ public abstract class AbstractHandlerWorker {
         logger.log(origin + " error: " + e + "\n" + sw.toString());
     }
 
+    // This call actually consists of two network transfers, hence for large files is more
+    // likely to time out. However, splitting it into two FSM states would require some place
+    // to keep the downloaded file. The callback context isn't intended for that, neither is
+    // the lambda's runtime filesystem.
     void getAndUploadConfiguration() throws IOException {
         tfSync().uploadConfiguration(handler.getConfiguration(proxy, model));
     }
