@@ -6,7 +6,7 @@ To build the project, you will first need few things installed on your local mac
 
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-- CFN CLI [TODO: Not public yet]
+- [CFN CLI](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-setup.html)
 
 ## Build
 
@@ -14,7 +14,7 @@ Once this repository is clone:
 
 1. Activate RPDK with: `source path/to/rpdk/bin/env/activate`
 2. Build with: `mvn clean package`
-3. Register with CFN: `cfn-cli submit -v`
+3. Register with CFN: `cfn submit -v`
 4. [only if updating] Set the version to use:
    `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 0000000N`
    
@@ -33,7 +33,7 @@ Alternatively, you can use the script below to perform the tasks described above
 
 export TYPE_NAME=Cloudsoft::Terraform::Infrastructure
 
-mvn clean package && cfn-cli submit -v | tee submit.log && \
+mvn clean package && cfn submit -v | tee submit.log && \
 REG_TOKEN=$(grep token: submit.log | awk '{print $NF}')
 
 while ( aws cloudformation describe-type-registration --registration-token ${REG_TOKEN} | grep Description | grep IN_PROGRESS ) ; do sleep 2 ; done
