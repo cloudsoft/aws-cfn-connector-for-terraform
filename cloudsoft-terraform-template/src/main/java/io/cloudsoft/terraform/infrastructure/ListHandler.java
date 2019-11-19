@@ -1,4 +1,4 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;

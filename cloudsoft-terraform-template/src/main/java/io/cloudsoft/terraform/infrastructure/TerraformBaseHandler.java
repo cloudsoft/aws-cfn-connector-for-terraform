@@ -1,6 +1,6 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -114,7 +114,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
             }
         }
 
-        throw new IllegalStateException("Missing one of the template properties");
+        throw new IllegalStateException("Missing one of the configuration properties");
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext, AbstractHandlerWorker> workerFactory) {

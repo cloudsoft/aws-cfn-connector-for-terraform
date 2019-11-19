@@ -2,14 +2,14 @@
     "typeName": "Cloudsoft::Terraform::Infrastructure",
     "language": "java",
     "runtime": "java8",
-    "entrypoint": "io.cloudsoft.terraform.template.HandlerWrapper::handleRequest",
-    "testEntrypoint": "io.cloudsoft.terraform.template.HandlerWrapper::testEntrypoint",
+    "entrypoint": "io.cloudsoft.terraform.infrastructure.HandlerWrapper::handleRequest",
+    "testEntrypoint": "io.cloudsoft.terraform.infrastructure.HandlerWrapper::testEntrypoint",
     "settings": {
         "namespace": [
             "io",
             "cloudsoft",
             "terraform",
-            "template"
+            "infrastructure"
         ]
     }
 }

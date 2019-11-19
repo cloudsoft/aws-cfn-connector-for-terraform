@@ -1,6 +1,6 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.template.worker.ReadHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.ReadHandlerWorker;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;

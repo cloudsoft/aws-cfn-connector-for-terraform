@@ -1,6 +1,6 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
@@ -26,7 +26,7 @@ public class RemoteSystemdUnit extends TerraformInterfaceSSH {
     public String getActiveState() throws IOException {
         return getRemotePropertyValue("ActiveState");
     }
-    
+
     public boolean isRunning() throws IOException {
         return "active".equals(getActiveState());
     }
@@ -34,11 +34,11 @@ public class RemoteSystemdUnit extends TerraformInterfaceSSH {
     public String getResult() throws IOException {
         return getRemotePropertyValue("Result");
     }
-    
+
     public boolean wasFailure() throws IOException {
         return !"success".equals(getResult());
     }
-    
+
     public String getErrno() throws IOException {
         return getRemotePropertyValue("StatusErrno");
     }
@@ -51,5 +51,5 @@ public class RemoteSystemdUnit extends TerraformInterfaceSSH {
         runSSHCommand(String.format("journalctl --no-pager --user-unit=%s", unitName));
         return getLastStdout() + "\n" + getLastStderr();
     }
-    
+
 }

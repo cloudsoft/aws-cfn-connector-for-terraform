@@ -1,6 +1,6 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TerraformInterfaceSSH {
     protected final Logger logger;
-    protected final String templateName, serverHostname, sshUsername, sshServerKeyFP,
+    protected final String configurationIdentifier, serverHostname, sshUsername, sshServerKeyFP,
             sshClientSecretKeyContents;
     protected final int sshPort;
     protected String lastStdout, lastStderr;
@@ -35,22 +35,22 @@ public class TerraformInterfaceSSH {
     // TODO support ZIPs
     TF_CONFFILENAME = "configuration.tf";
 
-    protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
+    protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
         this.logger = logger;
         this.serverHostname = h.getHost(proxy);
         this.sshPort = h.getPort(proxy);
         this.sshServerKeyFP = h.getFingerprint(proxy);
         this.sshUsername = h.getUsername(proxy);
         this.sshClientSecretKeyContents = h.getSSHKey(proxy);
-        this.templateName = templateName;
+        this.configurationIdentifier = configurationIdentifier;
     }
 
     public String getWorkdir() {
-        return String.format("%s/%s", TF_DATADIR, templateName);
+        return String.format("%s/%s", TF_DATADIR, configurationIdentifier);
     }
 
     private String getScpDir() {
-        return String.format("%s/%s", TF_SCPDIR, templateName);
+        return String.format("%s/%s", TF_SCPDIR, configurationIdentifier);
     }
 
     public void onlyMkdir() throws IOException {

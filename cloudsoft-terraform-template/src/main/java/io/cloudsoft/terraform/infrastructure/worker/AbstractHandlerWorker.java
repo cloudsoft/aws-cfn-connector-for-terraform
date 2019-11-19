@@ -1,9 +1,9 @@
-package io.cloudsoft.terraform.template.worker;
+package io.cloudsoft.terraform.infrastructure.worker;
 
-import io.cloudsoft.terraform.template.CallbackContext;
-import io.cloudsoft.terraform.template.ResourceModel;
-import io.cloudsoft.terraform.template.TerraformBaseHandler;
-import io.cloudsoft.terraform.template.TerraformInterfaceSSH;
+import io.cloudsoft.terraform.infrastructure.CallbackContext;
+import io.cloudsoft.terraform.infrastructure.ResourceModel;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformInterfaceSSH;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;

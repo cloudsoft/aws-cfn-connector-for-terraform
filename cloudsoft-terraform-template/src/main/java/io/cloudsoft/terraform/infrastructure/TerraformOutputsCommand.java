@@ -1,8 +1,8 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
@@ -14,8 +14,8 @@ public class TerraformOutputsCommand extends TerraformInterfaceSSH {
     private final ObjectMapper objectMapper;
     private String outputJsonStringized = null;
 
-    protected TerraformOutputsCommand(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
-        super(h, logger, proxy, templateName);
+    protected TerraformOutputsCommand(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
+        super(h, logger, proxy, configurationIdentifier);
         this.objectMapper = new ObjectMapper();
     }
 

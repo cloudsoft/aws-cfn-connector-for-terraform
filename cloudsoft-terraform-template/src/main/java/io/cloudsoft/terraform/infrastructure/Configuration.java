@@ -1,14 +1,14 @@
-package io.cloudsoft.terraform.template;
-
-import java.util.Map;
+package io.cloudsoft.terraform.infrastructure;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.util.Map;
+
 class Configuration extends BaseConfiguration {
 
     public Configuration() {
-        super("cloudsoft-terraform-template.json");
+        super("cloudsoft-terraform-infrastructure.json");
     }
 
     public JSONObject resourceSchemaJSONObject() {

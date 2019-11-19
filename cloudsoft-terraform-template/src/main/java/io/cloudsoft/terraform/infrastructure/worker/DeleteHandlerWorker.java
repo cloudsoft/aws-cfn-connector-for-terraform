@@ -1,9 +1,9 @@
-package io.cloudsoft.terraform.template.worker;
+package io.cloudsoft.terraform.infrastructure.worker;
 
-import io.cloudsoft.terraform.template.CallbackContext;
-import io.cloudsoft.terraform.template.RemoteSystemdUnit;
-import io.cloudsoft.terraform.template.ResourceModel;
-import io.cloudsoft.terraform.template.UpdateHandler;
+import io.cloudsoft.terraform.infrastructure.CallbackContext;
+import io.cloudsoft.terraform.infrastructure.DeleteHandler;
+import io.cloudsoft.terraform.infrastructure.RemoteSystemdUnit;
+import io.cloudsoft.terraform.infrastructure.ResourceModel;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -12,54 +12,54 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.io.IOException;
 
-public class UpdateHandlerWorker extends AbstractHandlerWorker {
+public class DeleteHandlerWorker extends AbstractHandlerWorker {
     public enum Steps {
-        UPDATE_INIT,
-        UPDATE_SYNC_UPLOAD,
-        UPDATE_ASYNC_TF_APPLY,
-        UPDATE_DONE
+        DELETE_INIT,
+        DELETE_ASYNC_TF_DESTROY,
+        DELETE_SYNC_RMDIR,
+        DELETE_DONE
     }
 
-    public UpdateHandlerWorker(
+    public DeleteHandlerWorker(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger,
-            final UpdateHandler updateHandler) {
-        super(proxy, request, callbackContext, logger, updateHandler);
+            final DeleteHandler deleteHandler) {
+        super(proxy, request, callbackContext, logger, deleteHandler);
     }
 
     public ProgressEvent<ResourceModel, CallbackContext> call() {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
-            Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_INIT : Steps.valueOf(callbackContext.stepId);
-            RemoteSystemdUnit tfApply = RemoteSystemdUnit.of(this, "terraform-apply");
+            Steps curStep = callbackContext.stepId == null ? Steps.DELETE_INIT : Steps.valueOf(callbackContext.stepId);
+            RemoteSystemdUnit tfDestroy = RemoteSystemdUnit.of(this, "terraform-destroy");
             switch (curStep) {
-                case UPDATE_INIT:
-                    advanceTo(Steps.UPDATE_SYNC_UPLOAD);
-                    getAndUploadConfiguration();
+                case DELETE_INIT:
+                    advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);
+                    tfDestroy.start();
                     break;   // optional break, as per CreateHandlerWorker
 
-                case UPDATE_SYNC_UPLOAD:
-                    advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
-                    tfApply.start();
-                    break;   // optional break, as per CreateHandlerWorker
-
-                case UPDATE_ASYNC_TF_APPLY:
-                    if (tfApply.isRunning()) {
+                case DELETE_ASYNC_TF_DESTROY:
+                    if (tfDestroy.isRunning()) {
                         break; // return IN_PROGRESS
                     }
-                    if (tfApply.wasFailure()) {
+                    if (tfDestroy.wasFailure()) {
                         // TODO log stdout/stderr
-                        logger.log("ERROR: " + tfApply.getLog());
+                        logger.log("ERROR: " + tfDestroy.getLog());
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '" + tfApply.getResult() + "'");
+                        throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '" + tfDestroy.getResult() + "' / " + tfDestroy.getLastExitStatusOrNull());
                     }
-                    advanceTo(Steps.UPDATE_DONE);
+                    advanceTo(Steps.DELETE_SYNC_RMDIR);
+                    break;   // optional break, as per CreateHandlerWorker
+
+                case DELETE_SYNC_RMDIR:
+                    advanceTo(Steps.DELETE_DONE);
+                    tfSync().onlyRmdir();
                     // no need to break
 
-                case UPDATE_DONE:
+                case DELETE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)

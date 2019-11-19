@@ -1,4 +1,4 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;

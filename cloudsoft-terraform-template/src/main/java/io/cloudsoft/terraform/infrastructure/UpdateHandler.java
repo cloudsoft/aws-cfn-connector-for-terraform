@@ -1,6 +1,6 @@
-package io.cloudsoft.terraform.template;
+package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.template.worker.UpdateHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.worker.UpdateHandlerWorker;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
