@@ -1,14 +1,14 @@
 package io.cloudsoft.terraform.template.worker;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.amazonaws.cloudformation.proxy.Logger;
-import com.amazonaws.cloudformation.proxy.OperationStatus;
-import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import io.cloudsoft.terraform.template.CallbackContext;
-import io.cloudsoft.terraform.template.UpdateHandler;
 import io.cloudsoft.terraform.template.RemoteSystemdUnit;
 import io.cloudsoft.terraform.template.ResourceModel;
+import io.cloudsoft.terraform.template.UpdateHandler;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.io.IOException;
 
@@ -40,7 +40,7 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                     advanceTo(Steps.UPDATE_SYNC_UPLOAD);
                     getAndUploadConfiguration();
                     break;   // optional break, as per CreateHandlerWorker
-                    
+
                 case UPDATE_SYNC_UPLOAD:
                     advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
                     tfApply.start();
@@ -52,9 +52,9 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                     }
                     if (tfApply.wasFailure()) {
                         // TODO log stdout/stderr
-                        logger.log("ERROR: "+tfApply.getLog());
+                        logger.log("ERROR: " + tfApply.getLog());
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '"+tfApply.getResult()+"'");
+                        throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '" + tfApply.getResult() + "'");
                     }
                     advanceTo(Steps.UPDATE_DONE);
                     // no need to break
@@ -69,7 +69,7 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                     throw new IllegalStateException("invalid step " + callbackContext.stepId);
             }
         } catch (Exception e) {
-            logException (getClass().getName(), e);
+            logException(getClass().getName(), e);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.FAILED)

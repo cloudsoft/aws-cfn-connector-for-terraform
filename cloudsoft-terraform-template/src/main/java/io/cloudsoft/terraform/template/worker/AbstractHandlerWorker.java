@@ -1,10 +1,13 @@
 package io.cloudsoft.terraform.template.worker;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.amazonaws.cloudformation.proxy.Logger;
-import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
-import io.cloudsoft.terraform.template.*;
+import io.cloudsoft.terraform.template.CallbackContext;
+import io.cloudsoft.terraform.template.ResourceModel;
+import io.cloudsoft.terraform.template.TerraformBaseHandler;
+import io.cloudsoft.terraform.template.TerraformInterfaceSSH;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,7 +22,7 @@ public abstract class AbstractHandlerWorker {
     public final CallbackContext callbackContext;
     public final Logger logger;
     public final TerraformBaseHandler<CallbackContext> handler;
-    
+
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
 
@@ -54,7 +57,7 @@ public abstract class AbstractHandlerWorker {
     public final TerraformInterfaceSSH tfSync() {
         return TerraformInterfaceSSH.of(this);
     }
-    
+
     public abstract ProgressEvent<ResourceModel, CallbackContext> call();
 
     int nextDelay(CallbackContext callbackContext) {
@@ -63,8 +66,8 @@ public abstract class AbstractHandlerWorker {
         } else if (callbackContext.lastDelaySeconds == 0) {
             callbackContext.lastDelaySeconds = 1;
         } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL_SECONDS) {
-                // exponential backoff
-                callbackContext.lastDelaySeconds = 
+            // exponential backoff
+            callbackContext.lastDelaySeconds =
                     Math.min(MAX_CHECK_INTERVAL_SECONDS, 2 * callbackContext.lastDelaySeconds);
         }
         return callbackContext.lastDelaySeconds;
@@ -76,7 +79,7 @@ public abstract class AbstractHandlerWorker {
         callbackContext.lastDelaySeconds = -1;
     }
 
-    void logException (String origin, Exception e) {
+    void logException(String origin, Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);

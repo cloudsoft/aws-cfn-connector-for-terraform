@@ -1,9 +1,8 @@
 package io.cloudsoft.terraform.template;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.amazonaws.cloudformation.proxy.Logger;
-
 import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 import java.io.IOException;
 

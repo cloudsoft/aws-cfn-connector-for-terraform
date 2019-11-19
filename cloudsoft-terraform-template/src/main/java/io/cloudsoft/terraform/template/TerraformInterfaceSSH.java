@@ -1,14 +1,13 @@
 package io.cloudsoft.terraform.template;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.amazonaws.cloudformation.proxy.Logger;
-
 import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import software.amazon.awssdk.utils.StringInputStream;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,8 +32,8 @@ public class TerraformInterfaceSSH {
             // fails to escape the quotes properly (again, works in OpenSSH).
             TF_DATADIR = "~/tfdata",
             TF_SCPDIR = "/tmp",
-            // TODO support ZIPs
-            TF_CONFFILENAME = "configuration.tf";
+    // TODO support ZIPs
+    TF_CONFFILENAME = "configuration.tf";
 
     protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String templateName) {
         this.logger = logger;
@@ -102,10 +101,10 @@ public class TerraformInterfaceSSH {
             debug("stdout: " + lastStdout);
             debug("stderr: " + lastStderr);
             debug("exit status: " + lastExitStatusOrNull);
-            if (!((Integer)0).equals(lastExitStatusOrNull) || !lastStderr.isEmpty()) {
-                logger.log("Unexpected result/output from command '"+command+"': "+lastExitStatusOrNull+"\n"
-                        + "  stderr: "+lastStderr+"\n"
-                        + "  stdout: "+lastStdout);
+            if (!((Integer) 0).equals(lastExitStatusOrNull) || !lastStderr.isEmpty()) {
+                logger.log("Unexpected result/output from command '" + command + "': " + lastExitStatusOrNull + "\n"
+                        + "  stderr: " + lastStderr + "\n"
+                        + "  stdout: " + lastStdout);
             }
         } finally {
             try {
@@ -136,7 +135,7 @@ public class TerraformInterfaceSSH {
         return lastExitStatusOrNull;
     }
 
-    public void uploadConfiguration (String contents) throws IOException {
+    public void uploadConfiguration(String contents) throws IOException {
         StringSourceFile src = new StringSourceFile(TF_CONFFILENAME, contents);
         SSHClient ssh = new SSHClient();
         ssh.addHostKeyVerifier(sshServerKeyFP);
@@ -161,7 +160,7 @@ public class TerraformInterfaceSSH {
     private static class StringSourceFile extends InMemorySourceFile {
         private String name, contents;
 
-        StringSourceFile (String name, String contents){
+        StringSourceFile(String name, String contents) {
             this.name = name;
             this.contents = contents;
         }

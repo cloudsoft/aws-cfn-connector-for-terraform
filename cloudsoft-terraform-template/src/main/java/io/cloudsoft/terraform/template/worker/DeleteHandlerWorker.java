@@ -1,14 +1,14 @@
 package io.cloudsoft.terraform.template.worker;
 
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import com.amazonaws.cloudformation.proxy.Logger;
-import com.amazonaws.cloudformation.proxy.OperationStatus;
-import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 import io.cloudsoft.terraform.template.CallbackContext;
 import io.cloudsoft.terraform.template.DeleteHandler;
 import io.cloudsoft.terraform.template.RemoteSystemdUnit;
 import io.cloudsoft.terraform.template.ResourceModel;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.io.IOException;
 
@@ -47,18 +47,18 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                     }
                     if (tfDestroy.wasFailure()) {
                         // TODO log stdout/stderr
-                        logger.log("ERROR: "+tfDestroy.getLog());
+                        logger.log("ERROR: " + tfDestroy.getLog());
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '"+tfDestroy.getResult()+"' / "+tfDestroy.getLastExitStatusOrNull());
+                        throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '" + tfDestroy.getResult() + "' / " + tfDestroy.getLastExitStatusOrNull());
                     }
                     advanceTo(Steps.DELETE_SYNC_RMDIR);
                     break;   // optional break, as per CreateHandlerWorker
-                    
+
                 case DELETE_SYNC_RMDIR:
                     advanceTo(Steps.DELETE_DONE);
                     tfSync().onlyRmdir();
                     // no need to break
-                    
+
                 case DELETE_DONE:
                     logger.log(getClass().getName() + " completed: success");
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -69,7 +69,7 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                     throw new IllegalStateException("invalid step " + callbackContext.stepId);
             }
         } catch (Exception e) {
-            logException (getClass().getName(), e);
+            logException(getClass().getName(), e);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.FAILED)

@@ -1,5 +1,17 @@
 package io.cloudsoft.terraform.template;
 
+import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,19 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
-import io.cloudsoft.terraform.template.worker.AbstractHandlerWorker;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-import com.amazonaws.cloudformation.proxy.OperationStatus;
-import com.amazonaws.cloudformation.proxy.ProgressEvent;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
-import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 
 public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
     private static final String PREFIX = "/cfn/terraform";
@@ -118,7 +117,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         throw new IllegalStateException("Missing one of the template properties");
     }
 
-    protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext,AbstractHandlerWorker> workerFactory) {
+    protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext, AbstractHandlerWorker> workerFactory) {
         // allows us to force synchronous behaviour -- especially useful when running in SAM
         boolean forceSynchronous = callback == null ? false : callback.forceSynchronous;
         boolean disregardCallbackDelay = callback == null ? false : callback.disregardCallbackDelay;
@@ -129,13 +128,13 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
             if (!forceSynchronous || !OperationStatus.IN_PROGRESS.equals(result.getStatus())) {
                 return result;
             }
-            worker.log("Synchronous mode: "+result.getCallbackContext());
+            worker.log("Synchronous mode: " + result.getCallbackContext());
             try {
                 if (disregardCallbackDelay) {
                     worker.log("Will run callback immediately");
                 } else {
-                    worker.log("Will run callback after "+result.getCallbackDelaySeconds()+" seconds");
-                    Thread.sleep(1000*result.getCallbackDelaySeconds());
+                    worker.log("Will run callback after " + result.getCallbackDelaySeconds() + " seconds");
+                    Thread.sleep(1000 * result.getCallbackDelaySeconds());
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException("Aborted due to interrupt", e);
