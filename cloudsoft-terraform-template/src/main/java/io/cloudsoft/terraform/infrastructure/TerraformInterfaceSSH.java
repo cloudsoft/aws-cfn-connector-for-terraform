@@ -5,10 +5,10 @@ import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
-import software.amazon.awssdk.utils.StringInputStream;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +32,8 @@ public class TerraformInterfaceSSH {
             // fails to escape the quotes properly (again, works in OpenSSH).
             TF_DATADIR = "~/tfdata",
             TF_SCPDIR = "/tmp",
-    // TODO support ZIPs
-    TF_CONFFILENAME = "configuration.tf";
+            TF_TMPFILENAME = "configuration.bin",
+            TF_CONFFILENAME = "configuration.tf";
 
     protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
         this.logger = logger;
@@ -63,10 +63,6 @@ public class TerraformInterfaceSSH {
 
     public void onlyMv(String source, String target) throws IOException {
         runSSHCommand(String.format("mv %s %s", source, target));
-    }
-
-    public void onlyDownload(String url) throws IOException {
-        runSSHCommand(String.format("cd %s && wget --output-document='%s' '%s'", getWorkdir(), TF_CONFFILENAME, url));
     }
 
     public void onlyRmdir() throws IOException {
@@ -135,18 +131,35 @@ public class TerraformInterfaceSSH {
         return lastExitStatusOrNull;
     }
 
-    public void uploadConfiguration(String contents) throws IOException {
-        StringSourceFile src = new StringSourceFile(TF_CONFFILENAME, contents);
+    public void uploadConfiguration(byte[] contents) throws IOException, IllegalArgumentException {
+        onlyMkdir(getScpDir());
+        uploadFile(getScpDir(), TF_TMPFILENAME, contents);
+        String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
+        runSSHCommand("file  --brief --mime-type " + tmpFilename);
+        String mimeType = lastStdout.replaceAll("\n", "");
+
+        switch (mimeType) {
+            case "text/plain":
+                onlyMv(tmpFilename, getWorkdir() + "/" + TF_CONFFILENAME);
+                break;
+            case "application/zip":
+                runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkdir()));
+                break;
+            default:
+                onlyRmdir(getScpDir());
+                throw new IllegalArgumentException("Unknown MIME type " + mimeType);
+        }
+        onlyRmdir(getScpDir());
+    }
+
+    public void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
+        BytesSourceFile src = new BytesSourceFile(fileName, contents);
         SSHClient ssh = new SSHClient();
         ssh.addHostKeyVerifier(sshServerKeyFP);
         ssh.connect(serverHostname, sshPort);
         try {
-            onlyMkdir(getScpDir());
             ssh.authPublickey(sshUsername, ssh.loadKeys(sshClientSecretKeyContents, null, null));
-            ssh.newSCPFileTransfer().upload(src, getScpDir());
-            // TODO: If ZIP or TAR archive, then expand in getScpDir(). The move will take care of the rest
-            onlyMv(getScpDir() + "/*", getWorkdir() + "/" + src.getName());
-            onlyRmdir(getScpDir());
+            ssh.newSCPFileTransfer().upload(src, dirName);
         } finally {
             try {
                 ssh.disconnect();
@@ -157,10 +170,11 @@ public class TerraformInterfaceSSH {
         }
     }
 
-    private static class StringSourceFile extends InMemorySourceFile {
-        private String name, contents;
+    private static class BytesSourceFile extends InMemorySourceFile {
+        private String name;
+        private byte[] contents;
 
-        StringSourceFile(String name, String contents) {
+        BytesSourceFile(String name, byte[] contents) {
             this.name = name;
             this.contents = contents;
         }
@@ -170,11 +184,11 @@ public class TerraformInterfaceSSH {
         }
 
         public long getLength() {
-            return contents.length();
+            return contents.length;
         }
 
         public InputStream getInputStream() {
-            return new StringInputStream(contents);
+            return new ByteArrayInputStream(contents);
         }
     }
 

@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -46,8 +47,8 @@ public class TerraformBaseHandlerTest {
         final String configurationContent = "Hello world";
         final ResourceModel model = ResourceModel.builder().configurationContent(configurationContent).build();
 
-        String result = handler.getConfiguration(proxy, model);
-        assertEquals(configurationContent, result);
+        byte[] result = handler.getConfiguration(proxy, model);
+        assertArrayEquals(configurationContent.getBytes(StandardCharsets.UTF_8), result);
     }
 
     @Test
@@ -57,9 +58,9 @@ public class TerraformBaseHandlerTest {
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         String expected = "Hello world";
-        String result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getConfiguration(proxy, model);
 
-        assertEquals(expected, result);
+        assertArrayEquals(expected.getBytes(StandardCharsets.UTF_8), result);
     }
 
     @Test
@@ -89,12 +90,12 @@ public class TerraformBaseHandlerTest {
             return null;
         });
 
-        String result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getConfiguration(proxy, model);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any());
         ArgumentCaptor<GetObjectRequest> argument = ArgumentCaptor.forClass(GetObjectRequest.class);
         verify(s3Client, times(1)).getObject(argument.capture(), any(Path.class));
 
-        assertEquals(expectedContent, result);
+        assertArrayEquals(expectedContent.getBytes(StandardCharsets.UTF_8), result);
         assertEquals(expectedBucket, argument.getValue().bucket());
         assertEquals(expectedKey, argument.getValue().key());
     }
