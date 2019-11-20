@@ -13,9 +13,9 @@ To declare this type in your CloudFormation template, use the following syntax
 {
   "Type" : "Cloudsoft::Terraform::Infrastructure",
   "Properties" : {
-      "ConfigurationContent": String,
-      "ConfigurationUrl": String,
-      "ConfigurationS3Path": String
+      "ConfigurationContent": "String",
+      "ConfigurationUrl": "String",
+      "ConfigurationS3Path": "String"
     }
 }
 ```
