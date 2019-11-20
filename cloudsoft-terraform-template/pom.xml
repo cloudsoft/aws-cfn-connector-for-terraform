@@ -201,8 +201,8 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
-                        <!-- Comment out the test coverage chack as we currently don't have enough unit test. -->
-                        <!-- Should be put back once the unit tests are big enough. -->
+                    <!-- Comment out the test coverage check as we currently don't have enough unit test. -->
+                    <!-- Should be put back once the unit tests are big enough. -->
 <!--                    <execution>-->
 <!--                        <id>jacoco-check</id>-->
 <!--                        <goals>-->

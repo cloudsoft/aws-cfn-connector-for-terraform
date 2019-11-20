@@ -57,7 +57,7 @@ public class UpdateHandlerWorker extends AbstractHandlerWorker {
                         throw new IOException("tfApply returned errno " + tfApply.getErrno() + " / '" + tfApply.getResult() + "'");
                     }
                     advanceTo(Steps.UPDATE_DONE);
-                    // no need to break
+                    break;
 
                 case UPDATE_DONE:
                     logger.log(getClass().getName() + " completed: success");
