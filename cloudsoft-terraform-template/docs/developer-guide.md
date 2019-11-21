@@ -27,7 +27,7 @@ template to create a stack using the command below.
 ```sh
 aws cloudformation create-stack \
     --template-body "file://setup.yaml" \
-    --stack-name CloudsoftTerraformTemplateSetup \
+    --stack-name CloudsoftTerraformInfrastructureSetup \
     --capabilities CAPABILITY_IAM
 ```
 
@@ -77,7 +77,9 @@ See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the in
 Once the connector is built and submitted to AWS:
 
 1. Deploy some `Cloudsoft::Terraform::Infrastructure` resource, e.g. the file `terraform-example.cfn.yaml`:
-   `aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example`
+   ```sh
+   aws cloudformation create-stack --template-body file://terraform-example.cfn.yaml --stack-name terraform-example
+   ```
 2. Delete it when you're done:
    `aws cloudformation delete-stack --stack-name terraform-example`
 
