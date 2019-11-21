@@ -75,7 +75,7 @@ public class TerraformInterfaceSSH {
 
     protected void debug(String message) {
         System.out.println(message);
-//        logger.log(message);
+        logger.log(message);
     }
 
     protected void runSSHCommand(String command) throws IOException {
