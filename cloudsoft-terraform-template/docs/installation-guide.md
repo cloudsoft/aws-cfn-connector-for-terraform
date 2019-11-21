@@ -1,8 +1,8 @@
 # Installation guide
 
-The CloudFormation connector for Terraform add a new CloudFormation type, for instance `Cloudsoft::Terraform::Configuration` which allows you to deploy Terraform configuration direction through CloudFormation.
+The Terraform resource provider for CloudFormation adds a new CloudFormation resource type, `Cloudsoft::Terraform::Infrastructure`, which allows you to deploy a Terraform infrastructure as a part of a CloudFormation stack using a Terraform configuration that is a part of a CloudFormation template.
 
-This page will guide you on how to install the CloudFormation connector for Terraform.
+This page will guide you on how to install the Terraform resource provider for CloudFormation.
 
 ## Prerequisites
 
