@@ -36,7 +36,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: cloudsoft-terraform-template-logs
+      LogGroupName: cloudsoft-terraform-infrastructure-logs
       RetentionInDays: 7
 
   TerraformSSHHostParameter:
