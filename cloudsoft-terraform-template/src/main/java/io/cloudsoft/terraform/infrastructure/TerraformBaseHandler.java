@@ -114,6 +114,7 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         throw new IllegalStateException("Missing one of the configuration properties");
     }
 
+    // TODO: This is now obsolete as the cfn-cli handles reinvokes out of the box. Should remove it.
     protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext, AbstractHandlerWorker> workerFactory) {
         // allows us to force synchronous behaviour -- especially useful when running in SAM
         boolean forceSynchronous = callback == null ? false : callback.forceSynchronous;

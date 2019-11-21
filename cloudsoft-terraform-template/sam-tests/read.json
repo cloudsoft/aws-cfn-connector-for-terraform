@@ -1,13 +1,6 @@
 {
-  "action": "READ",
-  "request": {
-    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
-    "desiredResourceState": {
-      "Name": "example-s3"
-    },
-    "logicalResourceIdentifier": "MyResource"
+  "desiredResourceState": {
+    "Name": "example-s3"
   },
-  "callbackContext": {
-    "forceSynchronous": true
-  }
+  "logicalResourceIdentifier": "MyResource"
 }

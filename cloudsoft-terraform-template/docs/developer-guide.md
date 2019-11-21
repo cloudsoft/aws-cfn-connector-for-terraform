@@ -10,39 +10,25 @@ To build the project, you will first need few things installed on your local mac
 
 ## Build
 
-Once this repository is clone:
+Once this repository is cloned:
 
-1. Activate RPDK with: `source path/to/rpdk/bin/env/activate`
-2. Build with: `mvn clean package`
-3. Register with CFN: `cfn submit -v`
-4. [only if updating] Set the version to use:
-   `aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 0000000N`
-   
-   If you update the codebase you must choose an `N` greater than those already installed. 
-    
-   To retrieve information about the versions of a resource provider:
-   `aws cloudformation list-type-versions --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure`
-   
-   If you have so many it gets irritating or you hit the AWS limit (10):
-   `aws cloudformation deregister-type --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 00000004` 
+1. Build with: 
+   ```sh
+   mvn clean package
+   ```
+1. Register in CloudFormation with:
+   ```sh
+   cfn submit --set-default -v
+   ```
 
-Alternatively, you can use the script below to perform the tasks described above
-
-```shell
-#!/bin/bash
-
-export TYPE_NAME=Cloudsoft::Terraform::Infrastructure
-
-mvn clean package && cfn submit -v | tee submit.log && \
-REG_TOKEN=$(grep token: submit.log | awk '{print $NF}')
-
-while ( aws cloudformation describe-type-registration --registration-token ${REG_TOKEN} | grep Description | grep IN_PROGRESS ) ; do sleep 2 ; done
-
-aws cloudformation describe-type-registration --registration-token ${REG_TOKEN}
-
-export V=$(aws cloudformation list-type-versions --type RESOURCE --type-name $TYPE_NAME | jq -r .TypeVersionSummaries[].VersionId | sort | tail -1)
-aws cloudformation set-type-default-version --type RESOURCE --type-name $TYPE_NAME --version-id $V && \
-  echo Set $TYPE_NAME version $V
+The connector requires few parameters in parameter store. If you haven't installed the connector, you can use the
+[`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml)
+template to create a stack using the command below.
+```sh
+aws cloudformation create-stack \
+    --template-body "file://setup.yaml" \
+    --stack-name CloudsoftTerraformTemplateSetup \
+    --capabilities CAPABILITY_IAM
 ```
 
 ## IDE
@@ -70,16 +56,18 @@ The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` propert
  
  To run the tests:
  1. In one terminal, start SAM local lambda: `sam local start-lambda`
- 2. In another terminal, run: `./sam-tests/run.sh --event sam-tests/<event.json>`
+ 2. In another terminal, run: ` cfn invoke --max-reinvoke 10 {CREATE,READ,UPDATE,DELETE,LIST} path/to/event.json`
     
     To do a full cycle, you can execute in sequence:
     ```sh
-    ./sam-tests/run.sh --event ./sam-tests/create.json # about 20 seconds
-    ./sam-tests/run.sh --event ./sam-tests/update.json # about 20 seconds
-    ./sam-tests/run.sh --event ./sam-tests/delete.json # about 15 seconds
+    cfn invoke --max-reinvoke 10 CREATE ./sam-tests/create.json
+    cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json
+    cfn invoke --max-reinvoke 10 UPDATE ./sam-tests/update.json
+    cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json
+    cfn invoke --max-reinvoke 10 DELETE ./sam-tests/delete.json
     ```
-    _Note that you can specify `--profile` to get credentials from a specific profile (defaults to `default`) and
-     `--region` to run the test in a specific region (defaults to `eu-central-1`)._
+    _Note that `cfn` doesn't support yet profiles so you will need to have the `default` profile setup for your `aws` CLI.
+    However, you can specify `--region` to run the test in a specific region._
  
 _Note these tests require the a Terraform server to be up and running, as well parameters to be set in parameter store.
 See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the installation guide](./installation-guide.md#installation)._
