@@ -1,17 +1,18 @@
-package io.cloudsoft.terraform.infrastructure;
+package io.cloudsoft.terraform.infrastructure.commands;
 
-import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+
+import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 
 public class TerraformSshCommands {
     
@@ -35,6 +36,10 @@ public class TerraformSshCommands {
             TF_SCPDIR = "/tmp",
             TF_TMPFILENAME = "configuration.bin",
             TF_CONFFILENAME = "configuration.tf";
+
+    public static TerraformSshCommands of(TerraformBaseHandler<?> w) {
+        return new TerraformSshCommands(w.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
+    }
 
     protected TerraformSshCommands(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
         this.logger = logger;
@@ -193,7 +198,4 @@ public class TerraformSshCommands {
         }
     }
 
-    public static TerraformSshCommands of(AbstractHandlerWorker<?> w) {
-        return new TerraformSshCommands(w.handler.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
-    }
 }

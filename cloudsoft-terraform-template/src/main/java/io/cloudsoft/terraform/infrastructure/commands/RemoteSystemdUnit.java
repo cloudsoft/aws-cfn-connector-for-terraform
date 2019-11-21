@@ -1,13 +1,19 @@
-package io.cloudsoft.terraform.infrastructure;
+package io.cloudsoft.terraform.infrastructure.commands;
 
 import java.io.IOException;
 
-import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
-    private String unitName;
+    
+    private final String unitName;
+
+    public static RemoteSystemdUnit of(TerraformBaseHandler<?> w, String unitName) {
+        return new RemoteSystemdUnit(w.getParameters(), w.logger, w.proxy, unitName, w.model.getIdentifier());
+    }
 
     protected RemoteSystemdUnit(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String unitName, String configurationName) {
         super(params, logger, proxy, configurationName);
@@ -41,10 +47,6 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     public String getErrno() throws IOException {
         return getRemotePropertyValue("StatusErrno");
-    }
-
-    public static RemoteSystemdUnit of(AbstractHandlerWorker<?> w, String unitName) {
-        return new RemoteSystemdUnit(w.handler.getParameters(), w.logger, w.proxy, unitName, w.model.getIdentifier());
     }
 
     public String getLog() throws IOException {

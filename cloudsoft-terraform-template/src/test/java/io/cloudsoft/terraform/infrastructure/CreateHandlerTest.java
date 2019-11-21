@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -14,6 +15,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static org.mockito.Mockito.*;
+
+import java.io.IOException;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -42,7 +45,7 @@ public class CreateHandlerTest {
     }
 
     @Test
-    public void handleRequestCallWorkerRun() {
+    public void handleRequestCallWorkerRun() throws IOException {
         final ResourceModel model = ResourceModel.builder().build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
@@ -56,10 +59,10 @@ public class CreateHandlerTest {
         handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         CreateHandler spy = spy(handler);
 
-        doReturn(progressEvent).when(spy).run();
+        doReturn(progressEvent).when(spy).runStep();
 
         spy.handleRequest(proxy, request, callbackContext, logger);
 
-        verify(spy, times(1)).run();
+        verify(spy, times(1)).runWithLoopingIfNecessary();
     }
 }

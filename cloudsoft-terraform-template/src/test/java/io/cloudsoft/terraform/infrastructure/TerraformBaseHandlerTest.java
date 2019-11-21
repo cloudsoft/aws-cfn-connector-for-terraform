@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
@@ -318,7 +319,9 @@ public class TerraformBaseHandlerTest {
     }
 
     // TerraformBaseHandler is an abstract class. In order to tests methods within it, we need to create a dummy implementation
-    class TerraformBaseHandlerUnderTest extends TerraformBaseHandler {
+    static class TerraformBaseHandlerUnderTest extends TerraformBaseHandler<TerraformBaseHandlerUnderTest.NoSteps> {
+        protected enum NoSteps {}
+        
         public TerraformBaseHandlerUnderTest() {
             super();
         }
@@ -327,9 +330,9 @@ public class TerraformBaseHandlerTest {
             super();
             setParameters(new TerraformParameters(awsSimpleSystemsManagement, amazonS3));
         }
-
+        
         @Override
-        protected ProgressEvent<ResourceModel, CallbackContext> run() {
+        protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             return null;
         }
     }

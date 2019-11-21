@@ -6,6 +6,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +49,7 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequestCallWorkerRun() {
+    public void handleRequestCallWorkerRun() throws IOException {
         final ResourceModel model = ResourceModel.builder().build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
@@ -61,11 +63,11 @@ public class UpdateHandlerTest {
         handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         UpdateHandler spy = spy(handler);
 
-        doReturn(progressEvent).when(spy).run();
+        doReturn(progressEvent).when(spy).runStep();
 
         spy.handleRequest(proxy, request, callbackContext, logger);
 
-        verify(spy, times(1)).run();
+        verify(spy, times(1)).runWithLoopingIfNecessary();
 
     }
 }

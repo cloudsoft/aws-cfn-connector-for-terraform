@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import io.cloudsoft.terraform.infrastructure.ResourceModel;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -34,11 +35,11 @@ public class TerraformParameters {
         this(SsmClient.create(), S3Client.create());
     }
 
-    protected String getHost(AmazonWebServicesClientProxy proxy) {
+    public String getHost(AmazonWebServicesClientProxy proxy) {
         return getParameterValue(proxy, "ssh-host");
     }
 
-    protected int getPort(AmazonWebServicesClientProxy proxy) {
+    public int getPort(AmazonWebServicesClientProxy proxy) {
         int ret;
         try {
             ret = Integer.parseInt(getParameterValue(proxy, "ssh-port").trim());
@@ -50,19 +51,19 @@ public class TerraformParameters {
         return ret;
     }
 
-    protected String getUsername(AmazonWebServicesClientProxy proxy) {
+    public String getUsername(AmazonWebServicesClientProxy proxy) {
         return getParameterValue(proxy, "ssh-username");
     }
 
-    protected String getSSHKey(AmazonWebServicesClientProxy proxy) {
+    public String getSSHKey(AmazonWebServicesClientProxy proxy) {
         return getParameterValue(proxy, "ssh-key");
     }
 
-    protected String getFingerprint(AmazonWebServicesClientProxy proxy) {
+    public String getFingerprint(AmazonWebServicesClientProxy proxy) {
         return getParameterValue(proxy, "ssh-fingerprint");
     }
 
-    private String getParameterValue(AmazonWebServicesClientProxy proxy, String id) {
+    public String getParameterValue(AmazonWebServicesClientProxy proxy, String id) {
         GetParameterRequest getParameterRequest = GetParameterRequest.builder()
                 .name(String.format("%s/%s", PREFIX, id))
                 .withDecryption(true)
