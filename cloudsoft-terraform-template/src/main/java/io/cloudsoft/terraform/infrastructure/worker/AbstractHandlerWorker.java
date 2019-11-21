@@ -1,19 +1,20 @@
 package io.cloudsoft.terraform.infrastructure.worker;
 
-import io.cloudsoft.terraform.infrastructure.CallbackContext;
-import io.cloudsoft.terraform.infrastructure.ResourceModel;
-import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
-import io.cloudsoft.terraform.infrastructure.TerraformInterfaceSSH;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public abstract class AbstractHandlerWorker {
+import io.cloudsoft.terraform.infrastructure.CallbackContext;
+import io.cloudsoft.terraform.infrastructure.ResourceModel;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformSshCommands;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+public abstract class AbstractHandlerWorker<Steps extends Enum<?>> {
 
     // TODO accessors or other tidy, rather than public
     public final AmazonWebServicesClientProxy proxy;
@@ -54,12 +55,48 @@ public abstract class AbstractHandlerWorker {
         logger.log(message);
     }
 
-    public final TerraformInterfaceSSH tfSync() {
-        return TerraformInterfaceSSH.of(this);
+    public final TerraformSshCommands tfSync() {
+        return TerraformSshCommands.of(this);
     }
 
-    public abstract ProgressEvent<ResourceModel, CallbackContext> call();
+    public final ProgressEvent<ResourceModel, CallbackContext> call() {
+        logger.log(getClass().getName() + " lambda starting: " + model);
 
+        try {
+            ProgressEvent<ResourceModel, CallbackContext> result = doCall();
+            logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: " + callbackContext);
+            return result;
+            
+        } catch (Exception e) {
+            logException(getClass().getName(), e);
+            logger.log(getClass().getName() + " lambda exiting with error");
+            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .resourceModel(model)
+                    .status(OperationStatus.FAILED)
+                    .build();
+        }
+    }
+
+    public abstract ProgressEvent<ResourceModel, CallbackContext> doCall() throws IOException;
+
+    // TODO put in results object
+    
+    protected ProgressEvent<ResourceModel, CallbackContext> success() {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.SUCCESS)
+                .build();
+    }
+    
+    protected ProgressEvent<ResourceModel, CallbackContext> inProgressResult() {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .resourceModel(model)
+            .callbackContext(callbackContext)
+            .callbackDelaySeconds(nextDelay(callbackContext))
+            .status(OperationStatus.IN_PROGRESS)
+            .build();
+    }
+    
     int nextDelay(CallbackContext callbackContext) {
         if (callbackContext.lastDelaySeconds < 0) {
             callbackContext.lastDelaySeconds = 0;
@@ -73,13 +110,13 @@ public abstract class AbstractHandlerWorker {
         return callbackContext.lastDelaySeconds;
     }
 
-    void advanceTo(String nextStep) {
+    protected final void advanceTo(Steps nextStep) {
         logger.log(String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep));
-        callbackContext.stepId = nextStep;
+        callbackContext.stepId = nextStep.toString();
         callbackContext.lastDelaySeconds = -1;
     }
 
-    void logException(String origin, Exception e) {
+    protected final void logException(String origin, Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
@@ -93,4 +130,5 @@ public abstract class AbstractHandlerWorker {
     void getAndUploadConfiguration() throws IOException {
         tfSync().uploadConfiguration(handler.getConfiguration(proxy, model));
     }
+    
 }

@@ -13,7 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-public class TerraformInterfaceSSH {
+public class TerraformSshCommands {
+    
     protected final Logger logger;
     protected final String configurationIdentifier, serverHostname, sshUsername, sshServerKeyFP,
             sshClientSecretKeyContents;
@@ -35,7 +36,7 @@ public class TerraformInterfaceSSH {
             TF_TMPFILENAME = "configuration.bin",
             TF_CONFFILENAME = "configuration.tf";
 
-    protected TerraformInterfaceSSH(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
+    protected TerraformSshCommands(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
         this.logger = logger;
         this.serverHostname = h.getHost(proxy);
         this.sshPort = h.getPort(proxy);
@@ -53,23 +54,23 @@ public class TerraformInterfaceSSH {
         return String.format("%s/%s", TF_SCPDIR, configurationIdentifier);
     }
 
-    public void onlyMkdir() throws IOException {
-        onlyMkdir(getWorkdir());
+    public void mkdir() throws IOException {
+        mkdir(getWorkdir());
     }
 
-    public void onlyMkdir(String dir) throws IOException {
+    public void mkdir(String dir) throws IOException {
         runSSHCommand("mkdir -p " + dir);
     }
 
-    public void onlyMv(String source, String target) throws IOException {
+    public void mv(String source, String target) throws IOException {
         runSSHCommand(String.format("mv %s %s", source, target));
     }
 
-    public void onlyRmdir() throws IOException {
-        onlyRmdir(getWorkdir());
+    public void rmdir() throws IOException {
+        rmdir(getWorkdir());
     }
 
-    public void onlyRmdir(String dir) throws IOException {
+    public void rmdir(String dir) throws IOException {
         runSSHCommand("rm -rf " + dir);
     }
 
@@ -132,7 +133,7 @@ public class TerraformInterfaceSSH {
     }
 
     public void uploadConfiguration(byte[] contents) throws IOException, IllegalArgumentException {
-        onlyMkdir(getScpDir());
+        mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
         String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
         runSSHCommand("file  --brief --mime-type " + tmpFilename);
@@ -140,16 +141,16 @@ public class TerraformInterfaceSSH {
 
         switch (mimeType) {
             case "text/plain":
-                onlyMv(tmpFilename, getWorkdir() + "/" + TF_CONFFILENAME);
+                mv(tmpFilename, getWorkdir() + "/" + TF_CONFFILENAME);
                 break;
             case "application/zip":
                 runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkdir()));
                 break;
             default:
-                onlyRmdir(getScpDir());
+                rmdir(getScpDir());
                 throw new IllegalArgumentException("Unknown MIME type " + mimeType);
         }
-        onlyRmdir(getScpDir());
+        rmdir(getScpDir());
     }
 
     public void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
@@ -192,7 +193,7 @@ public class TerraformInterfaceSSH {
         }
     }
 
-    public static TerraformInterfaceSSH of(AbstractHandlerWorker w) {
-        return new TerraformInterfaceSSH(w.handler, w.logger, w.proxy, w.model.getIdentifier());
+    public static TerraformSshCommands of(AbstractHandlerWorker w) {
+        return new TerraformSshCommands(w.handler, w.logger, w.proxy, w.model.getIdentifier());
     }
 }

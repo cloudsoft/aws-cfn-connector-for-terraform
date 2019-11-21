@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -23,6 +25,19 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 public class AbstractHandlerWorkerTest {
 
+    private enum NoSteps {}
+    private static class EmptyHandlerWorker extends AbstractHandlerWorker<NoSteps> {
+        EmptyHandlerWorker(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request,
+            CallbackContext callbackContext, Logger logger, TerraformBaseHandler<CallbackContext> terraformBaseHandler) {
+            super(proxy, request, callbackContext, logger, terraformBaseHandler);
+        }
+
+        @Override
+        public ProgressEvent<ResourceModel, CallbackContext> doCall() {
+            return null;
+        }
+    }
+    
     @Mock
     private TerraformBaseHandler<CallbackContext> handler;
 
@@ -31,14 +46,7 @@ public class AbstractHandlerWorkerTest {
 
     @Test
     public void throwsIfRequestIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new AbstractHandlerWorker(null, null, null, logger, handler) {
-                @Override
-                public ProgressEvent<ResourceModel, CallbackContext> call() {
-                    return null;
-                }
-            };
-        });
+        assertThrows(IllegalArgumentException.class, () -> new EmptyHandlerWorker(null, null, null, logger, handler));
     }
 
     @Test
@@ -46,13 +54,7 @@ public class AbstractHandlerWorkerTest {
         assertThrows(IllegalArgumentException.class, () -> {
             final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                     .build();
-
-            new AbstractHandlerWorker(null, request, null, logger, handler) {
-                @Override
-                public ProgressEvent<ResourceModel, CallbackContext> call() {
-                    return null;
-                }
-            };
+            new EmptyHandlerWorker(null, request, null, logger, handler);
         });
     }
 
@@ -63,14 +65,7 @@ public class AbstractHandlerWorkerTest {
                 .desiredResourceState(model)
                 .build();
         final CallbackContext callbackContext = new CallbackContext();
-
-        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(null, request, callbackContext, logger, handler) {
-            @Override
-            public ProgressEvent<ResourceModel, CallbackContext> call() {
-                return null;
-            }
-        };
-
+        AbstractHandlerWorker<?> abstractHandlerWorker = new EmptyHandlerWorker(null, request, callbackContext, logger, handler);
         assertEquals(model, abstractHandlerWorker.model);
     }
 
@@ -82,12 +77,7 @@ public class AbstractHandlerWorkerTest {
                 .build();
         final CallbackContext callbackContext = new CallbackContext();
 
-        AbstractHandlerWorker abstractHandlerWorker = new AbstractHandlerWorker(null, request, callbackContext, logger, handler) {
-            @Override
-            public ProgressEvent<ResourceModel, CallbackContext> call() {
-                return null;
-            }
-        };
+        AbstractHandlerWorker<?> abstractHandlerWorker = new EmptyHandlerWorker(null, request, callbackContext, logger, handler);
 
         String message = "This is a message";
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
