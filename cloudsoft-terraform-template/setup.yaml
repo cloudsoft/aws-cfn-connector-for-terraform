@@ -36,7 +36,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: cloudsoft-terraform-template-logs
+      LogGroupName: cloudsoft-terraform-infrastructure-logs
       RetentionInDays: 7
 
   TerraformSSHHostParameter:
@@ -56,21 +56,21 @@ Resources:
   TerraformSSHUsernameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Username of the terraform server host for SSH connections
+      Description: Username of the Terraform server host for SSH connections
       Name: /cfn/terraform/ssh-username
       Type: String
       Value: 'terraform'
   TerraformSSHKeyParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Private SSH key of the terraform server for SSH connections
+      Description: Private SSH key of the CloudFormation client for SSH connections
       Name: /cfn/terraform/ssh-key
       Type: String
       Value: '(FIXME)'
   TerraformSSHFingerprintParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Private SSH key fingerprint of the terraform server to verify SSH connections
+      Description: Public SSH key fingerprint of the Terraform server to verify SSH connections
       Name: /cfn/terraform/ssh-fingerprint
       Type: String
       Value: '(FIXME)'

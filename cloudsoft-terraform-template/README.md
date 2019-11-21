@@ -1,7 +1,5 @@
 # Cloudsoft::Terraform::Infrastructure
 
-(TODO: rename Terraform::Configuration)
-
 ## Quick start
 
 First, you need to install the custom type into CloudFomation. See the [installation guide](./docs/installation-guide.md) documentation.

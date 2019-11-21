@@ -1,8 +1,8 @@
 # Installation guide
 
-The CloudFormation connector for Terraform add a new CloudFormation type, for instance `Cloudsoft::Terraform::Configuration` which allows you to deploy Terraform configuration direction through CloudFormation.
+The Terraform resource provider for CloudFormation adds a new CloudFormation resource type, `Cloudsoft::Terraform::Infrastructure`, which allows you to deploy a Terraform infrastructure as a part of a CloudFormation stack using a Terraform configuration that is a part of a CloudFormation template.
 
-This page will guide you on how to install the CloudFormation connector for Terraform.
+This page will guide you on how to install the Terraform resource provider for CloudFormation.
 
 ## Prerequisites
 
@@ -32,14 +32,14 @@ You will need to have the AWS CLI installed and configured on your local machine
    ```sh
    aws cloudformation create-stack \
      --template-body "file://resource-role.yaml" \
-     --stack-name CloudsoftTerraformTemplateExecutionRole \
+     --stack-name CloudsoftTerraformInfrastructureExecutionRole \
      --capabilities CAPABILITY_IAM
    ```
 1. Download the [`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
      --template-body "file://setup.yaml" \
-     --stack-name CloudsoftTerraformTemplateSetup \
+     --stack-name CloudsoftTerraformInfrastructureSetup \
      --capabilities CAPABILITY_IAM
    ```
 1. Register the `Cloudsoft::Terraform::Infrastructure` CloudFormation type, using the command below:
@@ -58,7 +58,7 @@ You will need to have the AWS CLI installed and configured on your local machine
    
    If you are updating the connector, note the version number and use the following command to set the default version:
    ```sh
-   aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Template --version-id 0000000N
+   aws cloudformation set-type-default-version --type RESOURCE --type-name Cloudsoft::Terraform::Infrastructure --version-id 0000000N
    ```
 1. Update as required in parameter store the following parameters:
    - `/cfn/terraform/ssh-host`
