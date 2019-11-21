@@ -106,7 +106,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
-                <configuration>
+                <configuration>    
+                    <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:all,-options,-processing</arg>
                         <arg>-Werror</arg>
