@@ -54,7 +54,8 @@ public class DeleteHandlerTest {
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
                 .build();
-        final DeleteHandler handler = new DeleteHandler(ssmClient, s3Client);
+        final DeleteHandler handler = new DeleteHandler();
+        handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         DeleteHandler spy = spy(handler);
 
         doReturn(progressEvent).when(spy).run(any(), any());

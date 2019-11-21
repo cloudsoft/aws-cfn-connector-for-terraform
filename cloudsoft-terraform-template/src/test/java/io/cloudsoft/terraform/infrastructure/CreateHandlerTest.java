@@ -52,7 +52,8 @@ public class CreateHandlerTest {
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
                 .build();
-        final CreateHandler handler = new CreateHandler(ssmClient, s3Client);
+        final CreateHandler handler = new CreateHandler();
+        handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         CreateHandler spy = spy(handler);
 
         doReturn(progressEvent).when(spy).run(any(), any());

@@ -1,21 +1,22 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import java.io.IOException;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
-
-import java.io.IOException;
-import java.util.Map;
 
 public class TerraformOutputsCommand extends TerraformSshCommands {
 
     private final ObjectMapper objectMapper;
     private String outputJsonStringized = null;
 
-    protected TerraformOutputsCommand(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
-        super(h, logger, proxy, configurationIdentifier);
+    protected TerraformOutputsCommand(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
+        super(params, logger, proxy, configurationIdentifier);
         this.objectMapper = new ObjectMapper();
     }
 
@@ -37,7 +38,7 @@ public class TerraformOutputsCommand extends TerraformSshCommands {
         return outputJsonStringized;
     }
 
-    public static TerraformOutputsCommand of(AbstractHandlerWorker w) {
-        return new TerraformOutputsCommand(w.handler, w.logger, w.proxy, w.model.getIdentifier());
+    public static TerraformOutputsCommand of(AbstractHandlerWorker<?> w) {
+        return new TerraformOutputsCommand(w.handler.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
     }
 }

@@ -1,38 +1,35 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import software.amazon.awssdk.awscore.AwsResponseMetadata;
-import software.amazon.awssdk.core.SdkField;
-import software.amazon.awssdk.core.SdkResponse;
-import software.amazon.awssdk.http.SdkHttpResponse;
+
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.SsmResponse;
-import software.amazon.awssdk.services.ssm.model.SsmResponseMetadata;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 public class TerraformBaseHandlerTest {
 
@@ -67,7 +64,7 @@ public class TerraformBaseHandlerTest {
                         .build())
                 .build());
 
-        String host = handler.getHost(proxy);
+        String host = handler.getParameters().getHost(proxy);
         assertEquals(expected, host);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
@@ -87,7 +84,7 @@ public class TerraformBaseHandlerTest {
                         .build())
                 .build());
 
-        String fingerprint = handler.getFingerprint(proxy);
+        String fingerprint = handler.getParameters().getFingerprint(proxy);
         assertEquals(expected, fingerprint);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
@@ -103,7 +100,7 @@ public class TerraformBaseHandlerTest {
 
         when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
-        String sshKey = handler.getSSHKey(proxy);
+        String sshKey = handler.getParameters().getSSHKey(proxy);
         assertEquals(expected, sshKey);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
@@ -119,7 +116,7 @@ public class TerraformBaseHandlerTest {
 
         when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
-        String username = handler.getUsername(proxy);
+        String username = handler.getParameters().getUsername(proxy);
         assertEquals(expected, username);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
@@ -135,7 +132,7 @@ public class TerraformBaseHandlerTest {
 
         when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
-        int port = handler.getPort(proxy);
+        int port = handler.getParameters().getPort(proxy);
         assertEquals(Integer.parseInt(expected), port);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
@@ -151,7 +148,7 @@ public class TerraformBaseHandlerTest {
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> {
-            handler.getHost(proxy);
+            handler.getParameters().getHost(proxy);
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
@@ -168,7 +165,7 @@ public class TerraformBaseHandlerTest {
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> {
-            handler.getFingerprint(proxy);
+            handler.getParameters().getFingerprint(proxy);
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
@@ -185,7 +182,7 @@ public class TerraformBaseHandlerTest {
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> {
-            handler.getSSHKey(proxy);
+            handler.getParameters().getSSHKey(proxy);
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
@@ -202,7 +199,7 @@ public class TerraformBaseHandlerTest {
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> {
-            handler.getUsername(proxy);
+            handler.getParameters().getUsername(proxy);
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
@@ -219,7 +216,7 @@ public class TerraformBaseHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
-        int port = handler.getPort(proxy);
+        int port = handler.getParameters().getPort(proxy);
         assertEquals(expected, port);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
@@ -231,7 +228,7 @@ public class TerraformBaseHandlerTest {
         final String configurationContent = "Hello world";
         final ResourceModel model = ResourceModel.builder().configurationContent(configurationContent).build();
 
-        byte[] result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getParameters().getConfiguration(proxy, model);
         assertArrayEquals(configurationContent.getBytes(StandardCharsets.UTF_8), result);
     }
 
@@ -242,7 +239,7 @@ public class TerraformBaseHandlerTest {
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         String expected = "Hello world";
-        byte[] result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getParameters().getConfiguration(proxy, model);
 
         assertArrayEquals(expected.getBytes(StandardCharsets.UTF_8), result);
     }
@@ -254,7 +251,7 @@ public class TerraformBaseHandlerTest {
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(proxy, model);
+            handler.getParameters().getConfiguration(proxy, model);
         });
     }
 
@@ -274,7 +271,7 @@ public class TerraformBaseHandlerTest {
             return null;
         });
 
-        byte[] result = handler.getConfiguration(proxy, model);
+        byte[] result = handler.getParameters().getConfiguration(proxy, model);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any());
         ArgumentCaptor<GetObjectRequest> argument = ArgumentCaptor.forClass(GetObjectRequest.class);
         verify(s3Client, times(1)).getObject(argument.capture(), any(Path.class));
@@ -293,7 +290,7 @@ public class TerraformBaseHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(proxy, model);
+            handler.getParameters().getConfiguration(proxy, model);
         });
     }
 
@@ -306,7 +303,7 @@ public class TerraformBaseHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            handler.getConfiguration(proxy, model);
+            handler.getParameters().getConfiguration(proxy, model);
         });
     }
 
@@ -318,7 +315,7 @@ public class TerraformBaseHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
 
         assertThrows(IllegalStateException.class, () -> {
-            handler.getConfiguration(proxy, model);
+            handler.getParameters().getConfiguration(proxy, model);
         });
     }
 
@@ -329,7 +326,8 @@ public class TerraformBaseHandlerTest {
         }
 
         public TerraformBaseHandlerUnderTest(SsmClient awsSimpleSystemsManagement, S3Client amazonS3) {
-            super(awsSimpleSystemsManagement, amazonS3);
+            super();
+            setParameters(new TerraformParameters(awsSimpleSystemsManagement, amazonS3));
         }
 
         @Override

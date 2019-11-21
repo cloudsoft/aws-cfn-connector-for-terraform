@@ -36,13 +36,13 @@ public class TerraformSshCommands {
             TF_TMPFILENAME = "configuration.bin",
             TF_CONFFILENAME = "configuration.tf";
 
-    protected TerraformSshCommands(TerraformBaseHandler<?> h, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
+    protected TerraformSshCommands(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
         this.logger = logger;
-        this.serverHostname = h.getHost(proxy);
-        this.sshPort = h.getPort(proxy);
-        this.sshServerKeyFP = h.getFingerprint(proxy);
-        this.sshUsername = h.getUsername(proxy);
-        this.sshClientSecretKeyContents = h.getSSHKey(proxy);
+        this.serverHostname = params.getHost(proxy);
+        this.sshPort = params.getPort(proxy);
+        this.sshServerKeyFP = params.getFingerprint(proxy);
+        this.sshUsername = params.getUsername(proxy);
+        this.sshClientSecretKeyContents = params.getSSHKey(proxy);
         this.configurationIdentifier = configurationIdentifier;
     }
 
@@ -193,7 +193,7 @@ public class TerraformSshCommands {
         }
     }
 
-    public static TerraformSshCommands of(AbstractHandlerWorker w) {
-        return new TerraformSshCommands(w.handler, w.logger, w.proxy, w.model.getIdentifier());
+    public static TerraformSshCommands of(AbstractHandlerWorker<?> w) {
+        return new TerraformSshCommands(w.handler.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
     }
 }

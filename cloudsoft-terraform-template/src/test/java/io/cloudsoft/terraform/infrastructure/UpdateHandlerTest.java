@@ -54,7 +54,8 @@ public class UpdateHandlerTest {
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
                 .build();
-        final UpdateHandler handler = new UpdateHandler(ssmClient, s3Client);
+        final UpdateHandler handler = new UpdateHandler();
+        handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         UpdateHandler spy = spy(handler);
 
         doReturn(progressEvent).when(spy).run(any(), any());

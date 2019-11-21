@@ -128,7 +128,7 @@ public abstract class AbstractHandlerWorker<Steps extends Enum<?>> {
     // to keep the downloaded file. The callback context isn't intended for that, neither is
     // the lambda's runtime filesystem.
     void getAndUploadConfiguration() throws IOException {
-        tfSync().uploadConfiguration(handler.getConfiguration(proxy, model));
+        tfSync().uploadConfiguration(handler.getParameters().getConfiguration(proxy, model));
     }
     
 }
