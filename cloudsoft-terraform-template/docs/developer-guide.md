@@ -2,15 +2,30 @@
 
 ## Prerequisites
 
-To build the project, you will first need few things installed on your local machine. For instance:
+To build the project, you will need the:
 
-- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
-- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-- [CFN CLI](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-setup.html)
+* [CFN CLI](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-setup.html)
 
-## Build
+Note you will need these prerequisites as described on that page:
 
-Once this repository is cloned:
+* Python 3.6 or later
+* Java and Maven
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html),
+
+Make sure to install both the `cloudformation-cli` and the `cloudformation-cli-java-plugin`,
+as described on the CFN CLI page.
+
+These resources are not needed to build but aree very useful to develop and test:
+
+* [Lombok](https://projectlombok.org/) support for your IDE
+  (if you want your IDE to understand the Lombok Java annotations)
+* [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+  and Docker (if you want to run serverless unit tests)
+
+
+## Build and Run
+
+To build and run this project, clone it to your machine and then:
 
 1. Build with: 
    ```sh
@@ -20,22 +35,18 @@ Once this repository is cloned:
    ```sh
    cfn submit --set-default -v
    ```
-
-The connector requires few parameters in parameter store. If you haven't installed the connector, you can use the
-[`setup.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml)
-template to create a stack by downloading that file, editing it, and using the command below:
+1. Set the parameters in parameter store. We suggest copying the file `setup.yaml`
+   to `setup-local.yaml` (which is `.gitignore`d) and editing the values to connect
+   to your Terraform server as described in the [installation guide](installation-guide.md),
+   then creating the stack:
 
 ```sh
 aws cloudformation create-stack \
-    --template-body "file://setup.yaml" \
+    --template-body "file://setup-local.yaml" \
     --stack-name CloudsoftTerraformInfrastructureSetup \
     --capabilities CAPABILITY_IAM
 ```
 
-## IDE
-
-The code use [Lombok](https://projectlombok.org/), and [you may have to install IDE integrations](https://projectlombok.org/)
-to enable auto-complete for Lombok-annotated classes.
 
 ## Testing
 
@@ -67,11 +78,13 @@ The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` propert
     cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json
     cfn invoke --max-reinvoke 10 DELETE ./sam-tests/delete.json
     ```
+    The output will be shown in the _first_ tab.
+    
     _Note that `cfn` doesn't support yet profiles so you will need to have the `default` profile setup for your `aws` CLI.
     However, you can specify `--region` to run the test in a specific region._
  
-_Note these tests require the a Terraform server to be up and running, as well parameters to be set in parameter store.
-See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the installation guide](./installation-guide.md#installation)._
+    _These tests require the Terraform server to be up and running, as well as the parameters set in parameter store.
+    See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the installation guide](./installation-guide.md#installation)._
 
 ### End-to-end tests
 

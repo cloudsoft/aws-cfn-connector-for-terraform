@@ -19,3 +19,7 @@ target/
 # our logs
 rpdk.log
 submit.log
+
+# local config files
+*-local.yaml
+
