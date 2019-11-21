@@ -51,10 +51,12 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     break;   // don't _need_ to break here, but improves readability,
                 // helps us maximize the time for each step (avoid timeout), and
                 // in any case the framework calls back quickly
+
                 case CREATE_SYNC_MKDIR:
                     advanceTo(Steps.CREATE_SYNC_UPLOAD);
                     getAndUploadConfiguration();
                     break;   // optional break, as above
+
                 case CREATE_SYNC_UPLOAD:
                     advanceTo(Steps.CREATE_ASYNC_TF_INIT);
                     tfInit.start();
@@ -93,7 +95,7 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
                     model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
                     model.setOutputs(outputCmd.getOutputAsMap());
                     advanceTo(Steps.CREATE_DONE);
-                    // no need to break
+                    break;
 
                 case CREATE_DONE:
                     logger.log(getClass().getName() + " completed: success");

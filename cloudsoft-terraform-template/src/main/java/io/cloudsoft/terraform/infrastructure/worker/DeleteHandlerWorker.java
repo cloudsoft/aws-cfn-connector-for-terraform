@@ -57,7 +57,7 @@ public class DeleteHandlerWorker extends AbstractHandlerWorker {
                 case DELETE_SYNC_RMDIR:
                     advanceTo(Steps.DELETE_DONE);
                     tfSync().onlyRmdir();
-                    // no need to break
+                    break;
 
                 case DELETE_DONE:
                     logger.log(getClass().getName() + " completed: success");
