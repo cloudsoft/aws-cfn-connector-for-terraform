@@ -38,9 +38,9 @@ public class CreateHandlerWorker extends AbstractHandlerWorker {
         logger.log(getClass().getName() + " lambda starting: " + model);
 
         try {
-            if (model.getIdentifier() == null) {
-                model.setIdentifier(UUID.randomUUID().toString());
-            }
+            if (callbackContext.createdModelIdentifier == null)
+                callbackContext.createdModelIdentifier = UUID.randomUUID().toString();
+            model.setIdentifier(callbackContext.createdModelIdentifier);
             Steps curStep = callbackContext.stepId == null ? Steps.CREATE_INIT : Steps.valueOf(callbackContext.stepId);
             RemoteSystemdUnit tfInit = RemoteSystemdUnit.of(this, "terraform-init");
             RemoteSystemdUnit tfApply = RemoteSystemdUnit.of(this, "terraform-apply");

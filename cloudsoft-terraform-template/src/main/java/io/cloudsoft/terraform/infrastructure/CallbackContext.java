@@ -9,6 +9,7 @@ public class CallbackContext {
 
     public String stepId;
     public int lastDelaySeconds;
+    public String createdModelIdentifier;
 
     // for testing:
     public boolean forceSynchronous = false;
