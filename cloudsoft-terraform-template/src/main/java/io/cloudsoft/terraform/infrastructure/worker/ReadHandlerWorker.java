@@ -3,8 +3,8 @@ package io.cloudsoft.terraform.infrastructure.worker;
 import java.io.IOException;
 
 import io.cloudsoft.terraform.infrastructure.CallbackContext;
+import io.cloudsoft.terraform.infrastructure.ReadHandler;
 import io.cloudsoft.terraform.infrastructure.ResourceModel;
-import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
 import io.cloudsoft.terraform.infrastructure.TerraformOutputsCommand;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -15,8 +15,8 @@ public class ReadHandlerWorker extends AbstractHandlerWorker<ReadHandlerWorker.N
 
     protected enum NoSteps {}
     
-    public ReadHandlerWorker(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger, TerraformBaseHandler<CallbackContext> terraformBaseHandler) {
-        super(proxy, request, callbackContext, logger, terraformBaseHandler);
+    public ReadHandlerWorker(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger, ReadHandler handler) {
+        super(proxy, request, callbackContext, logger, handler);
     }
 
     @Override

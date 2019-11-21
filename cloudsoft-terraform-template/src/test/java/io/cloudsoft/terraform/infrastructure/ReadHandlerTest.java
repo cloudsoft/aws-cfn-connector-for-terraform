@@ -1,19 +1,22 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
@@ -44,10 +47,10 @@ public class ReadHandlerTest {
         final ReadHandler handler = new ReadHandler();
         ReadHandler spy = spy(handler);
 
-        doReturn(progressEvent).when(spy).run(any(), any());
+        doReturn(progressEvent).when(spy).run();
 
         spy.handleRequest(proxy, request, callbackContext, logger);
 
-        verify(spy, times(1)).run(eq(callbackContext), any());
+        verify(spy, times(1)).run();
     }
 }

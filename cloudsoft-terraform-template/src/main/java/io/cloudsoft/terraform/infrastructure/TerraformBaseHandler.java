@@ -1,17 +1,36 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.util.function.Function;
-
 import com.google.common.base.Preconditions;
 
-import io.cloudsoft.terraform.infrastructure.worker.AbstractHandlerWorker;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
+public abstract class TerraformBaseHandler extends BaseHandler<CallbackContext> {
 
+    // TODO accessors or other tidy, rather than public
+    public AmazonWebServicesClientProxy proxy;
+    public ResourceHandlerRequest<ResourceModel> request;
+    public ResourceModel model, prevModel;
+    public CallbackContext callbackContext;
+    public Logger logger;
+    public TerraformBaseHandler handler;
+    
     TerraformParameters parameters;
     
+    protected void init(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request,
+            CallbackContext callbackContext, Logger logger) {
+        this.proxy = proxy;
+        this.request = request;
+        this.callbackContext = callbackContext;
+        this.logger = logger;
+        
+        // TODO replace with 'this'
+        this.handler = this;
+    }
+
     public synchronized TerraformParameters getParameters() {
         if (parameters==null) {
             parameters = new TerraformParameters();
@@ -25,30 +44,50 @@ public abstract class TerraformBaseHandler<T> extends BaseHandler<T> {
         this.parameters = Preconditions.checkNotNull(parameters, "parameters");
     }
     
+    
+    @Override
+    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
+        
+        init(proxy, request, callbackContext, logger);
+        return runWithLoopingIfNecessary();
+    }
+    
     // TODO: This is now obsolete as the cfn-cli handles reinvokes out of the box. Should remove it.
-    protected ProgressEvent<ResourceModel, CallbackContext> run(CallbackContext callback, Function<CallbackContext, AbstractHandlerWorker<?>> workerFactory) {
+    protected ProgressEvent<ResourceModel, CallbackContext> runWithLoopingIfNecessary() {
         // allows us to force synchronous behaviour -- especially useful when running in SAM
-        boolean forceSynchronous = callback == null ? false : callback.forceSynchronous;
-        boolean disregardCallbackDelay = callback == null ? false : callback.disregardCallbackDelay;
+        boolean forceSynchronous = callbackContext == null ? false : callbackContext.forceSynchronous;
+        boolean disregardCallbackDelay = callbackContext == null ? false : callbackContext.disregardCallbackDelay;
 
         while (true) {
-            AbstractHandlerWorker<?> worker = workerFactory.apply(callback);
-            ProgressEvent<ResourceModel, CallbackContext> result = worker.call();
+            ProgressEvent<ResourceModel, CallbackContext> result = run();
             if (!forceSynchronous || !OperationStatus.IN_PROGRESS.equals(result.getStatus())) {
                 return result;
             }
-            worker.log("Synchronous mode: " + result.getCallbackContext());
+            log("Synchronous mode: " + result.getCallbackContext());
             try {
                 if (disregardCallbackDelay) {
-                    worker.log("Will run callback immediately");
+                    log("Will run callback immediately");
                 } else {
-                    worker.log("Will run callback after " + result.getCallbackDelaySeconds() + " seconds");
+                    log("Will run callback after " + result.getCallbackDelaySeconds() + " seconds");
                     Thread.sleep(1000 * result.getCallbackDelaySeconds());
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException("Aborted due to interrupt", e);
             }
-            callback = result.getCallbackContext();
+            callbackContext = result.getCallbackContext();
         }
     }
+    
+    public void log(String message) {
+        System.out.println(message);
+        System.out.println("<EOL>");
+        logger.log(message);
+    }
+
+    protected abstract ProgressEvent<ResourceModel, CallbackContext> run();
+        
 }

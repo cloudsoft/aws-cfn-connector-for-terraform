@@ -56,10 +56,10 @@ public class CreateHandlerTest {
         handler.setParameters(new TerraformParameters(ssmClient, s3Client));
         CreateHandler spy = spy(handler);
 
-        doReturn(progressEvent).when(spy).run(any(), any());
+        doReturn(progressEvent).when(spy).run();
 
         spy.handleRequest(proxy, request, callbackContext, logger);
 
-        verify(spy, times(1)).run(eq(callbackContext), any());
+        verify(spy, times(1)).run();
     }
 }

@@ -1,30 +1,23 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListHandler extends TerraformBaseHandler<CallbackContext> {
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
+public class ListHandler extends TerraformBaseHandler {
+    
     @Override
-    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-            final AmazonWebServicesClientProxy proxy,
-            final ResourceHandlerRequest<ResourceModel> request,
-            final CallbackContext callbackContext,
-            final Logger logger) {
-
+    protected ProgressEvent<ResourceModel, CallbackContext> run() {
         final List<ResourceModel> models = new ArrayList<>();
-
+        
         // TODO handler not implemented yet
-
+        
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModels(models)
-                .status(OperationStatus.SUCCESS)
-                .build();
+            .resourceModels(models)
+            .status(OperationStatus.SUCCESS)
+            .build();
     }
+
 }

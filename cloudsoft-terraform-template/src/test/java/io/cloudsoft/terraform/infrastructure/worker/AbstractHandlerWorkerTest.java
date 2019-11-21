@@ -28,7 +28,7 @@ public class AbstractHandlerWorkerTest {
     private enum NoSteps {}
     private static class EmptyHandlerWorker extends AbstractHandlerWorker<NoSteps> {
         EmptyHandlerWorker(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request,
-            CallbackContext callbackContext, Logger logger, TerraformBaseHandler<CallbackContext> terraformBaseHandler) {
+            CallbackContext callbackContext, Logger logger, TerraformBaseHandler terraformBaseHandler) {
             super(proxy, request, callbackContext, logger, terraformBaseHandler);
         }
 
@@ -39,7 +39,7 @@ public class AbstractHandlerWorkerTest {
     }
     
     @Mock
-    private TerraformBaseHandler<CallbackContext> handler;
+    private TerraformBaseHandler handler;
 
     @Mock
     private Logger logger;

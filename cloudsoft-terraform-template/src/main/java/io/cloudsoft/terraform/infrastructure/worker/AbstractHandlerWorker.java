@@ -22,8 +22,17 @@ public abstract class AbstractHandlerWorker<Steps extends Enum<?>> {
     public final ResourceModel model, prevModel;
     public final CallbackContext callbackContext;
     public final Logger logger;
-    public final TerraformBaseHandler<CallbackContext> handler;
+    public final TerraformBaseHandler handler;
 
+    public void log(String message) {
+        System.out.println(message);
+        System.out.println("<EOL>");
+        logger.log(message);
+    }
+
+    
+    
+    
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
 
@@ -32,7 +41,7 @@ public abstract class AbstractHandlerWorker<Steps extends Enum<?>> {
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger,
-            final TerraformBaseHandler<CallbackContext> terraformBaseHandler) {
+            final TerraformBaseHandler terraformBaseHandler) {
         if (request == null) {
             throw new IllegalArgumentException("Request must not be null");
         }
@@ -47,12 +56,6 @@ public abstract class AbstractHandlerWorker<Steps extends Enum<?>> {
         this.callbackContext = callbackContext == null ? new CallbackContext() : callbackContext;
         this.logger = logger;
         this.handler = terraformBaseHandler;
-    }
-
-    public void log(String message) {
-        System.out.println(message);
-        System.out.println("<EOL>");
-        logger.log(message);
     }
 
     public final TerraformSshCommands tfSync() {

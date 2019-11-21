@@ -27,9 +27,7 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class TerraformBaseHandlerTest {
 
@@ -320,7 +318,7 @@ public class TerraformBaseHandlerTest {
     }
 
     // TerraformBaseHandler is an abstract class. In order to tests methods within it, we need to create a dummy implementation
-    class TerraformBaseHandlerUnderTest extends TerraformBaseHandler<CallbackContext> {
+    class TerraformBaseHandlerUnderTest extends TerraformBaseHandler {
         public TerraformBaseHandlerUnderTest() {
             super();
         }
@@ -331,9 +329,7 @@ public class TerraformBaseHandlerTest {
         }
 
         @Override
-        public ProgressEvent<ResourceModel, CallbackContext> handleRequest(AmazonWebServicesClientProxy proxy,
-                                                                           ResourceHandlerRequest<ResourceModel> request,
-                                                                           CallbackContext callbackContext, Logger logger) {
+        protected ProgressEvent<ResourceModel, CallbackContext> run() {
             return null;
         }
     }
