@@ -22,8 +22,9 @@ Once this repository is cloned:
    ```
 
 The connector requires few parameters in parameter store. If you haven't installed the connector, you can use the
-[`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml)
-template to create a stack using the command below.
+[`setup.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml)
+template to create a stack by downloading that file, editing it, and using the command below:
+
 ```sh
 aws cloudformation create-stack \
     --template-body "file://setup.yaml" \
@@ -56,9 +57,9 @@ The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` propert
  
  To run the tests:
  1. In one terminal, start SAM local lambda: `sam local start-lambda`
- 2. In another terminal, run: ` cfn invoke --max-reinvoke 10 {CREATE,READ,UPDATE,DELETE,LIST} path/to/event.json`
+ 2. In another terminal, run: `cfn invoke --max-reinvoke 10 {CREATE,READ,UPDATE,DELETE,LIST} path/to/event.json`
     
-    To do a full cycle, you can execute in sequence:
+    For instance to do a full cycle of the tests for this project, execute:
     ```sh
     cfn invoke --max-reinvoke 10 CREATE ./sam-tests/create.json
     cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json

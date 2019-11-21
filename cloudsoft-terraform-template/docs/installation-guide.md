@@ -28,14 +28,14 @@ You will need to have the AWS CLI installed and configured on your local machine
    popd
    systemctl --user daemon-reload
    ```
-1. Download the [`resource-role.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+1. Download the [`resource-role.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
      --template-body "file://resource-role.yaml" \
      --stack-name CloudsoftTerraformInfrastructureExecutionRole \
      --capabilities CAPABILITY_IAM
    ```
-1. Download the [`setup.yml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+1. Download the [`setup.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
      --template-body "file://setup.yaml" \
