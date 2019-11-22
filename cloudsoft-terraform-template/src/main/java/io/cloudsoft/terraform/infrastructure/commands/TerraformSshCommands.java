@@ -5,13 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class TerraformSshCommands {
@@ -37,17 +36,17 @@ public class TerraformSshCommands {
             TF_TMPFILENAME = "configuration.bin",
             TF_CONFFILENAME = "configuration.tf";
 
-    public static TerraformSshCommands of(TerraformBaseHandler<?> w) {
-        return new TerraformSshCommands(w.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
+    public static TerraformSshCommands of(TerraformBaseWorker<?> w) {
+        return new TerraformSshCommands(w.getParameters(), w.logger, w.model.getIdentifier());
     }
 
-    protected TerraformSshCommands(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
+    protected TerraformSshCommands(TerraformParameters params, Logger logger, String configurationIdentifier) {
         this.logger = logger;
-        this.serverHostname = params.getHost(proxy);
-        this.sshPort = params.getPort(proxy);
-        this.sshServerKeyFP = params.getFingerprint(proxy);
-        this.sshUsername = params.getUsername(proxy);
-        this.sshClientSecretKeyContents = params.getSSHKey(proxy);
+        this.serverHostname = params.getHost();
+        this.sshPort = params.getPort();
+        this.sshServerKeyFP = params.getFingerprint();
+        this.sshUsername = params.getUsername();
+        this.sshClientSecretKeyContents = params.getSSHKey();
         this.configurationIdentifier = configurationIdentifier;
     }
 

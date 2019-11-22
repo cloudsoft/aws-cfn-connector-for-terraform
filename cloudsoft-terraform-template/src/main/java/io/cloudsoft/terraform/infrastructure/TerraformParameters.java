@@ -21,28 +21,30 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";
-    private SsmClient ssmClient;
-    private S3Client s3Client;
-    private Pattern s3Pattern;
+    private final AmazonWebServicesClientProxy proxy;
+    private final SsmClient ssmClient;
+    private final S3Client s3Client;
+    private final Pattern s3Pattern;
 
-    public TerraformParameters(SsmClient ssmClient, S3Client s3Client) {
+    public TerraformParameters(AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
+        this.proxy = proxy;
         this.ssmClient = ssmClient;
         this.s3Client = s3Client;
         s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
     }
 
-    public TerraformParameters() {
-        this(SsmClient.create(), S3Client.create());
+    public TerraformParameters(AmazonWebServicesClientProxy proxy) {
+        this(proxy, SsmClient.create(), S3Client.create());
     }
 
-    public String getHost(AmazonWebServicesClientProxy proxy) {
-        return getParameterValue(proxy, "ssh-host");
+    public String getHost() {
+        return getParameterValue("ssh-host");
     }
 
-    public int getPort(AmazonWebServicesClientProxy proxy) {
+    public int getPort() {
         int ret;
         try {
-            ret = Integer.parseInt(getParameterValue(proxy, "ssh-port").trim());
+            ret = Integer.parseInt(getParameterValue("ssh-port").trim());
         } catch (Exception e) {
             // if not set or not an integer
             // TODO if the exception is anything other than whatever is returned for a missing parameter, log it
@@ -51,19 +53,19 @@ public class TerraformParameters {
         return ret;
     }
 
-    public String getUsername(AmazonWebServicesClientProxy proxy) {
-        return getParameterValue(proxy, "ssh-username");
+    public String getUsername() {
+        return getParameterValue("ssh-username");
     }
 
-    public String getSSHKey(AmazonWebServicesClientProxy proxy) {
-        return getParameterValue(proxy, "ssh-key");
+    public String getSSHKey() {
+        return getParameterValue("ssh-key");
     }
 
-    public String getFingerprint(AmazonWebServicesClientProxy proxy) {
-        return getParameterValue(proxy, "ssh-fingerprint");
+    public String getFingerprint() {
+        return getParameterValue("ssh-fingerprint");
     }
 
-    public String getParameterValue(AmazonWebServicesClientProxy proxy, String id) {
+    public String getParameterValue(String id) {
         GetParameterRequest getParameterRequest = GetParameterRequest.builder()
                 .name(String.format("%s/%s", PREFIX, id))
                 .withDecryption(true)
@@ -75,7 +77,7 @@ public class TerraformParameters {
         return getParameterResponse.parameter().value();
     }
 
-    public byte[] getConfiguration(AmazonWebServicesClientProxy proxy, ResourceModel model) {
+    public byte[] getConfiguration(ResourceModel model) {
         if (model.getConfigurationContent() != null) {
             return model.getConfigurationContent().getBytes(StandardCharsets.UTF_8);
         }
@@ -104,7 +106,11 @@ public class TerraformParameters {
                         .key(key)
                         .build();
                 proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
-                return FileUtils.readFileToByteArray(tmpFile);
+                byte[] result = FileUtils.readFileToByteArray(tmpFile);
+                if (result.length==0) {
+                    throw new IllegalArgumentException(String.format("S3 file at %s is empty", model.getConfigurationS3Path()));
+                }
+                return result;
             } catch (Exception e) {
                 throw new IllegalArgumentException(String.format("Failed to get S3 file at %s", model.getConfigurationS3Path()), e);
             }

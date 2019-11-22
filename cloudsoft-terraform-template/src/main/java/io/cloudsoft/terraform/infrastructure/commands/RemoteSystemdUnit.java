@@ -2,21 +2,20 @@ package io.cloudsoft.terraform.infrastructure.commands;
 
 import java.io.IOException;
 
-import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
     
     private final String unitName;
 
-    public static RemoteSystemdUnit of(TerraformBaseHandler<?> w, String unitName) {
-        return new RemoteSystemdUnit(w.getParameters(), w.logger, w.proxy, unitName, w.model.getIdentifier());
+    public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
+        return new RemoteSystemdUnit(w.getParameters(), w.logger, unitName, w.model.getIdentifier());
     }
 
-    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String unitName, String configurationName) {
-        super(params, logger, proxy, configurationName);
+    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {
+        super(params, logger, configurationName);
         this.unitName = String.format("%s@%s", unitName, configurationName);
     }
 

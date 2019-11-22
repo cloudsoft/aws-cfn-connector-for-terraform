@@ -6,9 +6,8 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.cloudsoft.terraform.infrastructure.TerraformBaseHandler;
+import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class TerraformOutputsCommand extends TerraformSshCommands {
@@ -16,12 +15,12 @@ public class TerraformOutputsCommand extends TerraformSshCommands {
     private final ObjectMapper objectMapper;
     private String outputJsonStringized = null;
 
-    public static TerraformOutputsCommand of(TerraformBaseHandler<?> w) {
-        return new TerraformOutputsCommand(w.getParameters(), w.logger, w.proxy, w.model.getIdentifier());
+    public static TerraformOutputsCommand of(TerraformBaseWorker<?> w) {
+        return new TerraformOutputsCommand(w.getParameters(), w.logger, w.model.getIdentifier());
     }
     
-    protected TerraformOutputsCommand(TerraformParameters params, Logger logger, AmazonWebServicesClientProxy proxy, String configurationIdentifier) {
-        super(params, logger, proxy, configurationIdentifier);
+    protected TerraformOutputsCommand(TerraformParameters params, Logger logger, String configurationIdentifier) {
+        super(params, logger, configurationIdentifier);
         this.objectMapper = new ObjectMapper();
     }
 
