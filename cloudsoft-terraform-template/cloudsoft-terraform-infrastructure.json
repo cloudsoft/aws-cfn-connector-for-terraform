@@ -40,17 +40,6 @@
     }
   },
   "additionalProperties": false,
-  "oneOf": [
-    {
-      "$ref": "#/definitions/ConfigurationContent"
-    },
-    {
-      "$ref": "#/definitions/ConfigurationUrl"
-    },
-    {
-      "$ref": "#/definitions/ConfigurationS3Path"
-    }
-  ],
   "primaryIdentifier": [
     "/properties/Identifier"
   ],
