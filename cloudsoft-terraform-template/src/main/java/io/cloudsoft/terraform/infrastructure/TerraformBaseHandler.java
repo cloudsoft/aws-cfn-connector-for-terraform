@@ -23,7 +23,7 @@ public abstract class TerraformBaseHandler extends BaseHandler<CallbackContext> 
         try {
             TerraformBaseWorker<?> worker = newWorker();
             worker.init(proxy, request, callbackContext, logger);
-            return worker.runWithLoopingIfNecessary();
+            return worker.runHandlingError();
             
         } catch (Exception e) {
             e.printStackTrace();

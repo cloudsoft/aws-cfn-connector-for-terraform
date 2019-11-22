@@ -11,8 +11,4 @@ public class CallbackContext {
     public int lastDelaySeconds;
     public String createdModelIdentifier;
 
-    // for testing:
-    public boolean forceSynchronous = false;
-    public boolean disregardCallbackDelay = false; // Call the worker again ASAP (use with care)
-
 }

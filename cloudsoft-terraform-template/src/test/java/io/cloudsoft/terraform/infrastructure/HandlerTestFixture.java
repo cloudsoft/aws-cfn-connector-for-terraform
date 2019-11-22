@@ -73,7 +73,7 @@ public class HandlerTestFixture {
         ProgressEvent<ResourceModel, CallbackContext> result = spyHandler.handleRequest(proxy, request, callbackContext, logger);
         
         Assert.assertEquals(result, progressEvent);
-        verify(spyWorker, times(1)).runWithLoopingIfNecessary();
+        verify(spyWorker, times(1)).runHandlingError();
     }
     
 }

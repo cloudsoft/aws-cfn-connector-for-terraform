@@ -78,32 +78,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     
     // === lifecycle ========================
     
-    // TODO: This is now obsolete as the cfn-cli handles reinvokes out of the box. Should remove it.
-    protected ProgressEvent<ResourceModel, CallbackContext> runWithLoopingIfNecessary() {
-        // allows us to force synchronous behaviour -- especially useful when running in SAM
-        boolean forceSynchronous = callbackContext == null ? false : callbackContext.forceSynchronous;
-        boolean disregardCallbackDelay = callbackContext == null ? false : callbackContext.disregardCallbackDelay;
-
-        while (true) {
-            ProgressEvent<ResourceModel, CallbackContext> result = runHandlingError();
-            if (!forceSynchronous || !OperationStatus.IN_PROGRESS.equals(result.getStatus())) {
-                return result;
-            }
-            log("Synchronous mode: " + result.getCallbackContext());
-            try {
-                if (disregardCallbackDelay) {
-                    log("Will run callback immediately");
-                } else {
-                    log("Will run callback after " + result.getCallbackDelaySeconds() + " seconds");
-                    Thread.sleep(1000 * result.getCallbackDelaySeconds());
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Aborted due to interrupt", e);
-            }
-            callbackContext = result.getCallbackContext();
-        }
-    }
-    
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
