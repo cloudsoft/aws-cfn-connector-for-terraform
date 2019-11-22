@@ -11,12 +11,10 @@ public class CreateHandler extends TerraformBaseHandler {
 
     protected enum Steps {
         CREATE_INIT_AND_MKDIR,
-        CREATE_SYNC_CONFIG,
+        CREATE_SYNC_FILE,
         CREATE_RUN_TF_INIT,
         CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY,
-        CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN,
-        CREATE_GET_OUTPUTS,
-        CREATE_DONE
+        CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN
     }
 
     @Override
@@ -38,7 +36,7 @@ public class CreateHandler extends TerraformBaseHandler {
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
                     tfSync().mkdir();
-                    advanceTo(Steps.CREATE_SYNC_CONFIG);
+                    advanceTo(Steps.CREATE_SYNC_FILE);
                     
                     /* NOTE: here, and in several other places, we could proceed to the next
                      * step, but returning often increases transparency and maximises the time 
@@ -46,7 +44,7 @@ public class CreateHandler extends TerraformBaseHandler {
                      */
                     return progressEvents().inProgressResult();
     
-                case CREATE_SYNC_CONFIG:
+                case CREATE_SYNC_FILE:
                     getAndUploadConfiguration();
                     advanceTo(Steps.CREATE_RUN_TF_INIT);
                     return progressEvents().inProgressResult();
@@ -88,7 +86,6 @@ public class CreateHandler extends TerraformBaseHandler {
                     outputCmd.run();
                     model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
                     model.setOutputs(outputCmd.getOutputAsMap());
-                    advanceTo(Steps.CREATE_DONE);
     
                     return progressEvents().success();
                     

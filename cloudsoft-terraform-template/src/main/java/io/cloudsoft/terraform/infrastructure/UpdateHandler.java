@@ -7,10 +7,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 public class UpdateHandler extends TerraformBaseHandler {
 
     protected enum Steps {
-        UPDATE_INIT,
-        UPDATE_SYNC_UPLOAD,
-        UPDATE_ASYNC_TF_APPLY,
-        UPDATE_DONE
+        UPDATE_SYNC_FILE,
+        UPDATE_RUN_TF_APPLY,
+        UPDATE_WAIT_ON_APPLY_THEN_RETURN
     }
     
     @Override
@@ -22,19 +21,19 @@ public class UpdateHandler extends TerraformBaseHandler {
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_INIT : Steps.valueOf(callbackContext.stepId);
+            Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_SYNC_FILE : Steps.valueOf(callbackContext.stepId);
             switch (curStep) {
-                case UPDATE_INIT:
-                    advanceTo(Steps.UPDATE_SYNC_UPLOAD);
+                case UPDATE_SYNC_FILE:
                     getAndUploadConfiguration();
+                    advanceTo(Steps.UPDATE_RUN_TF_APPLY);
                     return progressEvents().inProgressResult();
     
-                case UPDATE_SYNC_UPLOAD:
-                    advanceTo(Steps.UPDATE_ASYNC_TF_APPLY);
+                case UPDATE_RUN_TF_APPLY:
+                    advanceTo(Steps.UPDATE_WAIT_ON_APPLY_THEN_RETURN);
                     tfApply().start();
                     return progressEvents().inProgressResult();
     
-                case UPDATE_ASYNC_TF_APPLY:
+                case UPDATE_WAIT_ON_APPLY_THEN_RETURN:
                     if (tfApply().isRunning()) {
                         return progressEvents().inProgressResult();
                     }
@@ -44,10 +43,7 @@ public class UpdateHandler extends TerraformBaseHandler {
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
                         throw new IOException("tfApply returned errno " + tfApply().getErrno() + " / '" + tfApply().getResult() + "'");
                     }
-                    advanceTo(Steps.UPDATE_DONE);
-                    return progressEvents().inProgressResult();
-    
-                case UPDATE_DONE:
+                    
                     return progressEvents().success();
                     
                 default:

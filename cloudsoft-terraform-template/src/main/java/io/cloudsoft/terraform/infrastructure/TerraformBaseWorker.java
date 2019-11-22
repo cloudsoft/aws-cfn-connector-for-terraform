@@ -101,14 +101,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
+            logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
-            logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: " + callbackContext);
+            logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
             
         } catch (Exception e) {
             logException(getClass().getName(), e);
             logger.log(getClass().getName() + " lambda exiting with error");
-            return progressEvents().failed();
+            return progressEvents().failed((currentStep!=null ? currentStep+": " : "")+e);
         }
     }
     
@@ -184,7 +185,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     protected final void advanceTo(Steps nextStep) {
-        logger.log(String.format("advanceTo(): %s -> %s", callbackContext.stepId, nextStep));
+        logger.log("Entering step "+nextStep);
         callbackContext.stepId = nextStep.toString();
         callbackContext.lastDelaySeconds = -1;
     }

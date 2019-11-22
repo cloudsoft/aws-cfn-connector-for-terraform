@@ -9,10 +9,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 public class DeleteHandler extends TerraformBaseHandler {
     
     protected enum Steps {
-        DELETE_INIT,
-        DELETE_ASYNC_TF_DESTROY,
-        DELETE_SYNC_RMDIR,
-        DELETE_DONE
+        DELETE_RUN_TF_DESTROY,
+        DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN
     }
     
     @Override
@@ -24,15 +22,16 @@ public class DeleteHandler extends TerraformBaseHandler {
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            Steps curStep = callbackContext.stepId == null ? Steps.DELETE_INIT : Steps.valueOf(callbackContext.stepId);
+            currentStep = callbackContext.stepId == null ? Steps.DELETE_RUN_TF_DESTROY : Steps.valueOf(callbackContext.stepId);
+            // TODO tidy
             RemoteSystemdUnit tfDestroy = tfDestroy();
-            switch (curStep) {
-                case DELETE_INIT:
-                    advanceTo(Steps.DELETE_ASYNC_TF_DESTROY);
+            switch (currentStep) {
+                case DELETE_RUN_TF_DESTROY:
+                    advanceTo(Steps.DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN);
                     tfDestroy.start();
                     return progressEvents().inProgressResult();
     
-                case DELETE_ASYNC_TF_DESTROY:
+                case DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN:
                     if (tfDestroy.isRunning()) {
                         return progressEvents().inProgressResult();
                     }
@@ -42,16 +41,9 @@ public class DeleteHandler extends TerraformBaseHandler {
                         // TODO make this a new "AlreadyLoggedException" where we suppress the trace
                         throw new IOException("tfDestroy returned errno " + tfDestroy.getErrno() + " / '" + tfDestroy.getResult() + "' / " + tfDestroy.getLastExitStatusOrNull());
                     }
-                    advanceTo(Steps.DELETE_SYNC_RMDIR);
-                    return progressEvents().inProgressResult();
     
-                case DELETE_SYNC_RMDIR:
-                    advanceTo(Steps.DELETE_DONE);
                     tfSync().rmdir();
-                    return progressEvents().inProgressResult();
-    
-                case DELETE_DONE:
-                    logger.log(getClass().getName() + " completed: success");
+                    
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)
                             .status(OperationStatus.SUCCESS)
