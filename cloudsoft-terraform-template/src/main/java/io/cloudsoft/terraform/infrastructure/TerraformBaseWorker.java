@@ -203,7 +203,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             return true;
         }
         if (process.wasFailure()) {
-            String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+process.getErrno()+")";
+            String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+
+                process.getMainExitCode()+")";
             logger.log(message+"\n"+process.getLog());
             throw ConnectorHandlerFailures.handled(message+"; see CloudWatch logs for more detail.");
         }

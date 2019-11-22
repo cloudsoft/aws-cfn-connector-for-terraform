@@ -46,8 +46,12 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         return !"success".equals(getResult());
     }
 
-    public String getErrno() throws IOException {
+    public String getStatusErrno() throws IOException {
         return getRemotePropertyValue("StatusErrno");
+    }
+
+    public String getMainExitCode() throws IOException {
+        return getRemotePropertyValue("ExecMainCode");
     }
 
     public String getLog() throws IOException {
