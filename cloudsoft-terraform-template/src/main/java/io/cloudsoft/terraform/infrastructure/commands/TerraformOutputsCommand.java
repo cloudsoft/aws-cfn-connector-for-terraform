@@ -16,7 +16,7 @@ public class TerraformOutputsCommand extends TerraformSshCommands {
     private String outputJsonStringized = null;
 
     public static TerraformOutputsCommand of(TerraformBaseWorker<?> w) {
-        return new TerraformOutputsCommand(w.getParameters(), w.logger, w.model.getIdentifier());
+        return new TerraformOutputsCommand(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
     }
     
     protected TerraformOutputsCommand(TerraformParameters params, Logger logger, String configurationIdentifier) {

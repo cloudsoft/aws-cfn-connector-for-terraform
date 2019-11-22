@@ -33,7 +33,7 @@ public class DeleteHandler extends TerraformBaseHandler {
                         return progressEvents().inProgressResult();
                     }
     
-                    tfSync().rmdir();
+                    tfSshCommands().rmdir();
                     
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)

@@ -13,7 +13,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
     private final String unitName;
 
     public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
-        return new RemoteSystemdUnit(w.getParameters(), w.logger, unitName, w.model.getIdentifier());
+        return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), unitName, w.getModel().getIdentifier());
     }
 
     protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {

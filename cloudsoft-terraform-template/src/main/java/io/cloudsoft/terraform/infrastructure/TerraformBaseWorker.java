@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
+import lombok.Getter;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -25,14 +26,18 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 
     public static boolean CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = true;
     
-    // TODO accessors or other tidy, rather than public
-    public AmazonWebServicesClientProxy proxy;
-    public ResourceHandlerRequest<ResourceModel> request;
-    public ResourceModel model;
-    public CallbackContext callbackContext;
-    public Logger logger;
+    @Getter
+    protected AmazonWebServicesClientProxy proxy;
+    @Getter
+    protected ResourceHandlerRequest<ResourceModel> request;
+    @Getter
+    protected ResourceModel model;
+    @Getter
+    protected CallbackContext callbackContext;
+    @Getter
+    private Logger logger;
     
-    TerraformParameters parameters;
+    protected TerraformParameters parameters;
     
     protected Steps currentStep;
     
@@ -203,8 +208,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         callbackContext.lastDelaySeconds = -1;
     }
 
-    // TODO command
-    protected final TerraformSshCommands tfSync() {
+    protected final TerraformSshCommands tfSshCommands() {
         return TerraformSshCommands.of(this);
     }
 
@@ -237,7 +241,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // to keep the downloaded file. The callback context isn't intended for that, neither is
     // the lambda's runtime filesystem.
     protected final void getAndUploadConfiguration() throws IOException {
-        tfSync().uploadConfiguration(getParameters().getConfiguration(model));
+        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model));
     }
 
 }

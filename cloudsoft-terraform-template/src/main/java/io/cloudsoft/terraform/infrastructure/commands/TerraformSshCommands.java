@@ -37,7 +37,7 @@ public class TerraformSshCommands {
             TF_CONFFILENAME = "configuration.tf";
 
     public static TerraformSshCommands of(TerraformBaseWorker<?> w) {
-        return new TerraformSshCommands(w.getParameters(), w.logger, w.model.getIdentifier());
+        return new TerraformSshCommands(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
     }
 
     protected TerraformSshCommands(TerraformParameters params, Logger logger, String configurationIdentifier) {

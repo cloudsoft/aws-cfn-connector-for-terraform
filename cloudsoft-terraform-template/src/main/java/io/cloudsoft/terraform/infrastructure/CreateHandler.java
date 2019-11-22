@@ -30,11 +30,11 @@ public class CreateHandler extends TerraformBaseHandler {
             }
             model.setIdentifier(callbackContext.createdModelIdentifier);
     
-            currentStep = callbackContext.stepId == null ? Steps.CREATE_INIT_AND_MKDIR : Steps.valueOf(callbackContext.stepId);
+            currentStep = getCallbackContext().stepId == null ? Steps.CREATE_INIT_AND_MKDIR : Steps.valueOf(callbackContext.stepId);
             
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
-                    tfSync().mkdir();
+                    tfSshCommands().mkdir();
                     advanceTo(Steps.CREATE_SYNC_FILE);
                     
                     /* NOTE: here, and in several other places, we could proceed to the next
