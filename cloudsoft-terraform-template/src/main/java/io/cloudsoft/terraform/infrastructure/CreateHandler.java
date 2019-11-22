@@ -3,7 +3,6 @@ package io.cloudsoft.terraform.infrastructure;
 import java.io.IOException;
 import java.util.UUID;
 
-import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformOutputsCommand;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
@@ -55,15 +54,8 @@ public class CreateHandler extends TerraformBaseHandler {
                     return progressEvents().inProgressResult();
     
                 case CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY:
-                    RemoteSystemdUnit tfInit = tfInit();
-                    if (tfInit.isRunning()) {
+                    if (checkStillRunnningOrError(tfInit())) {
                         return progressEvents().inProgressResult();
-                    }
-                    if (tfInit.wasFailure()) {
-                        // TODO log stdout/stderr
-                        logger.log("ERROR: " + tfInit.getLog());
-                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfInit returned errno " + tfInit.getErrno() + " / '" + tfInit.getResult() + "' / " + tfInit.getLastExitStatusOrNull());
                     }
                     
                     tfApply().start();
@@ -71,15 +63,8 @@ public class CreateHandler extends TerraformBaseHandler {
                     return progressEvents().inProgressResult();
     
                 case CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN:
-                    RemoteSystemdUnit tfApply = tfApply();
-                    if (tfApply.isRunning()) {
+                    if (checkStillRunnningOrError(tfApply())) {
                         return progressEvents().inProgressResult();
-                    }
-                    if (tfApply.wasFailure()) {
-                        // TODO log stdout/stderr
-                        logger.log("ERROR: " + tfApply.getLog());
-                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfDestroy returned errno " + tfApply.getErrno() + " / '" + tfApply.getResult() + "' / " + tfApply.getLastExitStatusOrNull());
                     }
     
                     TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);

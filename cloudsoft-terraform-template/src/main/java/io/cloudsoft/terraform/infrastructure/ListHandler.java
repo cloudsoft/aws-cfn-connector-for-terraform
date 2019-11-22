@@ -22,7 +22,7 @@ public class ListHandler extends TerraformBaseHandler {
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() {
             final List<ResourceModel> models = new ArrayList<>();
             
-            // TODO handler not implemented yet
+            // handler not used yet, always return empty
             
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModels(models)

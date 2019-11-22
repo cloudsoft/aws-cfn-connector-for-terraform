@@ -12,3 +12,5 @@ Outputs:
     Value: !GetAtt TerraformEc2Example.OutputsStringified
 # TODO the below is what we want to work! but it doesn't...
 #    Value: !GetAtt TerraformEc2Example.Outputs.bucket1arn.value
+# TODO would be nice if this worked also
+#    Value: { Ref: TerraformEc2Example }

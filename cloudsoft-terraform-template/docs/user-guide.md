@@ -41,7 +41,7 @@ Properties:
 
 ### Ref
 
-When you pass the logical ID of this resource to the intrinsic `Ref` function, `Ref` returns [TODO]
+The `Ref` function is not supported for this resource.
 
 ### Fn::GetAtt
 

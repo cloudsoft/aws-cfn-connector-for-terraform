@@ -4,10 +4,12 @@ import java.io.IOException;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import lombok.Getter;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
     
+    @Getter
     private final String unitName;
 
     public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {

@@ -21,8 +21,9 @@ public class UpdateHandler extends TerraformBaseHandler {
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            Steps curStep = callbackContext.stepId == null ? Steps.UPDATE_SYNC_FILE : Steps.valueOf(callbackContext.stepId);
-            switch (curStep) {
+            currentStep = callbackContext.stepId == null ? Steps.UPDATE_SYNC_FILE : Steps.valueOf(callbackContext.stepId);
+            
+            switch (currentStep) {
                 case UPDATE_SYNC_FILE:
                     getAndUploadConfiguration();
                     advanceTo(Steps.UPDATE_RUN_TF_APPLY);
@@ -34,14 +35,8 @@ public class UpdateHandler extends TerraformBaseHandler {
                     return progressEvents().inProgressResult();
     
                 case UPDATE_WAIT_ON_APPLY_THEN_RETURN:
-                    if (tfApply().isRunning()) {
+                    if (checkStillRunnningOrError(tfApply())) {
                         return progressEvents().inProgressResult();
-                    }
-                    if (tfApply().wasFailure()) {
-                        // TODO log stdout/stderr
-                        logger.log("ERROR: " + tfApply().getLog());
-                        // TODO make this a new "AlreadyLoggedException" where we suppress the trace
-                        throw new IOException("tfApply returned errno " + tfApply().getErrno() + " / '" + tfApply().getResult() + "'");
                     }
                     
                     return progressEvents().success();
@@ -50,7 +45,7 @@ public class UpdateHandler extends TerraformBaseHandler {
                     throw new IllegalStateException("Invalid step: " + callbackContext.stepId);
             }
         }
-    
+
     }
     
 }

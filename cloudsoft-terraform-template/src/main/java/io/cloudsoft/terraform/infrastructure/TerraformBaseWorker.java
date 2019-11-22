@@ -105,9 +105,22 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
+        
+        } catch (ConnectorHandlerFailures.Handled e) {
+            logger.log(getClass().getName() + " lambda exiting with error");
+            return progressEvents().failed("FAILING: "+e.getMessage());
+            
+        } catch (ConnectorHandlerFailures.Unhandled e) {
+            if (e.getCause()!=null) {
+                logException("FAILING: "+e.getMessage(), e.getCause());
+            } else {
+                log("FAILING: "+e.getMessage());
+            }
+            logger.log(getClass().getName() + " lambda exiting with error");
+            return progressEvents().failed(e.getMessage());
             
         } catch (Exception e) {
-            logException(getClass().getName(), e);
+            logException("FAILING: "+e, e);
             logger.log(getClass().getName() + " lambda exiting with error");
             return progressEvents().failed((currentStep!=null ? currentStep+": " : "")+e);
         }
@@ -125,11 +138,11 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         }
     }
 
-    protected final void logException(String origin, Exception e) {
+    protected final void logException(String message, Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
-        log(origin + " error: " + e + "\n" + sw.toString());
+        log(message + "\n" + sw.toString());
     }
 
 
@@ -207,6 +220,17 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         return RemoteSystemdUnit.of(this, "terraform-destroy");
     }
 
+    protected boolean checkStillRunnningOrError(RemoteSystemdUnit process) throws IOException {
+        if (process.isRunning()) {
+            return true;
+        }
+        if (process.wasFailure()) {
+            String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+process.getErrno()+")";
+            logger.log(message+"\n"+process.getLog());
+            throw ConnectorHandlerFailures.handled(message+"; see CloudWatch logs for more detail.");
+        }
+        return false;
+    }
 
     // This call actually consists of two network transfers, hence for large files is more
     // likely to time out. However, splitting it into two FSM states would require some place

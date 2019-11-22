@@ -91,7 +91,7 @@ public class TerraformSshCommands {
 
         final SSHClient ssh = new SSHClient();
 
-        ssh.addHostKeyVerifier(sshServerKeyFP);
+        addHostKeyVerifier(ssh);
         ssh.connect(serverHostname, sshPort);
         Session session = null;
         try {
@@ -163,7 +163,7 @@ public class TerraformSshCommands {
     public void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
         BytesSourceFile src = new BytesSourceFile(fileName, contents);
         SSHClient ssh = new SSHClient();
-        ssh.addHostKeyVerifier(sshServerKeyFP);
+        addHostKeyVerifier(ssh);
         ssh.connect(serverHostname, sshPort);
         try {
             ssh.authPublickey(sshUsername, ssh.loadKeys(sshClientSecretKeyContents, null, null));
@@ -175,6 +175,14 @@ public class TerraformSshCommands {
             } catch (Exception ee) {
                 // ignore
             }
+        }
+    }
+
+    protected void addHostKeyVerifier(SSHClient ssh) {
+        if (sshServerKeyFP!=null && sshServerKeyFP.length()>0) {
+            ssh.addHostKeyVerifier(sshServerKeyFP);
+        } else {
+            ssh.addHostKeyVerifier((host, port, key) -> true);
         }
     }
 

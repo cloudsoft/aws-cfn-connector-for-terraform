@@ -4,7 +4,8 @@
 
 First, you need to install the custom type into CloudFomation. See the [installation guide](./docs/installation-guide.md) documentation.
 
-Once done, you can use the new type in CloudFormation template. For example:
+Once done, you can use Terraform in CloudFormation templates by specifying the type `Cloudsoft::Terraform::Infrastructure`.
+For example:
 
 ```
 AWSTemplateFormatVersion: 2010-09-09
@@ -20,13 +21,19 @@ Resources:
         }
 ```
 
-The Terraform configuration does not need to be in-lined; you can instead use `ConfigurationUrl` or `ConfigurationS3Path` to point at a configuration.
+The Terraform configuration does not need to be in-lined; you can instead use 
+`ConfigurationUrl` or `ConfigurationS3Path` to point at a configuration.
 
 You can then:
 
+* Use Terraform in AWS Service Catalog
+* Mix and match Terraform with CloudFormation in IaC templatees
+
+Features:
+
 * View Terraform outputs as CloudFormation outputs
-* [TODO] Update in the usual CloudFormation way
-* Delete when done
+* Drive Terraform updates through CloudFormation
+* Read and delete
 
 For more information on how to use the custom type, see the [user guide](./docs/user-guide.md) documentation.
 

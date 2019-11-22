@@ -26,6 +26,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 
 public class TerraformParametersTest {
@@ -76,7 +77,8 @@ public class TerraformParametersTest {
                 .build();
         final String expected = "12:f8:7e:78:61:b4:bf:e2:de:24:15:96:4e:d4:72:53";
 
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder()
+        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(
+            GetParameterResponse.builder()
                 .parameter(Parameter.builder()
                         .value(expected)
                         .build())
@@ -95,7 +97,8 @@ public class TerraformParametersTest {
                 .build();
         final String expected = "=== RSA KEY === .............";
 
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
+        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(
+            GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
         String sshKey = parameters.getSSHKey();
         assertEquals(expected, sshKey);
@@ -104,47 +107,73 @@ public class TerraformParametersTest {
 
     @Test
     public void getUsernameReturnsParameterFromParameterStore() {
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-username")
                 .withDecryption(true)
                 .build();
         final String expected = "root";
 
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
+        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(
+            GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
-        String username = parameters.getUsername();
-        assertEquals(expected, username);
+        assertEquals(expected, parameters.getUsername());
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
 
     @Test
     public void getPortReturnsParameterFromParameterStore() {
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-port")
                 .withDecryption(true)
                 .build();
-        final String expected = "22";
+        final String expected = "1234";
 
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
+        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).thenReturn(
+            GetParameterResponse.builder().parameter(Parameter.builder().value(expected).build()).build());
 
-        int port = parameters.getPort();
-        assertEquals(Integer.parseInt(expected), port);
+        assertEquals(Integer.parseInt(expected), parameters.getPort());
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
 
     @Test
+    public void getPortReturns22IfNotFound() {
+        final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
+                .name("/cfn/terraform/ssh-port")
+                .withDecryption(true)
+                .build();
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(ParameterNotFoundException.builder().build());
+
+        assertEquals(22, parameters.getPort());
+        verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
+    }
+    
+    @Test
+    public void getPortThrowsIfGetParameterThrowsOtherError() {
+        final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
+                .name("/cfn/terraform/ssh-port")
+                .withDecryption(true)
+                .build();
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
+
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
+            parameters.getPort();
+        });
+        verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
+        verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
+    }
+
+    @Test
     public void getHostThrowsIfGetParameterThrows() {
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-host")
                 .withDecryption(true)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
-        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(ParameterNotFoundException.builder().build());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getHost();
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
@@ -152,16 +181,29 @@ public class TerraformParametersTest {
     }
 
     @Test
-    public void getFingerprintThrowsIfGetParameterThrows() {
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+    public void getFingerprintReturnsNullIfGetParameterThrowsNotFound() {
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-fingerprint")
                 .withDecryption(true)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(ParameterNotFoundException.builder().build());
+
+        assertEquals(null, parameters.getFingerprint());
+        verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
+        verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
+    }
+
+    @Test
+    public void getFingerprintThrowsIfGetParameterThrowsOtherError() {
+        final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
+                .name("/cfn/terraform/ssh-fingerprint")
+                .withDecryption(true)
+                .build();
+        whenProxyGetParameterCallSsmGetParameter();
         when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getFingerprint();
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
@@ -174,10 +216,10 @@ public class TerraformParametersTest {
                 .name("/cfn/terraform/ssh-key")
                 .withDecryption(true)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
-        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(ParameterNotFoundException.builder().build());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getSSHKey();
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
@@ -186,34 +228,29 @@ public class TerraformParametersTest {
 
     @Test
     public void getUsernameThrowsIfGetParameterThrows() {
+        proxy = mock(AmazonWebServicesClientProxy.class);
+        ssmClient = mock(SsmClient.class);
+        s3Client = mock(S3Client.class);
+        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-username")
                 .withDecryption(true)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
-        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
+        whenProxyGetParameterCallSsmGetParameter();
+        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(ParameterNotFoundException.builder().build());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getUsername();
         });
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
         verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
     }
 
-    @Test
-    public void getPortReturns22IfGetParameterThrows() {
-        final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
-                .name("/cfn/terraform/ssh-port")
-                .withDecryption(true)
-                .build();
-        final int expected = 22;
-        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(InvocationOnMock::callRealMethod);
-        when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(new RuntimeException());
-
-        int port = parameters.getPort();
-        assertEquals(expected, port);
-        verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
-        verify(ssmClient, times(1)).getParameter(any(GetParameterRequest.class));
+    protected void whenProxyGetParameterCallSsmGetParameter() {
+        // if we just do InvocationOnMock::callRealMethod we get NPE due to loggerProxy
+        when(proxy.injectCredentialsAndInvokeV2(any(GetParameterRequest.class), any())).then(
+            ctx -> ssmClient.getParameter((GetParameterRequest)ctx.getArgument(0)));
     }
 
     @Test
@@ -241,7 +278,7 @@ public class TerraformParametersTest {
         final String configurationUrl = "http://acme.com/does/not/exist";
         final ResourceModel model = ResourceModel.builder().configurationUrl(configurationUrl).build();
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getConfiguration(model);
         });
     }
@@ -254,7 +291,7 @@ public class TerraformParametersTest {
         final String configurationS3Path = String.format("s3://%s/%s", expectedBucket, expectedKey);
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
-        when(proxy.injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any())).then(InvocationOnMock::callRealMethod);
+        when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
         when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).then(invocationOnMock -> {
             Path path = invocationOnMock.getArgument(1);
             FileUtils.write(path.toFile(), expectedContent, StandardCharsets.UTF_8);
@@ -278,20 +315,20 @@ public class TerraformParametersTest {
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getConfiguration(model);
         });
     }
 
     @Test
     public void getConfigurationThrowsIfS3PathDoesNotExistProperty() {
-        final String configurationS3Path = "s3://bucket/does/not/exist9324817";
+        final String configurationS3Path = "s3://bucket/does/not/exist";
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
         when(s3Client.getObject((GetObjectRequest)any(), (Path)any())).thenThrow(IllegalArgumentException.class);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getConfiguration(model);
         });
     }
@@ -302,9 +339,8 @@ public class TerraformParametersTest {
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
 
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(ConnectorHandlerFailures.Unhandled.class, () -> {
             parameters.getConfiguration(model);
         });
     }
-
 }
