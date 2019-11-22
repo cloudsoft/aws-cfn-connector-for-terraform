@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import junit.framework.Assert;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -39,6 +40,7 @@ public class UpdateHandlerTest {
 
     @BeforeEach
     public void setup() {
+        TerraformBaseHandler.CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = false;
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = new Logger() {
             @Override
@@ -65,9 +67,9 @@ public class UpdateHandlerTest {
 
         doReturn(progressEvent).when(spy).runStep();
 
-        spy.handleRequest(proxy, request, callbackContext, logger);
+        ProgressEvent<ResourceModel, CallbackContext> result = spy.handleRequest(proxy, request, callbackContext, logger);
+        Assert.assertEquals(progressEvent, result);
 
         verify(spy, times(1)).runWithLoopingIfNecessary();
-
     }
 }

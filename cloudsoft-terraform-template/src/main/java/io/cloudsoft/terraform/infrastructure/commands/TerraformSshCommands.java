@@ -80,8 +80,11 @@ public class TerraformSshCommands {
     }
 
     protected void debug(String message) {
+        // generates a lot of output, but can be useful
+        // sysout makes it appear in SAM tests but not cloudwatch,
+        // which is a good compromise in most cases
         System.out.println(message);
-        logger.log(message);
+//        logger.log(message);
     }
 
     protected void runSSHCommand(String command) throws IOException {

@@ -18,7 +18,7 @@ You will need to have the AWS CLI installed and configured on your local machine
 
 ## Installation
 
-1. Download the 3 systemd helper and install them onto your Terraform server:
+1. Download the 3 systemd helpers and install them onto your Terraform server:
    ```sh
    mkdir -p ~/.config/systemd/user
    pushd ~/.config/systemd/user

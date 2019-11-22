@@ -70,7 +70,7 @@ The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` propert
  1. In one terminal, start SAM local lambda: `sam local start-lambda`
  2. In another terminal, run: `cfn invoke --max-reinvoke 10 {CREATE,READ,UPDATE,DELETE,LIST} path/to/event.json`
     
-    For instance to do a full cycle of the tests for this project, execute:
+    For instance to do a full cycle of the tests for this project, execute each of the following commands:
     ```sh
     cfn invoke --max-reinvoke 10 CREATE ./sam-tests/create.json
     cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json
@@ -78,7 +78,8 @@ The JSON payload must contain the `Cloudsoft::Terraform::Infrastructure` propert
     cfn invoke --max-reinvoke 10 READ ./sam-tests/read.json
     cfn invoke --max-reinvoke 10 DELETE ./sam-tests/delete.json
     ```
-    The output will be shown in the _first_ tab.
+    Log output will be shown in the _first_ terminal, whereas the second will show the
+    input and output to the connector lambdas. Each command should conclude with a `SUCCESS` status.
     
     _Note that `cfn` doesn't support yet profiles so you will need to have the `default` profile setup for your `aws` CLI.
     However, you can specify `--region` to run the test in a specific region._

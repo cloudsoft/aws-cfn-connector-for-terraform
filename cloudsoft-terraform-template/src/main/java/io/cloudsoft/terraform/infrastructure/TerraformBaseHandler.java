@@ -23,6 +23,8 @@ public abstract class TerraformBaseHandler<Steps extends Enum<?>> extends BaseHa
     // Use YAML doc separator to separate logged messages 
     public static final CharSequence LOG_MESSAGE_SEPARATOR = "---";
 
+    public static boolean CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = true;
+    
     // TODO accessors or other tidy, rather than public
     public AmazonWebServicesClientProxy proxy;
     public ResourceHandlerRequest<ResourceModel> request;
@@ -72,8 +74,23 @@ public abstract class TerraformBaseHandler<Steps extends Enum<?>> extends BaseHa
             final CallbackContext callbackContext,
             final Logger logger) {
         
-        init(proxy, request, callbackContext, logger);
-        return runWithLoopingIfNecessary();
+        if (logger==null) {
+            System.err.println("No logger set.");
+            throw new NullPointerException("logger");
+        }
+        
+        logger.log(getClass().getName() + " lambda starting: " + model);
+        
+        try {
+            @SuppressWarnings("unchecked")
+            TerraformBaseHandler<Steps> delegate =
+                CREATE_NEW_DELEGATE_FOR_EACH_REQUEST ? getClass().newInstance() : this;
+            delegate.init(proxy, request, callbackContext, logger);
+            return delegate.runWithLoopingIfNecessary();
+        } catch (Exception e) {
+            logException(getClass().getName()+" handleRequest", e);
+            return progressEvents().failed(e.toString());
+        }
     }
     
     // TODO: This is now obsolete as the cfn-cli handles reinvokes out of the box. Should remove it.
@@ -103,8 +120,6 @@ public abstract class TerraformBaseHandler<Steps extends Enum<?>> extends BaseHa
     }
     
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
-        logger.log(getClass().getName() + " lambda starting: " + model);
-
         try {
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: " + callbackContext);
@@ -124,7 +139,9 @@ public abstract class TerraformBaseHandler<Steps extends Enum<?>> extends BaseHa
     protected void log(String message) {
         System.out.println(message);
         System.out.println(LOG_MESSAGE_SEPARATOR);
-        logger.log(message);
+        if (logger!=null) {
+            logger.log(message);
+        }
     }
 
     protected final void logException(String origin, Exception e) {
@@ -141,6 +158,13 @@ public abstract class TerraformBaseHandler<Steps extends Enum<?>> extends BaseHa
     
     protected class ProgressEvents {
             
+        protected ProgressEvent<ResourceModel, CallbackContext> failed(String message) {
+            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.FAILED)
+                .message(message)
+                .build();            
+        }
         protected ProgressEvent<ResourceModel, CallbackContext> failed() {
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)

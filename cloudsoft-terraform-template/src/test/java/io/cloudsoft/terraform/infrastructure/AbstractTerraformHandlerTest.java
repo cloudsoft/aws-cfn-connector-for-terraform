@@ -14,8 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import junit.framework.Assert;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
@@ -23,7 +25,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class AbstractTerraformHandlerTest {
 
     private enum NoSteps {}
-    private static class EmptyHandler extends TerraformBaseHandler<NoSteps> {
+    public static class EmptyHandler extends TerraformBaseHandler<NoSteps> {
 
         @Override
         public ProgressEvent<ResourceModel, CallbackContext> runStep() {
@@ -43,7 +45,7 @@ public class AbstractTerraformHandlerTest {
     }
     
     @Mock
-    private Logger logger;
+    Logger logger;
 
     private EmptyHandler runEmptyHandler(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
         EmptyHandler result = new EmptyHandler();
@@ -62,8 +64,13 @@ public class AbstractTerraformHandlerTest {
     }
     
     @Test
-    public void throwsIfRequestIsNull() {
-        assertThrows(NullPointerException.class, () -> new EmptyHandler().handleRequest(null, null, null, logger));
+    public void failsIfRequestIsNull() {
+        ProgressEvent<ResourceModel, CallbackContext> result = new EmptyHandler().handleRequest(null, null, null, logger);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getStatus(), OperationStatus.FAILED);
+        String msg = result.getMessage();
+        Assert.assertTrue("'"+msg+"' did not contain 'request'", msg.contains("request"));
+        Assert.assertTrue("'"+msg+"' did not contain NPE", msg.contains(NullPointerException.class.getSimpleName()));
     }
 
     @Test
@@ -95,4 +102,5 @@ public class AbstractTerraformHandlerTest {
         assertTrue(allWrittenLines.contains(TerraformBaseHandler.LOG_MESSAGE_SEPARATOR));
         verify(logger).log(message);
     }
+    
 }

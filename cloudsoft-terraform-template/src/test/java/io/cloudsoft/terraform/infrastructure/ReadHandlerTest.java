@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import junit.framework.Assert;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -31,6 +32,8 @@ public class ReadHandlerTest {
 
     @BeforeEach
     public void setup() {
+        TerraformBaseHandler.CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = false;
+        
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
     }
@@ -51,7 +54,8 @@ public class ReadHandlerTest {
 
         doReturn(progressEvent).when(spy).runStep();
 
-        spy.handleRequest(proxy, request, callbackContext, logger);
+        ProgressEvent<ResourceModel, CallbackContext> result = spy.handleRequest(proxy, request, callbackContext, logger);
+        Assert.assertEquals(result, progressEvent);
 
         verify(spy, times(1)).runWithLoopingIfNecessary();
     }

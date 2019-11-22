@@ -1,3 +1,9 @@
+# this file is read from GitHub to perform the SAM tests.
+# if you wish to use a different example for SAM tests,
+# create your own TF files e.g. in a branch or gist or S3,
+# and change the JSON files in the folder to point to them.
+# local changes will have no effect on tests!
+
 provider "aws" {
   region = "eu-central-1"
 }
@@ -8,7 +14,7 @@ resource "aws_s3_bucket" "bucket1" {
 }
 
 resource "aws_s3_bucket" "bucket3" {
-  bucket = "denis-example7-bucket3"
+  bucket = "cfn-terraform-connector-example-bucket3"
   acl    = "private"
 }
 
