@@ -6,7 +6,9 @@ resources.
 
 ## Syntax
 
-To declare this type in your CloudFormation template, use the following syntax
+To declare this type in your CloudFormation template, use the following syntax,
+with exactly _one_ `Configuration` property specified.
+The URL and S3 variants can point at a `TF` text file or a `ZIP` archive.
 
 ### JSON
 ```json
@@ -39,15 +41,12 @@ Properties:
 
 ## Return Values
 
-### Ref
-
-The `Ref` function is not supported for this resource.
-
 ### Fn::GetAtt
 
 The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `Outputs` | Object | Any output coming from the Terraform configuration, as a map. |
-| `OutputsStringified` | Object | Any output coming from the Terraform configuration, as a JSON string of the map. |
+| `Outputs` | Object | All output coming from the Terraform configuration, as a map. |
+| `OutputsStringified` | String | All output coming from the Terraform configuration, as a JSON string of the map. |
+

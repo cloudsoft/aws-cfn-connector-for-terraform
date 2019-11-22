@@ -1,8 +1,6 @@
-# this file is read from GitHub to perform the SAM tests.
-# if you wish to use a different example for SAM tests,
-# create your own TF files e.g. in a branch or gist or S3,
-# and change the JSON files in the folder to point to them.
-# local changes will have no effect on tests!
+# this file is read from GitHub by terraform-example.cfn.yaml
+# local changes will have no effect unless you change that file!
+# (but see the docs for more examples)
 
 provider "aws" {
   region = "eu-central-1"

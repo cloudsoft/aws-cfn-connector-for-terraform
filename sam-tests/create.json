@@ -1,6 +1,6 @@
 {
   "desiredResourceState": {
-    "ConfigurationUrl": "https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/sam-tests/s3-step1.tf"
+    "ConfigurationUrl": "https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/sam-tests/s3-step1.tf"
   },
   "logicalResourceIdentifier": "MyResource"
 }

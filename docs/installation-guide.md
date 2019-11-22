@@ -22,20 +22,20 @@ You will need to have the AWS CLI installed and configured on your local machine
    ```sh
    mkdir -p ~/.config/systemd/user
    pushd ~/.config/systemd/user
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/server-side-systemd/terraform-apply%40.service
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/server-side-systemd/terraform-destroy%40.service
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/server-side-systemd/terraform-init%40.service
+   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-apply%40.service
+   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-destroy%40.service
+   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-init%40.service
    popd
    systemctl --user daemon-reload
    ```
-1. Download the [`resource-role.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+1. Download the [`resource-role.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
      --template-body "file://resource-role.yaml" \
      --stack-name CloudsoftTerraformInfrastructureExecutionRole \
      --capabilities CAPABILITY_IAM
    ```
-1. Download the [`setup.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/cloudsoft-terraform-template/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
+1. Download the [`setup.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/setup.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
      --template-body "file://setup.yaml" \

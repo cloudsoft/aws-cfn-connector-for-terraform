@@ -101,3 +101,22 @@ Once the connector is built and submitted to AWS:
 _Note these tests require the a Terraform server to be up and running, as well parameters to be set in parameter store.
 See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the installation guide](./installation-guide.md#installation)._
 
+
+## Open Features aka Limitations
+
+Some features we'd like to support include:
+
+* Getting individual outputs, e.g. using `!GetAtt TerraformExample.Outputs.custom_output1.value`.
+  This project currently returns the map in `Outputs`, but CFN does not support accessing it.
+
+* More download options: providing credentials, supporting Git, supporting downloads by the Terraform server.
+  Let us know what you'd like to see!
+
+* Spinning up a Terraform worker server as needed and maintaining state in S3,
+  so the connector does not require a pre-existing TF server.
+  (But the current implementation is more flexible, as it allows you to configure TF the way you wish.)
+
+* Supporting multiple connector instances in the same account, pointing at different TF servers.
+
+Contributions are welcome!
+
