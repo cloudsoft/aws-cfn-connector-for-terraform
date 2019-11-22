@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
+Resources:
+  TerraformExample:
+    Type: Cloudsoft::Terraform::Infrastructure
+    Properties:
+      ConfigurationUrl: https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/terraform-example.tf
+
+Outputs:
+  Bucket1Arn:
+    Description: Outputs from Terraform as a stringified JSON map
+    Value: !GetAtt TerraformExample.OutputsStringified
+

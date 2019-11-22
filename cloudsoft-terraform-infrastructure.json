@@ -1,0 +1,84 @@
+{
+  "typeName": "Cloudsoft::Terraform::Infrastructure",
+  "description": "The Cloudsoft::Terraform::Infrastructure resource creates and manages a terraform template, through an existing terraform server",
+  "sourceUrl": "https://github.com/cloudsoft/aws-cfn-connector-for-terraform",
+  "definitions": {
+    "ConfigurationContent": {
+      "description": "Inlined Terraform Configuration, passed to the Terraform server",
+      "type": "string"
+    },
+    "ConfigurationUrl": {
+      "description": "Public HTTP URL of a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server",
+      "type": "string"
+    },
+    "ConfigurationS3Path": {
+      "description": "S3 path object representing a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server (the current account must have access to this resource)",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "Identifier": {
+      "description": "UUID for this deployment",
+      "type": "string"
+    },
+    "Outputs": {
+      "description": "Outputs produced by the Terraform configuration, as a map",
+      "type": "object"
+    },
+    "OutputsStringified": {
+      "description": "Outputs produced by the Terraform configuration, as a JSON-stringified representation of the Outputs map",
+      "type": "string"
+    },
+    "ConfigurationContent": {
+      "$ref": "#/definitions/ConfigurationContent"
+    },
+    "ConfigurationUrl": {
+      "$ref": "#/definitions/ConfigurationUrl"
+    },
+    "ConfigurationS3Path": {
+      "$ref": "#/definitions/ConfigurationS3Path"
+    }
+  },
+  "additionalProperties": false,
+  "primaryIdentifier": [
+    "/properties/Identifier"
+  ],
+  "readOnlyProperties": [
+    "/properties/Identifier",
+    "/properties/OutputsStringified",
+    "/properties/Outputs"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "ssm:GetParameter"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "ssm:GetParameter"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "ssm:GetParameter"
+      ]
+    }
+  }
+}
