@@ -15,6 +15,7 @@ out/
 
 # auto-generated files
 target/
+cloudsoft-terraform-infrastructure.zip
 
 # our logs
 rpdk.log

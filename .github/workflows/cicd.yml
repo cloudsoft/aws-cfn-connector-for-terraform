@@ -1,0 +1,52 @@
+name: Cloudsoft::Terraform::Infrastructure CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 */3 * *' # Run every 3 days
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout project
+      uses: actions/checkout@v1
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Set up Python environement
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+        architecture: 'x64'
+    - name: Set up AWS CLI
+      uses: chrislennon/action-aws-cli@1.1
+    - name: Set up CFN CLI
+      run: pip3 install cloudformation-cli cloudformation-cli-java-plugin
+    - name: Build & unit tests
+      run: |
+        echo "::set-env name=TAG::v$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)-$(date '+%Y%m%d-%H%M%S')"
+        mvn -B package --file pom.xml
+      env:
+        AWS_REGION: eu-west-1
+    # TODO: Add SAM tests when building nightly
+    - name: Package nightly
+      if: github.event_name == 'schedule'
+      run: cfn submit --dry-run
+    - name: Publish nightly
+      if: github.event_name == 'schedule'
+      uses: ncipollo/release-action@v1
+      with:
+        body: Automatic nightly release, made by GitHub actions
+        name: ${{ env.TAG }}
+        tag: ${{ env.TAG }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: cloudsoft-terraform-infrastructure.zip
