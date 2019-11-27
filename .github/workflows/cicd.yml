@@ -31,18 +31,24 @@ jobs:
       uses: chrislennon/action-aws-cli@1.1
     - name: Set up CFN CLI
       run: pip3 install cloudformation-cli cloudformation-cli-java-plugin
+    - name: Set up nightly version
+      if: github.event_name == 'schedule' && startsWith(github.repository, 'cloudsoft')
+      run: |
+        CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+        NEW_VERSION=$(echo $CURRENT_VERSION | grep -E -o "[^-SNAPSHOT]+")-$(date '+%Y%m%d-%H%M%S')
+        mvn versions:set -DnewVersion=$NEW_VERSION
+        echo "::set-env name=TAG::v$NEW_VERSION"
     - name: Build & unit tests
       run: |
-        echo "::set-env name=TAG::v$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)-$(date '+%Y%m%d-%H%M%S')"
         mvn -B package --file pom.xml
       env:
         AWS_REGION: eu-west-1
     # TODO: Add SAM tests when building nightly
     - name: Package nightly
-      if: github.event_name == 'schedule'
+      if: github.event_name == 'schedule' && startsWith(github.repository, 'cloudsoft')
       run: cfn submit --dry-run
     - name: Publish nightly
-      if: github.event_name == 'schedule'
+      if: github.event_name == 'schedule' && startsWith(github.repository, 'cloudsoft')
       uses: ncipollo/release-action@v1
       with:
         body: Automatic nightly release, made by GitHub actions
