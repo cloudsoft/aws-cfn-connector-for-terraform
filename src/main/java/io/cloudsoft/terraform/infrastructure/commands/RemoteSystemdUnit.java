@@ -27,7 +27,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
     }
 
     public void start() throws IOException {
-        runSSHCommand(String.format("systemctl --user start %s", unitName));
+        runSSHCommand(String.format("loginctl enable-linger; systemctl --user start %s", unitName));
     }
 
     public String getActiveState() throws IOException {
