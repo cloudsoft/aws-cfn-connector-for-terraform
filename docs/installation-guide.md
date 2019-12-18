@@ -9,8 +9,15 @@ This page will guide you on how to install the Terraform resource provider for C
 ### Terraform server
 
 The connector requires a *running* Terraform server that:
-- is publicly SSH'able
+- runs a Linux distribution that uses systemd with support for user mode and linger, for example:
+  - CentOS 8
+  - Fedora 28+
+  - Ubuntu 18.04+
+- can accept SSH connections from AWS Lambda
 - is configured with the correct credentials for the target clouds
+  (for example, if the Terraform server needs to manage resources through its AWS provider,
+  the configured Linux user needs to have a valid `~/.aws/credentials` file, even though
+  Terraform does not use AWS CLI)
 
 ### AWS CLI
 
@@ -66,3 +73,11 @@ You will need to have the AWS CLI installed and configured on your local machine
    - `/cfn/terraform/ssh-username`
    - `/cfn/terraform/ssh-key`
    - `/cfn/terraform/ssh-fingerprint`
+   
+   The value of `ssh-fingerprint` must be in one of the
+   [fingerprint formats supported in SSHJ](https://github.com/hierynomus/sshj/blob/master/src/main/java/net/schmizz/sshj/transport/verification/FingerprintVerifier.java#L33).
+   For example, a SHA-256 fingerprint of the Ed25519 SSH host key of the current host
+   can be computed as follows:
+   ```shell
+   ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub | cut -d' ' -f2
+   ```
