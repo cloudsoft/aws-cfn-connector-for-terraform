@@ -1,5 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
+Parameters: 
+  Bucket1Name: 
+    Type: String
+    Default: cfn-terraform-connector-example-bucket1
 Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
@@ -43,7 +47,7 @@ Resources:
           value = aws_s3_bucket.bucket2.region
         }
       TerraformVariables:
-        V1: foo
+        V1: { Ref: Bucket1Name }
 
 Outputs:
   Bucket1Arn:
