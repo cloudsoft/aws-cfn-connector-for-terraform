@@ -10,12 +10,10 @@ Note you will need these prerequisites as described on that page:
 
 * Python 3.6 or later
 * Java and Maven
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html),
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+* [CFN CLI](https://github.com/aws-cloudformation/cloudformation-cli) including the `cloudformation-cli-java-plugin`
 
-Make sure to install both the `cloudformation-cli` and the `cloudformation-cli-java-plugin`,
-as described on the CFN CLI page.
-
-These resources are not needed to build but aree very useful to develop and test:
+These resources are not needed to build but are useful to develop and test custom resource providers:
 
 * [Lombok](https://projectlombok.org/) support for your IDE
   (if you want your IDE to understand the Lombok Java annotations)
