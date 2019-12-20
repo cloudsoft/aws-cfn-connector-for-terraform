@@ -81,6 +81,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
+            logger.log(getClass().getName() + " TF vars: "+model.getTerraformVariables().get("V1"));  // TODO note the object can be null - even if supplied, it's lost when the ReadHandler runs
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
