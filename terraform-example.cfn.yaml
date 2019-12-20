@@ -1,10 +1,53 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
+Parameters: 
+  Bucket1Name: 
+    Type: String
+    Default: cfn-terraform-connector-example-bucket1
 Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
     Properties:
-      ConfigurationUrl: https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/terraform-example.tf
+      ConfigurationContent: |
+        provider "aws" {
+          region = "eu-central-1"
+        }
+        
+        resource "aws_s3_bucket" "bucket1" {
+          bucket = "cfn-terraform-connector-example-bucket1"
+          acl    = "private"
+        }
+        
+        resource "aws_s3_bucket" "bucket2" {
+          bucket = "cfn-terraform-connector-example-bucket2"
+          acl    = "private"
+        }
+        
+        output "bucket1-id" {
+          value = aws_s3_bucket.bucket1.id
+        }
+        
+        output "bucket1-arn" {
+          value = aws_s3_bucket.bucket1.arn
+        }
+        
+        output "bucket1-region" {
+          value = aws_s3_bucket.bucket1.region
+        }
+        
+        output "bucket2-id" {
+          value = aws_s3_bucket.bucket2.id
+        }
+        
+        output "bucket2-arn" {
+          value = aws_s3_bucket.bucket2.arn
+        }
+        
+        output "bucket2-region" {
+          value = aws_s3_bucket.bucket2.region
+        }
+      TerraformVariables:
+        V1: { Ref: Bucket1Name }
 
 Outputs:
   Bucket1Arn:
