@@ -8,7 +8,7 @@ This page will guide you on how to install the Terraform resource provider for C
 
 ### Terraform server
 
-The connector requires a *running* Terraform server that:
+The connector requires a *running* Terraform (version 0.12 or later) server that:
 - runs a Linux distribution that uses systemd with support for user mode and linger, for example:
   - CentOS 8
   - Fedora 28+
