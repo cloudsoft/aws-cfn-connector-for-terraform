@@ -81,7 +81,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
-            logger.log(getClass().getName() + " TF vars: "+model.getTerraformVariables().get("V1"));  // TODO note the object can be null - even if supplied, it's lost when the ReadHandler runs
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
@@ -216,8 +215,10 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // likely to time out. However, splitting it into two FSM states would require some place
     // to keep the downloaded file. The callback context isn't intended for that, neither is
     // the lambda's runtime filesystem.
+    // There would be one more transfer if the CloudFormation template defines any Terraform
+    // variables, so the above note would apply even more.
     protected final void getAndUploadConfiguration() throws IOException {
-        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model));
+        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getTerraformVariables());
     }
 
 }
