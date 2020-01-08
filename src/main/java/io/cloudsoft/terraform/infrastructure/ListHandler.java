@@ -9,8 +9,6 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class ListHandler extends TerraformBaseHandler {
     
-    protected enum NoSteps {}
-    
     @Override
     protected TerraformBaseWorker<?> newWorker() {
         return new Worker();

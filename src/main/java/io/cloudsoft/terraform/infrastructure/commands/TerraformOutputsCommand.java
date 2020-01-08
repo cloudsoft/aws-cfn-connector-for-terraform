@@ -38,7 +38,7 @@ public class TerraformOutputsCommand extends TerraformSshCommands {
         });
     }
 
-    public String getOutputAsJsonStringized() throws IOException {
+    public String getOutputAsJsonStringized() {
         return outputJsonStringized;
     }
 

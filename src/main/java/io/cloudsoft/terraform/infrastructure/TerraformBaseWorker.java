@@ -24,8 +24,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // Use YAML doc separator to separate logged messages 
     public static final CharSequence LOG_MESSAGE_SEPARATOR = "---";
 
-    public static boolean CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = true;
-    
     @Getter
     protected AmazonWebServicesClientProxy proxy;
     @Getter
@@ -138,10 +136,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 .message(message)
                 .build();            
         }
-        protected ProgressEvent<ResourceModel, CallbackContext> failed() {
-            return failed(null);
-        }
-        
+
         protected ProgressEvent<ResourceModel, CallbackContext> success() {
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

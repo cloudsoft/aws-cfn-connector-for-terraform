@@ -8,8 +8,6 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class ReadHandler extends TerraformBaseHandler {
 
-    protected enum NoSteps {}
-    
     @Override
     protected TerraformBaseWorker<?> newWorker() {
         return new Worker();
