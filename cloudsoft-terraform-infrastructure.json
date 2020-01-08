@@ -15,7 +15,7 @@
       "description": "S3 path object representing a Terraform Configuration, to be downloaded by the connector and passed to the Terraform server (the current account must have access to this resource)",
       "type": "string"
     },
-    "TerraformVariables": {
+    "Variables": {
       "description": "Variables to set as part of the Terraform Configuration",
       "type": "object"
     }
@@ -42,8 +42,8 @@
     "ConfigurationS3Path": {
       "$ref": "#/definitions/ConfigurationS3Path"
     },
-    "TerraformVariables": {
-      "$ref": "#/definitions/TerraformVariables"
+    "Variables": {
+      "$ref": "#/definitions/Variables"
     }
   },
   "additionalProperties": false,

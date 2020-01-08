@@ -15,6 +15,11 @@ The URL and S3 variants can point at a `TF` text file or a `ZIP` archive.
 {
   "Type" : "Cloudsoft::Terraform::Infrastructure",
   "Properties" : {
+      "Variables": {
+          "variable1": "string1",
+          "variable2": "string2",
+          "variable3": "string3"
+      },
       "ConfigurationContent": "String",
       "ConfigurationUrl": "String",
       "ConfigurationS3Path": "String"
@@ -26,6 +31,10 @@ The URL and S3 variants can point at a `TF` text file or a `ZIP` archive.
 ```yaml
 Type: Cloudsoft::Terraform::Infrastructure
 Properties:
+  Variables:
+    variable1: string1
+    variable2: string2
+    variable3: string3
   ConfigurationContent: String
   ConfigurationUrl: String
   ConfigurationS3Path: String
@@ -38,6 +47,7 @@ Properties:
 | `ConfigurationContent` | Inlined Terraform configuration text to be uploaded to the Terraform server. | Conditional.<br/><br/>Exactly one of `ConfigurationContent`, `ConfigurationUrl` or `ConfigurationS3Path` must be specified. |
 | `ConfigurationUrl` | Public HTTP URL of a Terraform configuration. This will be downloaded from within CloudFormation and uploaded to the Terraform server. | (as above) |
 | `ConfigurationS3Path` | S3 path object representing a Terraform configuration. The current account must have access to this resource. This will be downloaded from within CloudFormation and uploaded to the Terraform server. | (as above) |
+| `Variables` | Variables to make available to the Terraform configuration by means of an `.auto.tfvars.json` file. | Optional in the CloudFormation template, although may be required by the Terraform configuration. |
 
 ## Return Values
 

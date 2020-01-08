@@ -207,7 +207,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // There would be one more transfer if the CloudFormation template defines any Terraform
     // variables, so the above note would apply even more.
     protected final void getAndUploadConfiguration() throws IOException {
-        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getTerraformVariables());
+        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
     }
 
 }
