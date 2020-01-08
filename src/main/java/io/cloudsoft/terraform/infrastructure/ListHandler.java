@@ -1,11 +1,11 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.cloudsoft.terraform.infrastructure.CreateHandler.Steps;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ListHandler extends TerraformBaseHandler {
     

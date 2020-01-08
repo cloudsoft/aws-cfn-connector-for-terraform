@@ -1,11 +1,5 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
@@ -14,6 +8,12 @@ import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class TerraformSshCommands {
     

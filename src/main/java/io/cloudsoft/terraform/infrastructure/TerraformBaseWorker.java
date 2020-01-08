@@ -1,21 +1,15 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
-
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
 import lombok.Getter;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.*;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 

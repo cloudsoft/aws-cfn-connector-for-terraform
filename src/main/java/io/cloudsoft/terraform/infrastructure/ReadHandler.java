@@ -1,10 +1,10 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.IOException;
-
 import io.cloudsoft.terraform.infrastructure.CreateHandler.Steps;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformOutputsCommand;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+
+import java.io.IOException;
 
 public class ReadHandler extends TerraformBaseHandler {
 

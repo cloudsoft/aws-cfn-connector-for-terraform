@@ -1,15 +1,14 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import static org.mockito.Mockito.mock;
-
-import java.io.IOException;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.ssm.SsmClient;
+
+import java.io.IOException;
+
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends HandlerTestFixture {

@@ -1,14 +1,13 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class TerraformOutputsCommand extends TerraformSshCommands {
 
