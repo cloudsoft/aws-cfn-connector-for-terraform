@@ -22,7 +22,7 @@ public class ReadHandler extends TerraformBaseHandler {
             model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
             model.setOutputs(outputCmd.getOutputAsMap());
 
-            return progressEvents().success();
+            return statusSuccess();
         }
 
     }

@@ -41,30 +41,30 @@ public class CreateHandler extends TerraformBaseHandler {
                      * step, but returning often increases transparency and maximises the time
                      * available for each step (avoiding errors due to timeout)
                      */
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case CREATE_SYNC_FILE:
                     getAndUploadConfiguration();
                     advanceTo(Steps.CREATE_RUN_TF_INIT);
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case CREATE_RUN_TF_INIT:
                     tfInit().start();
                     advanceTo(Steps.CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY);
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY:
                     if (checkStillRunnningOrError(tfInit())) {
-                        return progressEvents().inProgressResult();
+                        return statusInProgress();
                     }
 
                     tfApply().start();
                     advanceTo(Steps.CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN);
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN:
                     if (checkStillRunnningOrError(tfApply())) {
-                        return progressEvents().inProgressResult();
+                        return statusInProgress();
                     }
 
                     TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
@@ -72,7 +72,7 @@ public class CreateHandler extends TerraformBaseHandler {
                     model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
                     model.setOutputs(outputCmd.getOutputAsMap());
 
-                    return progressEvents().success();
+                    return statusSuccess();
 
                 default:
                     throw new IllegalStateException("Invalid step: " + callbackContext.stepId);

@@ -79,7 +79,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 
         } catch (ConnectorHandlerFailures.Handled e) {
             logger.log(getClass().getName() + " lambda exiting with error");
-            return progressEvents().failed("FAILING: "+e.getMessage());
+            return statusFailed("FAILING: "+e.getMessage());
 
         } catch (ConnectorHandlerFailures.Unhandled e) {
             if (e.getCause()!=null) {
@@ -88,12 +88,12 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 log("FAILING: "+e.getMessage());
             }
             logger.log(getClass().getName() + " lambda exiting with error");
-            return progressEvents().failed(e.getMessage());
+            return statusFailed(e.getMessage());
 
         } catch (Exception e) {
             logException("FAILING: "+e, e);
             logger.log(getClass().getName() + " lambda exiting with error");
-            return progressEvents().failed((currentStep!=null ? currentStep+": " : "")+e);
+            return statusFailed((currentStep!=null ? currentStep+": " : "")+e);
         }
     }
 
@@ -117,52 +117,46 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
 
-    protected ProgressEvents progressEvents() {
-        return new ProgressEvents();
-    }
-
-    protected class ProgressEvents {
-
-        protected ProgressEvent<ResourceModel, CallbackContext> failed(String message) {
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+    protected ProgressEvent<ResourceModel, CallbackContext> statusFailed(String message) {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.FAILED)
                 .message(message)
                 .build();
-        }
+    }
 
-        protected ProgressEvent<ResourceModel, CallbackContext> success() {
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(OperationStatus.SUCCESS)
-                    .build();
-        }
+    protected ProgressEvent<ResourceModel, CallbackContext> statusSuccess() {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.SUCCESS)
+                .build();
+    }
 
-        protected ProgressEvent<ResourceModel, CallbackContext> inProgressResult(String message) {
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+    protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress(String message) {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .callbackContext(callbackContext)
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
                 .message(message)
                 .build();
-        }
-        protected ProgressEvent<ResourceModel, CallbackContext> inProgressResult() {
-            return inProgressResult(currentStep == null ? null : "Step: "+currentStep);
-        }
+    }
 
-        int nextDelay(CallbackContext callbackContext) {
-            if (callbackContext.lastDelaySeconds < 0) {
-                callbackContext.lastDelaySeconds = 0;
-            } else if (callbackContext.lastDelaySeconds == 0) {
-                callbackContext.lastDelaySeconds = 1;
-            } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL_SECONDS) {
-                // exponential backoff
-                callbackContext.lastDelaySeconds =
+    protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress() {
+        return statusInProgress(currentStep == null ? null : "Step: " + currentStep);
+    }
+
+    int nextDelay(CallbackContext callbackContext) {
+        if (callbackContext.lastDelaySeconds < 0) {
+            callbackContext.lastDelaySeconds = 0;
+        } else if (callbackContext.lastDelaySeconds == 0) {
+            callbackContext.lastDelaySeconds = 1;
+        } else if (callbackContext.lastDelaySeconds < MAX_CHECK_INTERVAL_SECONDS) {
+            // exponential backoff
+            callbackContext.lastDelaySeconds =
                     Math.min(MAX_CHECK_INTERVAL_SECONDS, 2 * callbackContext.lastDelaySeconds);
-            }
-            return callbackContext.lastDelaySeconds;
         }
+        return callbackContext.lastDelaySeconds;
     }
 
     protected final void advanceTo(Steps nextStep) {

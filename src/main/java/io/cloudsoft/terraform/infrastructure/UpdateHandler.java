@@ -27,19 +27,19 @@ public class UpdateHandler extends TerraformBaseHandler {
                 case UPDATE_SYNC_FILE:
                     getAndUploadConfiguration();
                     advanceTo(Steps.UPDATE_RUN_TF_APPLY);
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case UPDATE_RUN_TF_APPLY:
                     advanceTo(Steps.UPDATE_WAIT_ON_APPLY_THEN_RETURN);
                     tfApply().start();
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case UPDATE_WAIT_ON_APPLY_THEN_RETURN:
                     if (checkStillRunnningOrError(tfApply())) {
-                        return progressEvents().inProgressResult();
+                        return statusInProgress();
                     }
 
-                    return progressEvents().success();
+                    return statusSuccess();
 
                 default:
                     throw new IllegalStateException("Invalid step: " + callbackContext.stepId);

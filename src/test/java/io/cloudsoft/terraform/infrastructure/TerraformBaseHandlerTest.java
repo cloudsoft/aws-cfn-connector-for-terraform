@@ -32,7 +32,7 @@ public class TerraformBaseHandlerTest {
     public static class EmptyWorker extends TerraformBaseWorker<NoSteps> {
         @Override
         public ProgressEvent<ResourceModel, CallbackContext> runStep() {
-            return progressEvents().success();
+            return statusSuccess();
         }
 
         // visible for testing

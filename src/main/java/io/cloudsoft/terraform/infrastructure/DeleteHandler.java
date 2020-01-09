@@ -26,11 +26,11 @@ public class DeleteHandler extends TerraformBaseHandler {
                 case DELETE_RUN_TF_DESTROY:
                     advanceTo(Steps.DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN);
                     tfDestroy().start();
-                    return progressEvents().inProgressResult();
+                    return statusInProgress();
 
                 case DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN:
                     if (checkStillRunnningOrError(tfDestroy())) {
-                        return progressEvents().inProgressResult();
+                        return statusInProgress();
                     }
 
                     tfSshCommands().rmdir();
