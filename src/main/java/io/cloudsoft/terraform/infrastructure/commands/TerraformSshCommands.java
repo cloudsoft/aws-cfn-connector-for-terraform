@@ -1,10 +1,6 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import net.schmizz.sshj.SSHClient;
@@ -12,6 +8,12 @@ import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class TerraformSshCommands {
     
@@ -135,11 +137,7 @@ public class TerraformSshCommands {
         return lastStderr;
     }
 
-    public Integer getLastExitStatusOrNull() {
-        return lastExitStatusOrNull;
-    }
-
-    public void uploadConfiguration(byte[] contents) throws IOException, IllegalArgumentException {
+    public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
         mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
         String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
@@ -156,6 +154,13 @@ public class TerraformSshCommands {
             default:
                 rmdir(getScpDir());
                 throw new IllegalArgumentException("Unknown MIME type " + mimeType);
+        }
+        if (vars_map != null && !vars_map.isEmpty()) {
+            String vars_filename = "cfn-" + configurationIdentifier + ".auto.tfvars.json";
+            byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
+            // Work around the tilde [non-]expansion as explained above.
+            uploadFile(getScpDir(), vars_filename, vars_json);
+            mv(getScpDir() + "/" + vars_filename, getWorkdir() + "/" + vars_filename);
         }
         rmdir(getScpDir());
     }

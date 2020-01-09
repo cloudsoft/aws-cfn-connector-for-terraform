@@ -1,21 +1,15 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
-
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
 import lombok.Getter;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.*;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 
@@ -24,8 +18,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // Use YAML doc separator to separate logged messages 
     public static final CharSequence LOG_MESSAGE_SEPARATOR = "---";
 
-    public static boolean CREATE_NEW_DELEGATE_FOR_EACH_REQUEST = true;
-    
     @Getter
     protected AmazonWebServicesClientProxy proxy;
     @Getter
@@ -138,10 +130,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 .message(message)
                 .build();            
         }
-        protected ProgressEvent<ResourceModel, CallbackContext> failed() {
-            return failed(null);
-        }
-        
+
         protected ProgressEvent<ResourceModel, CallbackContext> success() {
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
@@ -215,8 +204,10 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // likely to time out. However, splitting it into two FSM states would require some place
     // to keep the downloaded file. The callback context isn't intended for that, neither is
     // the lambda's runtime filesystem.
+    // There would be one more transfer if the CloudFormation template defines any Terraform
+    // variables, so the above note would apply even more.
     protected final void getAndUploadConfiguration() throws IOException {
-        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model));
+        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
     }
 
 }

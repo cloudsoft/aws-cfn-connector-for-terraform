@@ -1,8 +1,8 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.IOException;
-
 import software.amazon.cloudformation.proxy.ProgressEvent;
+
+import java.io.IOException;
 
 public class UpdateHandler extends TerraformBaseHandler {
 

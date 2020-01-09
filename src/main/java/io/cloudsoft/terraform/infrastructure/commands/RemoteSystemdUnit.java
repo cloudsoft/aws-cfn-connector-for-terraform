@@ -1,11 +1,11 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import java.io.IOException;
-
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import lombok.Getter;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.io.IOException;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
     
@@ -44,10 +44,6 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     public boolean wasFailure() throws IOException {
         return !"success".equals(getResult());
-    }
-
-    public String getStatusErrno() throws IOException {
-        return getRemotePropertyValue("StatusErrno");
     }
 
     public String getMainExitCode() throws IOException {

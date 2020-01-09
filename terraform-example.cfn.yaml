@@ -1,10 +1,73 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Terraform in CloudFormation example, using the Terraform Connector for CloudFormation
+Parameters: 
+  CFNBucket1Name:
+    Type: String
+    Default: terraform-rp-example-bucket1-cfndfl
+  CFNBucket2Name:
+    Type: String
+    Default: terraform-rp-example-bucket2-cfndfl
 Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
     Properties:
-      ConfigurationUrl: https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/terraform-example.tf
+      ConfigurationContent: |
+        variable "AWSRegion" {
+          type = string
+          default = "eu-central-1"
+        }
+
+        variable "TFBucket1Name" {
+          type = string
+          default = "terraform-rp-example-bucket1-tfdfl"
+        }
+
+        variable "TFBucket2Name" {
+          type = string
+          default = "terraform-rp-example-bucket2-tfdfl"
+        }
+
+        provider "aws" {
+          region = var.AWSRegion
+        }
+        
+        resource "aws_s3_bucket" "bucket1" {
+          bucket = var.TFBucket1Name
+          acl    = "private"
+        }
+        
+        resource "aws_s3_bucket" "bucket2" {
+          bucket = var.TFBucket2Name
+          acl    = "private"
+        }
+        
+        output "bucket1-id" {
+          value = aws_s3_bucket.bucket1.id
+        }
+        
+        output "bucket1-arn" {
+          value = aws_s3_bucket.bucket1.arn
+        }
+        
+        output "bucket1-region" {
+          value = aws_s3_bucket.bucket1.region
+        }
+        
+        output "bucket2-id" {
+          value = aws_s3_bucket.bucket2.id
+        }
+        
+        output "bucket2-arn" {
+          value = aws_s3_bucket.bucket2.arn
+        }
+        
+        output "bucket2-region" {
+          value = aws_s3_bucket.bucket2.region
+        }
+      Variables:
+        AWSRegion: !Ref "AWS::Region"
+        TFBucket1Name: !Ref CFNBucket1Name
+        TFBucket2Name: !Ref CFNBucket2Name
 
 Outputs:
   Bucket1Arn:

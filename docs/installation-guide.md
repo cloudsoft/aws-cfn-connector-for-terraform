@@ -18,6 +18,9 @@ The connector requires a *running* Terraform (version 0.12 or later) server that
   (for example, if the Terraform server needs to manage resources through its AWS provider,
   the configured Linux user needs to have a valid `~/.aws/credentials` file, even though
   Terraform does not use AWS CLI)
+- has the command-line tools to extract archived Terraform configurations (right now this
+  is ZIP, which requires `unzip`, which, for example, can be installed on Ubuntu Linux
+  with `apt-get install unzip`)
 
 ### AWS CLI
 
