@@ -16,7 +16,7 @@ public class ConnectorHandlerFailures {
     }
     
     /** An exception which has been handled and logged, with a nice message supplied here.
-     * The catcher should not to any further logging, but can include the message as a reason
+     * The catcher should not do any further logging, but can include the message as a reason
      * why the failure occurred. 
      */ 
     public static class Handled extends RuntimeException {
