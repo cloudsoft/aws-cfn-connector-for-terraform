@@ -35,10 +35,7 @@ public class DeleteHandler extends TerraformBaseHandler {
 
                     tfSshCommands().rmdir();
 
-                    return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                            .resourceModel(model)
-                            .status(OperationStatus.SUCCESS)
-                            .build();
+                    return statusSuccess();
                 default:
                     throw new IllegalStateException("invalid step " + callbackContext.stepId);
             }
