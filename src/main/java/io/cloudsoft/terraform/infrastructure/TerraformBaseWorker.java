@@ -132,18 +132,14 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 .build();
     }
 
-    protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress(String message) {
+    protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress() {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .callbackContext(callbackContext)
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
-                .message(message)
+                .message(currentStep == null ? null : "Step: " + currentStep)
                 .build();
-    }
-
-    protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress() {
-        return statusInProgress(currentStep == null ? null : "Step: " + currentStep);
     }
 
     int nextDelay(CallbackContext callbackContext) {
