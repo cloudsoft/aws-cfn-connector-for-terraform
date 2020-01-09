@@ -18,7 +18,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {
         super(params, logger, configurationName);
-        this.unitName = String.format("%s@%s", unitName, configurationName);
+        this.unitName = unitName + "@" + configurationName;
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {

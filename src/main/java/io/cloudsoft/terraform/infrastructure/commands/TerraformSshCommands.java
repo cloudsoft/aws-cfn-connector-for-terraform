@@ -53,11 +53,11 @@ public class TerraformSshCommands {
     }
 
     public String getWorkdir() {
-        return String.format("%s/%s", TF_DATADIR, configurationIdentifier);
+        return TF_DATADIR + "/" + configurationIdentifier;
     }
 
     private String getScpDir() {
-        return String.format("%s/%s", TF_SCPDIR, configurationIdentifier);
+        return TF_SCPDIR + "/" + configurationIdentifier;
     }
 
     public void mkdir() throws IOException {

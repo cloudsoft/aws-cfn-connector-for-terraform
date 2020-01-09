@@ -68,7 +68,7 @@ public class TerraformParameters {
 
     public String getParameterValue(String id, boolean required) {
         GetParameterRequest getParameterRequest = GetParameterRequest.builder()
-                .name(String.format("%s/%s", PREFIX, id))
+                .name(PREFIX + "/" + id)
                 .withDecryption(true)
                 .build();
 
@@ -98,14 +98,14 @@ public class TerraformParameters {
             try {
                 return IOUtils.toByteArray(new URL(model.getConfigurationUrl()));
             } catch (IOException e) {
-                throw ConnectorHandlerFailures.unhandled(String.format("Failed to download file at %s", model.getConfigurationUrl()), e);
+                throw ConnectorHandlerFailures.unhandled("Failed to download file at " + model.getConfigurationUrl(), e);
             }
         }
 
         if (model.getConfigurationS3Path() != null) {
             Matcher matcher = s3Pattern.matcher(model.getConfigurationS3Path());
             if (!matcher.find()) {
-                throw ConnectorHandlerFailures.unhandled(String.format("Invalid S3 path %s", model.getConfigurationS3Path()));
+                throw ConnectorHandlerFailures.unhandled("Invalid S3 path " + model.getConfigurationS3Path());
             }
 
             String bucket = matcher.group(1);
