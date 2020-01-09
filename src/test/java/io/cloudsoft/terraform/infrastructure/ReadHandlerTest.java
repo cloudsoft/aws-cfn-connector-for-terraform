@@ -13,5 +13,5 @@ public class ReadHandlerTest extends HandlerTestFixture {
     public void handleRequestCallWorkerRun() throws IOException {
         doWorkerRun(() -> new ReadHandler());
     }
-    
+
 }

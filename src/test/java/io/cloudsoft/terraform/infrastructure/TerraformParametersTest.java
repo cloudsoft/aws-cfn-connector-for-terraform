@@ -35,7 +35,7 @@ public class TerraformParametersTest {
 
     @Mock
     private S3Client s3Client;
-    
+
     private TerraformParameters parameters;
 
     @BeforeEach
@@ -143,7 +143,7 @@ public class TerraformParametersTest {
         assertEquals(22, parameters.getPort());
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(eq(expectedGetParameterRequest), any());
     }
-    
+
     @Test
     public void getPortThrowsIfGetParameterThrowsOtherError() {
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()

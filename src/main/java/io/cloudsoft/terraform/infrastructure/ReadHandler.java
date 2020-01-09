@@ -12,19 +12,19 @@ public class ReadHandler extends TerraformBaseHandler {
     protected TerraformBaseWorker<?> newWorker() {
         return new Worker();
     }
-    
+
     protected static class Worker extends TerraformBaseWorker<Steps> {
-        
+
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
             outputCmd.run();
             model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
             model.setOutputs(outputCmd.getOutputAsMap());
-        
+
             return progressEvents().success();
         }
-    
+
     }
 
 }

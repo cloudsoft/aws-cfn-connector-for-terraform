@@ -47,10 +47,10 @@ public class TerraformParameters {
         }
         try {
             return Integer.parseInt(port.trim());
-            
+
         } catch (Exception e) {
             throw ConnectorHandlerFailures.unhandled("Parameter 'ssh-port' is invalid: '"+port+"'");
-            
+
         }
     }
 
@@ -76,7 +76,7 @@ public class TerraformParameters {
             GetParameterResponse getParameterResponse = proxy.injectCredentialsAndInvokeV2(getParameterRequest,
                 ssmClient::getParameter);
             return getParameterResponse.parameter().value();
-            
+
         } catch (ParameterNotFoundException e) {
             if (required) {
                 throw ConnectorHandlerFailures.unhandled("Parameter '"+id+"' must be set in parameter store.", e);

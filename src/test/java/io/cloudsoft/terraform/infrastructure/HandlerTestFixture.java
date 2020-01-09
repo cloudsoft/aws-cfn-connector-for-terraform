@@ -50,21 +50,21 @@ public class HandlerTestFixture {
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
                 .build();
-        
+
         final TerraformBaseWorker<?> worker = handlerFactory.get().newWorker();
         worker.setParameters(new TerraformParameters(proxy, ssmClient, s3Client));
         TerraformBaseWorker<?> spyWorker = spy(worker);
 
         final TerraformBaseHandler handler = handlerFactory.get();
         TerraformBaseHandler spyHandler = spy(handler);
-        
+
         doReturn(progressEvent).when(spyWorker).runStep();
         doReturn(spyWorker).when(spyHandler).newWorker();
 
         ProgressEvent<ResourceModel, CallbackContext> result = spyHandler.handleRequest(proxy, request, callbackContext, logger);
-        
+
         Assert.assertEquals(result, progressEvent);
         verify(spyWorker, times(1)).runHandlingError();
     }
-    
+
 }

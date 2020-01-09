@@ -13,5 +13,5 @@ public class DeleteHandlerTest extends HandlerTestFixture {
     public void handleRequestCallWorkerRun() throws IOException {
         doWorkerRun(() -> new DeleteHandler());
     }
-    
+
 }

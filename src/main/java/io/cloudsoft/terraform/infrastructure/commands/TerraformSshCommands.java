@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class TerraformSshCommands {
-    
+
     protected final Logger logger;
     protected final String configurationIdentifier, serverHostname, sshUsername, sshServerKeyFP,
             sshClientSecretKeyContents;

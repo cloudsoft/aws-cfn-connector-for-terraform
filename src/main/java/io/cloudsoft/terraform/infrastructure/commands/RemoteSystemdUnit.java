@@ -8,7 +8,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
-    
+
     @Getter
     private final String unitName;
 

@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 public class TerraformBaseHandlerTest {
 
     private enum NoSteps {}
-    
+
     public static class EmptyHandler extends TerraformBaseHandler {
         EmptyWorker w;
         @Override
@@ -28,7 +28,7 @@ public class TerraformBaseHandlerTest {
             return w = new EmptyWorker();
         }
     }
-    
+
     public static class EmptyWorker extends TerraformBaseWorker<NoSteps> {
         @Override
         public ProgressEvent<ResourceModel, CallbackContext> runStep() {
@@ -40,17 +40,17 @@ public class TerraformBaseHandlerTest {
         public void init(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
             super.init(proxy, request, callbackContext, logger);
         }
-        
+
         @Override
         public void log(String message) {
             super.log(message);
         }
     }
-    
-    
+
+
     @Mock
     Logger logger;
-    
+
     private EmptyHandler lastHandler;
 
     private ProgressEvent<ResourceModel, CallbackContext> runEmptyHandler(AmazonWebServicesClientProxy proxy, ResourceHandlerRequest<ResourceModel> request, CallbackContext callbackContext, Logger logger) {
@@ -58,7 +58,7 @@ public class TerraformBaseHandlerTest {
         this.lastHandler = h;
         return h.handleRequest(proxy, request, callbackContext, logger);
     }
-    
+
     private ProgressEvent<ResourceModel, CallbackContext> runEmptyHandlerWithDefaults() {
         final ResourceModel model = ResourceModel.builder().build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -68,7 +68,7 @@ public class TerraformBaseHandlerTest {
 
         return runEmptyHandler(null, request, callbackContext, logger);
     }
-    
+
     @Test
     public void failsIfRequestIsNull() {
         System.err.println("Expecting logged NPE to follow; ignore it");
@@ -109,5 +109,5 @@ public class TerraformBaseHandlerTest {
         assertTrue(allWrittenLines.contains(TerraformBaseWorker.LOG_MESSAGE_SEPARATOR));
         verify(logger).log(message);
     }
-    
+
 }

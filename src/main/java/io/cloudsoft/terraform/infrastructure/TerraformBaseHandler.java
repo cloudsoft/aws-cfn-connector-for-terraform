@@ -10,17 +10,17 @@ public abstract class TerraformBaseHandler extends BaseHandler<CallbackContext> 
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
             final Logger logger) {
-        
+
         if (logger==null) {
             System.err.println("No logger set.");
             throw new NullPointerException("logger");
         }
-        
+
         try {
             TerraformBaseWorker<?> worker = newWorker();
             worker.init(proxy, request, callbackContext, logger);
             return worker.runHandlingError();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             logger.log("Failed to create worker: "+e);
@@ -30,6 +30,6 @@ public abstract class TerraformBaseHandler extends BaseHandler<CallbackContext> 
                 .build();
         }
     }
-    
+
     protected abstract TerraformBaseWorker<?> newWorker();
 }

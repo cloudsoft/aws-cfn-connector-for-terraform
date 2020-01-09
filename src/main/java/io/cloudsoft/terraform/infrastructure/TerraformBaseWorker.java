@@ -15,7 +15,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
-    // Use YAML doc separator to separate logged messages 
+    // Use YAML doc separator to separate logged messages
     public static final CharSequence LOG_MESSAGE_SEPARATOR = "---";
 
     @Getter
@@ -28,17 +28,17 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     protected CallbackContext callbackContext;
     @Getter
     private Logger logger;
-    
+
     protected TerraformParameters parameters;
-    
+
     protected Steps currentStep;
-    
+
     // === init and accessors ========================
-    
+
     protected void init(
-            @Nullable AmazonWebServicesClientProxy proxy, 
+            @Nullable AmazonWebServicesClientProxy proxy,
             ResourceHandlerRequest<ResourceModel> request,
-            @Nullable CallbackContext callbackContext, 
+            @Nullable CallbackContext callbackContext,
             Logger logger) {
         if (this.request!=null) {
             throw new IllegalStateException("Handler can only be setup and used once, and request has already been initialized when attempting to re-initialize it");
@@ -53,13 +53,13 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     public synchronized TerraformParameters getParameters() {
         if (parameters==null) {
             if (proxy==null) {
-                throw new IllegalStateException("Parameters cannot be accessed before proxy set during init");                
+                throw new IllegalStateException("Parameters cannot be accessed before proxy set during init");
             }
             parameters = new TerraformParameters(proxy);
         }
         return parameters;
     }
-    
+
     // for testing
     public synchronized void setParameters(TerraformParameters parameters) {
         if (this.parameters!=null) {
@@ -67,20 +67,20 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         }
         this.parameters = Preconditions.checkNotNull(parameters, "parameters");
     }
-    
+
     // === lifecycle ========================
-    
+
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
-        
+
         } catch (ConnectorHandlerFailures.Handled e) {
             logger.log(getClass().getName() + " lambda exiting with error");
             return progressEvents().failed("FAILING: "+e.getMessage());
-            
+
         } catch (ConnectorHandlerFailures.Unhandled e) {
             if (e.getCause()!=null) {
                 logException("FAILING: "+e.getMessage(), e.getCause());
@@ -89,18 +89,18 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             }
             logger.log(getClass().getName() + " lambda exiting with error");
             return progressEvents().failed(e.getMessage());
-            
+
         } catch (Exception e) {
             logException("FAILING: "+e, e);
             logger.log(getClass().getName() + " lambda exiting with error");
             return progressEvents().failed((currentStep!=null ? currentStep+": " : "")+e);
         }
     }
-    
+
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
 
     // === utils ========================
-    
+
     protected void log(String message) {
         System.out.println(message);
         System.out.println(LOG_MESSAGE_SEPARATOR);
@@ -120,15 +120,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     protected ProgressEvents progressEvents() {
         return new ProgressEvents();
     }
-    
+
     protected class ProgressEvents {
-            
+
         protected ProgressEvent<ResourceModel, CallbackContext> failed(String message) {
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.FAILED)
                 .message(message)
-                .build();            
+                .build();
         }
 
         protected ProgressEvent<ResourceModel, CallbackContext> success() {
@@ -137,7 +137,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                     .status(OperationStatus.SUCCESS)
                     .build();
         }
-        
+
         protected ProgressEvent<ResourceModel, CallbackContext> inProgressResult(String message) {
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
@@ -150,7 +150,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         protected ProgressEvent<ResourceModel, CallbackContext> inProgressResult() {
             return inProgressResult(currentStep == null ? null : "Step: "+currentStep);
         }
-        
+
         int nextDelay(CallbackContext callbackContext) {
             if (callbackContext.lastDelaySeconds < 0) {
                 callbackContext.lastDelaySeconds = 0;
@@ -178,7 +178,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     protected RemoteSystemdUnit tfInit() {
         return RemoteSystemdUnit.of(this, "terraform-init");
     }
-    
+
     protected RemoteSystemdUnit tfApply() {
         return RemoteSystemdUnit.of(this, "terraform-apply");
     }

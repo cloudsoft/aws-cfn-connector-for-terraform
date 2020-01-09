@@ -13,5 +13,5 @@ public class UpdateHandlerTest extends HandlerTestFixture {
     public void handleRequestCallWorkerRun() throws IOException {
         doWorkerRun(() -> new UpdateHandler());
     }
-    
+
 }
