@@ -133,10 +133,6 @@ public class TerraformSshCommands {
         return lastStdout;
     }
 
-    public String getLastStderr() {
-        return lastStderr;
-    }
-
     public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
         mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
@@ -181,6 +177,11 @@ public class TerraformSshCommands {
                 // ignore
             }
         }
+    }
+
+    protected String catFileIfExists(String remotePath) throws IOException {
+        runSSHCommand(String.format("[ -f %s ] && cat %s || :", remotePath, remotePath));
+        return lastStdout;
     }
 
     protected void addHostKeyVerifier(SSHClient ssh) {

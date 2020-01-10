@@ -12,6 +12,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     @Getter
     private final String unitName;
+    private final String stdoutLogFileName, stderrLogFileName;
 
     public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
         return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), unitName, w.getModel().getIdentifier());
@@ -20,6 +21,9 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
     protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {
         super(params, logger, configurationName);
         this.unitName = unitName + "@" + configurationName;
+        // NB: The two values below must be consistent with what is in the systemd unit files.
+        stdoutLogFileName = String.format("%s/%s-stdout-live.log", getWorkDir(), this.unitName);
+        stderrLogFileName = String.format("%s/%s-stderr-live.log", getWorkDir(), this.unitName);
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
@@ -29,6 +33,10 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     public void start() throws IOException {
         final List<String> commands = Arrays.asList(
+                // systemd neither replaces nor appends the log file on a 2nd run of the same unit, it just
+                // starts writing over the pre-existing contents (at least the version 237-3ubuntu10.33).
+                "truncate --size=0 " + stdoutLogFileName,
+                "truncate --size=0 " + stderrLogFileName,
                 "loginctl enable-linger",
                 "systemctl --user start " + unitName
         );
@@ -55,9 +63,12 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         return getRemotePropertyValue("ExecMainCode");
     }
 
-    public String getLog() throws IOException {
-        runSSHCommand(String.format("journalctl --no-pager --user-unit=%s", unitName));
-        return getLastStdout() + "\n" + getLastStderr();
+    public String getFullStdout() throws IOException {
+        return catFileIfExists(stdoutLogFileName);
+    }
+
+    public String getFullStderr() throws IOException {
+        return catFileIfExists(stderrLogFileName);
     }
 
 }

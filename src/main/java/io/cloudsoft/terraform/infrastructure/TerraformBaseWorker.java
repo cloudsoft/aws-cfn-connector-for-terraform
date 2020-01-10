@@ -181,10 +181,22 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         if (process.isRunning()) {
             return true;
         }
-        if (process.wasFailure()) {
+        final String stderr = process.getFullStderr();
+        if (!process.wasFailure()) {
+            if (!stderr.isEmpty()) {
+                // Any stderr output is not the wanted result because usually it is a side
+                // effect of the remote process' failure, but combined with a non-raised fault
+                // flag it may mean a bug (a failure to fail) in Terraform or in the resource
+                // provider code, hence report this separately to make it easier to relate.
+                logger.log("Spurious remote stderr:\n" + stderr);
+            }
+        } else {
             String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+
                 process.getMainExitCode()+")";
-            logger.log(message+"\n"+process.getLog());
+            logger.log(message);
+            logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
+            final String stdout = process.getFullStdout();
+            logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
             throw ConnectorHandlerFailures.handled(message+"; see CloudWatch logs for more detail.");
         }
         return false;
