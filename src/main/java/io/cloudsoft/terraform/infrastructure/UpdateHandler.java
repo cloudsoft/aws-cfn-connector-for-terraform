@@ -35,7 +35,7 @@ public class UpdateHandler extends TerraformBaseHandler {
                     return statusInProgress();
 
                 case UPDATE_WAIT_ON_APPLY_THEN_RETURN:
-                    if (checkStillRunnningOrError(tfApply())) {
+                    if (checkStillRunningOrError(tfApply())) {
                         return statusInProgress();
                     }
 

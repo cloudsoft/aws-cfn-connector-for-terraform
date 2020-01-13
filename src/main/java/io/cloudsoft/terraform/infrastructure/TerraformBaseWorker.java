@@ -177,7 +177,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         return RemoteSystemdUnit.of(this, "terraform-destroy");
     }
 
-    protected boolean checkStillRunnningOrError(RemoteSystemdUnit process) throws IOException {
+    protected boolean checkStillRunningOrError(RemoteSystemdUnit process) throws IOException {
         if (process.isRunning()) {
             return true;
         }

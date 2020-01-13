@@ -54,7 +54,7 @@ public class CreateHandler extends TerraformBaseHandler {
                     return statusInProgress();
 
                 case CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY:
-                    if (checkStillRunnningOrError(tfInit())) {
+                    if (checkStillRunningOrError(tfInit())) {
                         return statusInProgress();
                     }
 
@@ -63,7 +63,7 @@ public class CreateHandler extends TerraformBaseHandler {
                     return statusInProgress();
 
                 case CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN:
-                    if (checkStillRunnningOrError(tfApply())) {
+                    if (checkStillRunningOrError(tfApply())) {
                         return statusInProgress();
                     }
 

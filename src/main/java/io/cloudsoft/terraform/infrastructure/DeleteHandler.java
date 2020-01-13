@@ -29,7 +29,7 @@ public class DeleteHandler extends TerraformBaseHandler {
                     return statusInProgress();
 
                 case DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN:
-                    if (checkStillRunnningOrError(tfDestroy())) {
+                    if (checkStillRunningOrError(tfDestroy())) {
                         return statusInProgress();
                     }
 
