@@ -177,11 +177,31 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         return RemoteSystemdUnit.of(this, "terraform-destroy");
     }
 
+    private void drainPendingRemoteLogs(RemoteSystemdUnit process) throws IOException {
+        String str;
+        str = process.getIncrementalStdout();
+        if (!str.isEmpty())
+            logger.log("New standard output data:\n" + str);
+        str = process.getIncrementalStderr();
+        if (!str.isEmpty())
+            logger.log("New standard error data:\n" + str);
+    }
+
     protected boolean checkStillRunningOrError(RemoteSystemdUnit process) throws IOException {
-        if (process.isRunning()) {
+        // Always drain pending log messages regardless of any other activity/conditions.
+        // That said, do not drain _before_ establishing whether the remote process is still
+        // running as that would be a race against short-lived processes and would require a
+        // second drain in case the process has finished and would result in a short Terraform
+        // log split across two CloudWatch messages for no obvious reason.
+        final boolean isRunning = process.isRunning();
+        drainPendingRemoteLogs(process);
+        if (isRunning) {
             return true;
         }
+
         final String stderr = process.getFullStderr();
+        // FIXME: instead of retrieving the full log files it would be faster to accumulate the
+        //  incremental fragments already retrieved above.
         if (!process.wasFailure()) {
             if (!stderr.isEmpty()) {
                 // Any stderr output is not the wanted result because usually it is a side

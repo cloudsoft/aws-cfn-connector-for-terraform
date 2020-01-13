@@ -37,6 +37,8 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
                 // starts writing over the pre-existing contents (at least the version 237-3ubuntu10.33).
                 "truncate --size=0 " + stdoutLogFileName,
                 "truncate --size=0 " + stderrLogFileName,
+                setupIncrementalFileCommand(stdoutLogFileName),
+                setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
                 "systemctl --user start " + unitName
         );
@@ -71,4 +73,11 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         return catFileIfExists(stderrLogFileName);
     }
 
+    public String getIncrementalStdout() throws IOException {
+        return catIncrementalFileIfExists(stdoutLogFileName);
+    }
+
+    public String getIncrementalStderr() throws IOException {
+        return catIncrementalFileIfExists(stderrLogFileName);
+    }
 }
