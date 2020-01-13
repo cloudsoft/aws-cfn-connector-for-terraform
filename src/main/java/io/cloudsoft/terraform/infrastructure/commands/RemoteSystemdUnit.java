@@ -6,6 +6,7 @@ import lombok.Getter;
 import software.amazon.cloudformation.proxy.Logger;
 
 import java.io.IOException;
+import java.util.*;
 
 public class RemoteSystemdUnit extends TerraformSshCommands {
 
@@ -27,7 +28,11 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
     }
 
     public void start() throws IOException {
-        runSSHCommand(String.format("loginctl enable-linger; systemctl --user start %s", unitName));
+        final List<String> commands = Arrays.asList(
+                "loginctl enable-linger",
+                "systemctl --user start " + unitName
+        );
+        runSSHCommand(String.join("; ", commands));
     }
 
     private String getActiveState() throws IOException {
