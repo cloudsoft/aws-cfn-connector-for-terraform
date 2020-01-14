@@ -30,7 +30,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         runSSHCommand(String.format("loginctl enable-linger; systemctl --user start %s", unitName));
     }
 
-    public String getActiveState() throws IOException {
+    private String getActiveState() throws IOException {
         return getRemotePropertyValue("ActiveState");
     }
 
