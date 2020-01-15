@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
 import lombok.Getter;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.cloudformation.proxy.*;
 
 import javax.annotation.Nullable;
@@ -199,7 +202,17 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             return true;
         }
 
+        final String stdout = process.getFullStdout();
         final String stderr = process.getFullStderr();
+
+        final String s3BucketName = getParameters().getLogsS3BucketName();
+        if (s3BucketName != null) {
+            // Implies the string is not empty (SSM does not allow that for parameter values).
+            final String prefix = model.getIdentifier() + "/" + process.getUnitName();
+            uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
+            uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
+        }
+
         // FIXME: instead of retrieving the full log files it would be faster to accumulate the
         //  incremental fragments already retrieved above.
         if (!process.wasFailure()) {
@@ -215,9 +228,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 process.getMainExitCode()+")";
             logger.log(message);
             logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
-            final String stdout = process.getFullStdout();
             logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
-            throw ConnectorHandlerFailures.handled(message+"; see CloudWatch logs for more detail.");
+            throw ConnectorHandlerFailures.handled(message+"; see logs for more detail.");
         }
         return false;
     }
@@ -232,4 +244,18 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
     }
 
+    private void uploadFileToS3(String bucketName, String objectKey, String text) {
+        S3Client s3Client = S3Client.create();
+        PutObjectRequest putReq = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectKey)
+                .contentType("text/plain")
+                .build();
+        try {
+            proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(putReq, RequestBody.fromString(text)));
+            logger.log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
+        } catch (Exception e) {
+            logger.log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+        }
+    }
 }
