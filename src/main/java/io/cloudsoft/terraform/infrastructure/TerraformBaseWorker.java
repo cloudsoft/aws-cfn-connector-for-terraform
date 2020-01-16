@@ -252,7 +252,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 .contentType("text/plain")
                 .build();
         try {
-            proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(putReq, RequestBody.fromString(text)));
+            proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(request, RequestBody.fromString(text)));
             logger.log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
         } catch (Exception e) {
             logger.log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
