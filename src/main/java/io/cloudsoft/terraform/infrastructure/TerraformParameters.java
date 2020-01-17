@@ -68,7 +68,7 @@ public class TerraformParameters {
         return getParameterValue("logs-s3-bucket-name", false);
     }
 
-    public String getParameterValue(String id, boolean required) {
+    private String getParameterValue(String id, boolean required) {
         GetParameterRequest getParameterRequest = GetParameterRequest.builder()
                 .name(PREFIX + "/" + id)
                 .withDecryption(true)

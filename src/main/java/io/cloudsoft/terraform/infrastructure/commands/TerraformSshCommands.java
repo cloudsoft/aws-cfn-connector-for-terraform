@@ -52,7 +52,7 @@ public class TerraformSshCommands {
         this.configurationIdentifier = configurationIdentifier;
     }
 
-    public String getWorkDir() {
+    protected String getWorkDir() {
         return TF_DATADIR + "/" + configurationIdentifier;
     }
 
@@ -64,7 +64,7 @@ public class TerraformSshCommands {
         mkdir(getWorkDir());
     }
 
-    public void mkdir(String dir) throws IOException {
+    protected void mkdir(String dir) throws IOException {
         runSSHCommand("mkdir -p " + dir);
     }
 
@@ -76,7 +76,7 @@ public class TerraformSshCommands {
         rmdir(getWorkDir());
     }
 
-    public void rmdir(String dir) throws IOException {
+    protected void rmdir(String dir) throws IOException {
         runSSHCommand("rm -rf " + dir);
     }
 
@@ -157,7 +157,7 @@ public class TerraformSshCommands {
         rmdir(getScpDir());
     }
 
-    public void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
+    protected void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
         final BytesSourceFile src = new BytesSourceFile(fileName, contents);
         final SSHClient ssh = new SSHClient();
         addHostKeyVerifier(ssh);
@@ -199,7 +199,7 @@ public class TerraformSshCommands {
         return lastStdout;
     }
 
-    protected void addHostKeyVerifier(SSHClient ssh) {
+    private void addHostKeyVerifier(SSHClient ssh) {
         if (sshServerKeyFP!=null && sshServerKeyFP.length()>0) {
             ssh.addHostKeyVerifier(sshServerKeyFP);
         } else {
