@@ -224,8 +224,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 logger.log("Spurious remote stderr:\n" + stderr);
             }
         } else {
-            String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+
-                process.getMainExitCode()+")";
+            final String message = String.format("Error in %s: %s", process.getUnitName(), process.getErrorString());
             logger.log(message);
             logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
             logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);

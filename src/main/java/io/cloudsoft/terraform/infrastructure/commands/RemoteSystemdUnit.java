@@ -54,7 +54,7 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         return "active".equals(getActiveState());
     }
 
-    public String getResult() throws IOException {
+    private String getResult() throws IOException {
         return getRemotePropertyValue("Result");
     }
 
@@ -62,8 +62,12 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
         return !"success".equals(getResult());
     }
 
-    public String getMainExitCode() throws IOException {
+    private String getMainExitCode() throws IOException {
         return getRemotePropertyValue("ExecMainCode");
+    }
+
+    public String getErrorString() throws IOException {
+        return String.format("result %s (%s)", getResult(), getMainExitCode());
     }
 
     public String getFullStdout() throws IOException {
