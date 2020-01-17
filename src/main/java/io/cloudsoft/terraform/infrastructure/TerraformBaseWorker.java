@@ -113,8 +113,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     protected final void logException(String message, Throwable e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         log(message + "\n" + sw.toString());
     }
@@ -244,8 +244,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, String text) {
-        S3Client s3Client = S3Client.create();
-        PutObjectRequest putReq = PutObjectRequest.builder()
+        final S3Client s3Client = S3Client.create();
+        final PutObjectRequest putReq = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectKey)
                 .contentType("text/plain")

@@ -136,9 +136,9 @@ public class TerraformSshCommands {
     public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
         mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
-        String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
+        final String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
         runSSHCommand("file  --brief --mime-type " + tmpFilename);
-        String mimeType = lastStdout.replaceAll("\n", "");
+        final String mimeType = lastStdout.replaceAll("\n", "");
 
         switch (mimeType) {
             case "text/plain":
@@ -152,8 +152,8 @@ public class TerraformSshCommands {
                 throw new IllegalArgumentException("Unknown MIME type " + mimeType);
         }
         if (vars_map != null && !vars_map.isEmpty()) {
-            String vars_filename = "cfn-" + configurationIdentifier + ".auto.tfvars.json";
-            byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
+            final String vars_filename = "cfn-" + configurationIdentifier + ".auto.tfvars.json";
+            final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
             // Work around the tilde [non-]expansion as explained above.
             uploadFile(getScpDir(), vars_filename, vars_json);
             mv(getScpDir() + "/" + vars_filename, getWorkDir() + "/" + vars_filename);
@@ -162,8 +162,8 @@ public class TerraformSshCommands {
     }
 
     public void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {
-        BytesSourceFile src = new BytesSourceFile(fileName, contents);
-        SSHClient ssh = new SSHClient();
+        final BytesSourceFile src = new BytesSourceFile(fileName, contents);
+        final SSHClient ssh = new SSHClient();
         addHostKeyVerifier(ssh);
         ssh.connect(serverHostname, sshPort);
         try {
@@ -212,8 +212,8 @@ public class TerraformSshCommands {
     }
 
     private static class BytesSourceFile extends InMemorySourceFile {
-        private String name;
-        private byte[] contents;
+        final private String name;
+        final private byte[] contents;
 
         BytesSourceFile(String name, byte[] contents) {
             this.name = name;

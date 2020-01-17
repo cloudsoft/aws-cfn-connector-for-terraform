@@ -41,7 +41,7 @@ public class TerraformParameters {
     }
 
     public int getPort() {
-        String port = getParameterValue("ssh-port", false);
+        final String port = getParameterValue("ssh-port", false);
         if (port==null) {
             return 22;
         }
@@ -107,22 +107,22 @@ public class TerraformParameters {
         }
 
         if (model.getConfigurationS3Path() != null) {
-            Matcher matcher = s3Pattern.matcher(model.getConfigurationS3Path());
+            final Matcher matcher = s3Pattern.matcher(model.getConfigurationS3Path());
             if (!matcher.find()) {
                 throw ConnectorHandlerFailures.unhandled("Invalid S3 path " + model.getConfigurationS3Path());
             }
 
-            String bucket = matcher.group(1);
-            String key = matcher.group(2);
+            final String bucket = matcher.group(1);
+            final String key = matcher.group(2);
 
             try {
-                File tmpFile = File.createTempFile("configuration-", ".tf");
+                final File tmpFile = File.createTempFile("configuration-", ".tf");
                 GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                         .bucket(bucket)
                         .key(key)
                         .build();
                 proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
-                byte[] result = FileUtils.readFileToByteArray(tmpFile);
+                final byte[] result = FileUtils.readFileToByteArray(tmpFile);
                 if (result.length==0) {
                     throw ConnectorHandlerFailures.unhandled(String.format("S3 file at %s is empty", model.getConfigurationS3Path()));
                 }
