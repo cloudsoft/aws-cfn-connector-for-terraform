@@ -25,7 +25,7 @@ public class TerraformOutputsCommand extends TerraformSshCommands {
 
     public void run() throws IOException {
         runSSHCommand(String.format("cd %s && terraform output -json", getWorkDir()));
-        outputJsonStringized = getLastStdout();
+        outputJsonStringized = lastStdout;
         logger.log("Outputs from TF: '" + outputJsonStringized + "'");
         if (outputJsonStringized == null || outputJsonStringized.isEmpty()) {
             outputJsonStringized = "{}";

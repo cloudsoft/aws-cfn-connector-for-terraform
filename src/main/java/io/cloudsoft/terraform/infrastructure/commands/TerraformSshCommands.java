@@ -129,10 +129,6 @@ public class TerraformSshCommands {
         }
     }
 
-    public String getLastStdout() {
-        return lastStdout;
-    }
-
     public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
         mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
