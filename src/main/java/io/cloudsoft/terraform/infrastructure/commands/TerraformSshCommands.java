@@ -60,7 +60,7 @@ public class TerraformSshCommands {
         return TF_SCPDIR + "/" + configurationIdentifier;
     }
 
-    public void mkdir() throws IOException {
+    public void mkWorkDir() throws IOException {
         mkdir(getWorkDir());
     }
 
@@ -68,7 +68,7 @@ public class TerraformSshCommands {
         runSSHCommand("mkdir -p " + dir);
     }
 
-    public void rmdir() throws IOException {
+    public void rmWorkDir() throws IOException {
         rmdir(getWorkDir());
     }
 

@@ -34,7 +34,7 @@ public class CreateHandler extends TerraformBaseHandler {
 
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
-                    tfSshCommands().mkdir();
+                    tfSshCommands().mkWorkDir();
                     advanceTo(Steps.CREATE_SYNC_FILE);
 
                     /* NOTE: here, and in several other places, we could proceed to the next

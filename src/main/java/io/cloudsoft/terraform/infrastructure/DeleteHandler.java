@@ -33,7 +33,7 @@ public class DeleteHandler extends TerraformBaseHandler {
                         return statusInProgress();
                     }
 
-                    tfSshCommands().rmdir();
+                    tfSshCommands().rmWorkDir();
 
                     return statusSuccess();
                 default:
