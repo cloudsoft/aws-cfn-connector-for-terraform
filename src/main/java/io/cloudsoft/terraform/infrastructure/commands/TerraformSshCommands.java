@@ -68,10 +68,6 @@ public class TerraformSshCommands {
         runSSHCommand("mkdir -p " + dir);
     }
 
-    public void mv(String source, String target) throws IOException {
-        runSSHCommand(String.format("mv %s %s", source, target));
-    }
-
     public void rmdir() throws IOException {
         rmdir(getWorkDir());
     }
@@ -138,7 +134,7 @@ public class TerraformSshCommands {
 
         switch (mimeType) {
             case "text/plain":
-                mv(tmpFilename, getWorkDir() + "/" + TF_CONFFILENAME);
+                runSSHCommand(String.format("mv %s %s/%s", tmpFilename, getWorkDir(), TF_CONFFILENAME));
                 break;
             case "application/zip":
                 runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkDir()));
@@ -152,7 +148,7 @@ public class TerraformSshCommands {
             final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
             // Work around the tilde [non-]expansion as explained above.
             uploadFile(getScpDir(), vars_filename, vars_json);
-            mv(getScpDir() + "/" + vars_filename, getWorkDir() + "/" + vars_filename);
+            runSSHCommand(String.format("mv %s/%s %s/%s", getScpDir(), vars_filename, getWorkDir(), vars_filename));
         }
         rmdir(getScpDir());
     }
