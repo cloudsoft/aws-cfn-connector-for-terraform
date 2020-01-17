@@ -23,13 +23,11 @@ public class TerraformParameters {
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
     private final S3Client s3Client;
-    private final Pattern s3Pattern;
 
     public TerraformParameters(AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
         this.proxy = proxy;
         this.ssmClient = ssmClient;
         this.s3Client = s3Client;
-        s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
     }
 
     public TerraformParameters(AmazonWebServicesClientProxy proxy) {
@@ -107,6 +105,7 @@ public class TerraformParameters {
         }
 
         if (model.getConfigurationS3Path() != null) {
+            final Pattern s3Pattern = Pattern.compile("^s3://([^/]*)/(.*)$");
             final Matcher matcher = s3Pattern.matcher(model.getConfigurationS3Path());
             if (!matcher.find()) {
                 throw ConnectorHandlerFailures.unhandled("Invalid S3 path " + model.getConfigurationS3Path());
