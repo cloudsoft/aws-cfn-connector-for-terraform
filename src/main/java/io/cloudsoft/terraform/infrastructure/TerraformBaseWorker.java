@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
 import lombok.Getter;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.cloudformation.proxy.*;
 
 import javax.annotation.Nullable;
@@ -177,15 +180,56 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         return RemoteSystemdUnit.of(this, "terraform-destroy");
     }
 
+    private void drainPendingRemoteLogs(RemoteSystemdUnit process) throws IOException {
+        String str;
+        str = process.getIncrementalStdout();
+        if (!str.isEmpty())
+            logger.log("New standard output data:\n" + str);
+        str = process.getIncrementalStderr();
+        if (!str.isEmpty())
+            logger.log("New standard error data:\n" + str);
+    }
+
     protected boolean checkStillRunningOrError(RemoteSystemdUnit process) throws IOException {
-        if (process.isRunning()) {
+        // Always drain pending log messages regardless of any other activity/conditions.
+        // That said, do not drain _before_ establishing whether the remote process is still
+        // running as that would be a race against short-lived processes and would require a
+        // second drain in case the process has finished and would result in a short Terraform
+        // log split across two CloudWatch messages for no obvious reason.
+        final boolean isRunning = process.isRunning();
+        drainPendingRemoteLogs(process);
+        if (isRunning) {
             return true;
         }
-        if (process.wasFailure()) {
+
+        final String stdout = process.getFullStdout();
+        final String stderr = process.getFullStderr();
+
+        final String s3BucketName = getParameters().getLogsS3BucketName();
+        if (s3BucketName != null) {
+            // Implies the string is not empty (SSM does not allow that for parameter values).
+            final String prefix = model.getIdentifier() + "/" + process.getUnitName();
+            uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
+            uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
+        }
+
+        // FIXME: instead of retrieving the full log files it would be faster to accumulate the
+        //  incremental fragments already retrieved above.
+        if (!process.wasFailure()) {
+            if (!stderr.isEmpty()) {
+                // Any stderr output is not the wanted result because usually it is a side
+                // effect of the remote process' failure, but combined with a non-raised fault
+                // flag it may mean a bug (a failure to fail) in Terraform or in the resource
+                // provider code, hence report this separately to make it easier to relate.
+                logger.log("Spurious remote stderr:\n" + stderr);
+            }
+        } else {
             String message = "Error in " + process.getUnitName()+": result "+process.getResult()+" ("+
                 process.getMainExitCode()+")";
-            logger.log(message+"\n"+process.getLog());
-            throw ConnectorHandlerFailures.handled(message+"; see CloudWatch logs for more detail.");
+            logger.log(message);
+            logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
+            logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
+            throw ConnectorHandlerFailures.handled(message+"; see logs for more detail.");
         }
         return false;
     }
@@ -200,4 +244,18 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
     }
 
+    private void uploadFileToS3(String bucketName, String objectKey, String text) {
+        S3Client s3Client = S3Client.create();
+        PutObjectRequest putReq = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectKey)
+                .contentType("text/plain")
+                .build();
+        try {
+            proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(request, RequestBody.fromString(text)));
+            logger.log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
+        } catch (Exception e) {
+            logger.log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+        }
+    }
 }

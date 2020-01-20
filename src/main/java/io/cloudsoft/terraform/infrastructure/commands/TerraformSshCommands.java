@@ -133,10 +133,6 @@ public class TerraformSshCommands {
         return lastStdout;
     }
 
-    public String getLastStderr() {
-        return lastStderr;
-    }
-
     public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
         mkdir(getScpDir());
         uploadFile(getScpDir(), TF_TMPFILENAME, contents);
@@ -181,6 +177,30 @@ public class TerraformSshCommands {
                 // ignore
             }
         }
+    }
+
+    protected String catFileIfExists(String remotePath) throws IOException {
+        runSSHCommand(String.format("[ -f %s ] && cat %s || :", remotePath, remotePath));
+        return lastStdout;
+    }
+
+    private String getSnapshotFileName(String fn) {
+        return fn + ".snapshot";
+    }
+
+    private String getOffsetFileName(String fn) {
+        return fn + ".offset";
+    }
+
+    protected String setupIncrementalFileCommand(String fn) throws IOException {
+        return String.format("truncate --size=0 %s; echo 0 > %s", getSnapshotFileName(fn), getOffsetFileName(fn));
+    }
+
+    protected String catIncrementalFileIfExists(String fn) throws IOException {
+        final String sfn = getSnapshotFileName(fn), ofn = getOffsetFileName(fn);
+        runSSHCommand(String.format("cp %s %s; dd status=none if=%s bs=1 skip=`cat %s`; wc -c <%s >%s",
+                fn, sfn, sfn, ofn, sfn, ofn));
+        return lastStdout;
     }
 
     protected void addHostKeyVerifier(SSHClient ssh) {

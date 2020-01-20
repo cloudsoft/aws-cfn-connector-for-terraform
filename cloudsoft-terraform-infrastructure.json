@@ -60,6 +60,7 @@
       "permissions": [
         "s3:GetObject",
         "s3:GetObjectVersion",
+        "s3:PutObject",
         "ssm:GetParameter"
       ]
     },
@@ -72,6 +73,7 @@
       "permissions": [
         "s3:GetObject",
         "s3:GetObjectVersion",
+        "s3:PutObject",
         "ssm:GetParameter"
       ]
     },
@@ -79,6 +81,7 @@
       "permissions": [
         "s3:GetObject",
         "s3:GetObjectVersion",
+        "s3:PutObject",
         "ssm:GetParameter"
       ]
     },

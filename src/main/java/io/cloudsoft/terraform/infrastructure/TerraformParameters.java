@@ -66,6 +66,10 @@ public class TerraformParameters {
         return getParameterValue("ssh-fingerprint", false);
     }
 
+    public String getLogsS3BucketName() {
+        return getParameterValue("logs-s3-bucket-name", false);
+    }
+
     public String getParameterValue(String id, boolean required) {
         GetParameterRequest getParameterRequest = GetParameterRequest.builder()
                 .name(PREFIX + "/" + id)
