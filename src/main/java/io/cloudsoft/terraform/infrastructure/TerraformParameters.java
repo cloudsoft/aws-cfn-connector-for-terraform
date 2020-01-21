@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";
@@ -52,8 +54,9 @@ public class TerraformParameters {
         }
     }
 
-    public String getProcessManager() {
-        return null; // FIXME: retrieve with getParameterValue(); allow null; validation done by caller
+    public @Nullable String getProcessManager() {
+        // null is allowed; validation done by caller
+        return getParameterValue("process-manager", false);
     }
 
     public String getUsername() {
