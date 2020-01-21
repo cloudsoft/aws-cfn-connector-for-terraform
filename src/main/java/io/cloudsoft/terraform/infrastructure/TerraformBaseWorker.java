@@ -178,10 +178,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         if (processManager==null) {
             processManager = getParameters().getProcessManager();
         }
-        if (processManager==null) {
-            // default
-            processManager = "systemd";
-        }
         
         // ensure it doesn't change in the middle of a run, even if parameters are changed
         callbackContext.processManager = processManager; 

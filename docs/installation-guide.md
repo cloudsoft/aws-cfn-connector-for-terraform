@@ -9,10 +9,7 @@ This page will guide you on how to install the Terraform resource provider for C
 ### Terraform server
 
 The connector requires a *running* Terraform (version 0.12 or later) server that:
-- runs a Linux distribution that uses systemd with support for user mode and linger, for example:
-  - CentOS 8
-  - Fedora 28+
-  - Ubuntu 18.04+
+- runs Linux
 - can accept SSH connections from AWS Lambda
 - is configured with the correct credentials for the target clouds
   (for example, if the Terraform server needs to manage resources through its AWS provider,
@@ -28,16 +25,6 @@ You will need to have the AWS CLI installed and configured on your local machine
 
 ## Installation
 
-1. Download the 3 systemd helpers and install them onto your Terraform server:
-   ```sh
-   mkdir -p ~/.config/systemd/user
-   pushd ~/.config/systemd/user
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-apply%40.service
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-destroy%40.service
-   wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-init%40.service
-   popd
-   systemctl --user daemon-reload
-   ```
 1. Download the [`resource-role.yaml`](https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/resource-role.yaml) template and create a stack using the command below. Note the ARN of the created role for step 4:
    ```sh
    aws cloudformation create-stack \
@@ -76,6 +63,7 @@ You will need to have the AWS CLI installed and configured on your local machine
    - `/cfn/terraform/ssh-username`
    - `/cfn/terraform/ssh-key`
    - `/cfn/terraform/ssh-fingerprint`
+   - `/cfn/terraform/process-manager`
    
    The value of `ssh-fingerprint` must be in one of the
    [fingerprint formats supported in SSHJ](https://github.com/hierynomus/sshj/blob/master/src/main/java/net/schmizz/sshj/transport/verification/FingerprintVerifier.java#L33).
@@ -84,3 +72,20 @@ You will need to have the AWS CLI installed and configured on your local machine
    ```shell
    ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub | cut -d' ' -f2
    ```
+   The value of `process-manager` is either `nohup` (default) or `systemd`. In the latter case the server
+   must run a Linux distribution that uses systemd with support for user mode and linger, for example:
+     - CentOS 8
+     - Fedora 28+
+     - Ubuntu 18.04+
+
+   Also in the `systemd` case it is necessary to download the 3 systemd helper files and to install
+   them in the Terraform SSH user account (not as root):
+      ```sh
+      mkdir -p ~/.config/systemd/user
+      pushd ~/.config/systemd/user
+      wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-apply%40.service
+      wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-destroy%40.service
+      wget https://raw.githubusercontent.com/cloudsoft/aws-cfn-connector-for-terraform/master/server-side-systemd/terraform-init%40.service
+      popd
+      systemctl --user daemon-reload
+      ```

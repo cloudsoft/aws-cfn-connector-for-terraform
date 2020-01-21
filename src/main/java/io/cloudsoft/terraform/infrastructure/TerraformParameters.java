@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";
+    private static final String DEFAULT_PROCESS_MANAGER = "nohup";
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
     private final S3Client s3Client;
@@ -54,9 +55,15 @@ public class TerraformParameters {
         }
     }
 
-    public @Nullable String getProcessManager() {
-        // null is allowed; validation done by caller
-        return getParameterValue("process-manager", false);
+    public String getProcessManager() {
+        String pm = getParameterValue("process-manager", false);
+        if (pm == null) {
+            pm = DEFAULT_PROCESS_MANAGER;
+        }
+        if (pm.equals("systemd") || pm.equals("nohup")) {
+            return pm;
+        }
+        throw ConnectorHandlerFailures.unhandled("Parameter 'process-manager' is invalid: '" + pm + "'");
     }
 
     public String getUsername() {

@@ -74,6 +74,13 @@ Resources:
       Name: /cfn/terraform/ssh-fingerprint
       Type: String
       Value: '(FIXME)'
+  TerraformProcessManagerParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Process manager to use on the server to interact with a detached Terraform process ("systemd" or "nohup")
+      Name: /cfn/terraform/process-manager
+      Type: String
+      Value: 'nohup'
 
 Outputs:
   LoggingRoleArn:
@@ -97,3 +104,6 @@ Outputs:
   TerraformSSHFingerprintParameter:
     Value:
       Ref: TerraformSSHFingerprintParameter
+  TerraformProcessManagerParameter:
+    Value:
+      Ref: TerraformProcessManagerParameter
