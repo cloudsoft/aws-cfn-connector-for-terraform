@@ -71,10 +71,10 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
             tfCmd,
-            "echo $? > "+exitstatusFileName,
+            "echo '$?' > "+exitstatusFileName,
             "EOF",
             "chmod +x "+scriptName,
-            String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", tfCmd, stdoutLogFileName, stderrLogFileName, pidFileName)
+            String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", scriptName, stdoutLogFileName, stderrLogFileName, pidFileName)
             );
         ssh.runSSHCommand(fullCmd);
     }
