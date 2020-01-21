@@ -125,8 +125,11 @@ public class SshToolbox {
 
     protected String catIncrementalFileIfExists(String fn) throws IOException {
         final String sfn = getSnapshotFileName(fn), ofn = getOffsetFileName(fn);
-        runSSHCommand(String.format("cp %s %s; dd status=none if=%s bs=1 skip=`cat %s`; wc -c <%s >%s",
-                fn, sfn, sfn, ofn, sfn, ofn));
+        runSSHCommand(String.format(
+            "ls "+ofn+" || echo 0 > "+ofn+"; "
+            + "cp %s %s; "
+            + "dd status=none if=%s bs=1 skip=`cat %s`; wc -c <%s >%s",
+            fn, sfn, sfn, ofn, sfn, ofn));
         return lastStdout;
     }
 
