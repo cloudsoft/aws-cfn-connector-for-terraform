@@ -23,9 +23,26 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
         pidFileName = String.format("%s/%s@%s.pid", getWorkDir(), tc.toString(), configurationIdentifier);
     }
 
-    public boolean wasFailure() { return false; }
+    public boolean wasFailure() { 
+        String err = getErrorString();
+        if (err==null || err.trim().length()==0) {
+            // still running
+            return false;
+        }
+        try {
+            return Integer.parseInt(err.trim())==0;
+        } catch (Exception e) {
+            throw new IllegalStateException("Unparseable error status: '"+err.trim()+"'");
+        }
+    }
 
-    public String getErrorString() { return "unknown error"; }
+    public String getErrorString() { 
+        try {
+            return ssh.catFileIfExists(exitstatusFileName); 
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public boolean isRunning() throws IOException {
         ssh.runSSHCommand(String.format("[ -d /proc/`cat %s` ] && echo true || echo false", pidFileName));
@@ -49,13 +66,15 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
         }
         String scriptName = "terraform-command-"+UUID.randomUUID();
         String.join("\n", 
+            ssh.setupIncrementalFileCommand(stdoutLogFileName),
+            ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
             cmd,
-            "echo $? > "+exitstatusFileName+"\n"
-            + "EOF\n"
-            +"chmod +x "+scriptName+"\n"
-            + String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName)
-            ;
+            "echo $? > "+exitstatusFileName,
+            "EOF",
+            "chmod +x "+scriptName,
+            String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName)
+            );
         ssh.runSSHCommand(String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName));
     }
 }
