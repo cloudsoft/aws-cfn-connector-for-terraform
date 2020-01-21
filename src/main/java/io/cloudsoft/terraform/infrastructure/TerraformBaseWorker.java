@@ -123,6 +123,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             } else {
                 currentStep = stepsEnumClass.getEnumConstants()[0];
             }
+            getCallbackContext().commandRequestId = Configuration.getIdentifier(true,  4);
+            log("Using "+getCallbackContext().commandRequestId+" to unique identify this command across all steps (stack element "+model.getIdentifier()+", request "+request.getClientRequestToken()+")");
         } else {
             // continuing a step
             currentStep = Enum.valueOf(stepsEnumClass, callbackContext.stepId);

@@ -1,7 +1,6 @@
 package io.cloudsoft.terraform.infrastructure;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
@@ -31,7 +30,7 @@ public class CreateHandler extends TerraformBaseHandler {
             if (model.getIdentifier()==null) {
                 if (callbackContext.createdModelIdentifier == null) {
                     // creating this stack, the very first call for the stack
-                    callbackContext.createdModelIdentifier = UUID.randomUUID().toString();
+                    callbackContext.createdModelIdentifier = Configuration.getIdentifier(true,  8);
                     log("Identifier created: "+callbackContext.createdModelIdentifier);
                 }
                 // model doesn't seem to remember the identifier until the end
@@ -40,7 +39,7 @@ public class CreateHandler extends TerraformBaseHandler {
             
             super.preRunStep();
         }
-        
+
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             switch (currentStep) {
