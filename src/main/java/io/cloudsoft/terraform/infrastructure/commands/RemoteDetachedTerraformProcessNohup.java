@@ -17,9 +17,9 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
 
     public RemoteDetachedTerraformProcessNohup(TerraformParameters parameters, Logger logger, TerraformCommand tc, String identifier) {
         super(parameters, logger, tc, identifier);
-        stdoutLogFileName = String.format("%s/terraform-%s-%s-stdout.log", getWorkDir(), tc.toString(), configurationIdentifier);
-        stderrLogFileName = String.format("%s/terraform-%s-%s-stderr.log", getWorkDir(), tc.toString(), configurationIdentifier);
-        exitstatusFileName = String.format("%s/terraform-%s-%s-exitstatus.log", getWorkDir(), tc.toString(), configurationIdentifier);
+        stdoutLogFileName = String.format("%s/terraform-%s-%s-stdout.log", getWorkDir(), getCommandName(), configurationIdentifier);
+        stderrLogFileName = String.format("%s/terraform-%s-%s-stderr.log", getWorkDir(), getCommandName(), configurationIdentifier);
+        exitstatusFileName = String.format("%s/terraform-%s-%s-exitstatus.log", getWorkDir(), getCommandName(), configurationIdentifier);
         pidFileName = String.format("%s/%s@%s.pid", getWorkDir(), tc.toString(), configurationIdentifier);
     }
 
@@ -64,7 +64,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
             default:
                 throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
         }
-        String scriptName = "terraform-command-"+UUID.randomUUID();
+        String scriptName = "terraform-"+getCommandName()+"-"+configurationIdentifier+".sh";
         String fullCmd = String.join("\n", 
             "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
