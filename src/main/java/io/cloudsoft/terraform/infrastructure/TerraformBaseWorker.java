@@ -88,7 +88,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
 
     // === lifecycle ========================
 
-    public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
+    public ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
             preRunStep();

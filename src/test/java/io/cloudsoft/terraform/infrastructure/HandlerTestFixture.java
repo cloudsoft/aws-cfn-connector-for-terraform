@@ -26,7 +26,6 @@ public class HandlerTestFixture {
     @Mock
     protected SsmClient ssmClient;
 
-    @Mock
     protected Logger logger;
 
     @BeforeEach
@@ -64,7 +63,7 @@ public class HandlerTestFixture {
         ProgressEvent<ResourceModel, CallbackContext> result = spyHandler.handleRequest(proxy, request, callbackContext, logger);
 
         Assert.assertEquals(result, progressEvent);
-        verify(spyWorker, times(1)).runHandlingError();
+        verify(spyWorker).runHandlingError();
     }
 
 }
