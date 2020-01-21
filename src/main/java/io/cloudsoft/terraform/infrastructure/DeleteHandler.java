@@ -1,5 +1,6 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import io.cloudsoft.terraform.infrastructure.commands.RemoteProcess;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
@@ -33,7 +34,7 @@ public class DeleteHandler extends TerraformBaseHandler {
                         return statusInProgress();
                     }
 
-                    tfSshCommands().rmWorkDir();
+                    RemoteProcess.of(this).rmWorkDir();
 
                     return statusSuccess();
                 default:

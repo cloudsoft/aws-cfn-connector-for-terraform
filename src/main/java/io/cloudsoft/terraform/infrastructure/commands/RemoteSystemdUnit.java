@@ -8,20 +8,39 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 import java.util.*;
 
-public class RemoteSystemdUnit extends TerraformSshCommands {
+public class RemoteSystemdUnit extends RemoteDetachedProcess {
 
     @Getter
     private final String unitName;
     // systemd unit instance name is available as "configurationIdentifier" in the parent class.
     private final String stdoutLogFileName, stderrLogFileName;
 
+/*
+    @Deprecated
     public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
         return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), unitName, w.getModel().getIdentifier());
     }
+*/
 
-    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {
-        super(params, logger, configurationName);
-        this.unitName = unitName;
+    public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, TerraformCommand tc) {
+        return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
+    }
+
+    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
+        super(params, logger, tc, configurationName);
+        switch (tc) {
+            case TC_INIT:
+                unitName = "terraform-init";
+                break;
+            case TC_APPLY:
+                unitName = "terraform-apply";
+                break;
+            case TC_DESTROY:
+                unitName = "terraform-destroy";
+                break;
+            default:
+                throw new IllegalArgumentException ("Invalid value " + tc.toString());
+        }
         // NB: The two values below must be consistent with what is in the systemd unit files.
         stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, configurationIdentifier);
         stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, configurationIdentifier);

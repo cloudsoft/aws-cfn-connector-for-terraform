@@ -1,6 +1,7 @@
 package io.cloudsoft.terraform.infrastructure;
 
 import com.google.common.base.Preconditions;
+import io.cloudsoft.terraform.infrastructure.commands.RemoteDetachedProcess;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteSystemdUnit;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformSshCommands;
 import lombok.Getter;
@@ -164,23 +165,28 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         callbackContext.lastDelaySeconds = -1;
     }
 
-    protected final TerraformSshCommands tfSshCommands() {
-        return TerraformSshCommands.of(this);
+    protected final RemoteDetachedProcess remoteProcess() {
+        processManager = .valueOf(callbackContext.stepId)
+        switch(callbackContext.processManager) {
+            case
+        }
+        getParameters().getProcessManager
+        return RemoteDetachedProcess.of(this);
     }
 
-    protected RemoteSystemdUnit tfInit() {
-        return RemoteSystemdUnit.of(this, "terraform-init");
+    protected RemoteDetachedProcess tfInit() {
+        return RemoteSystemdUnit.of(this, RemoteDetachedProcess.TerraformCommand.TC_INIT);
     }
 
-    protected RemoteSystemdUnit tfApply() {
-        return RemoteSystemdUnit.of(this, "terraform-apply");
+    protected RemoteDetachedProcess tfApply() {
+        return RemoteSystemdUnit.of(this, RemoteDetachedProcess.TerraformCommand.TC_APPLY);
     }
 
-    protected RemoteSystemdUnit tfDestroy() {
-        return RemoteSystemdUnit.of(this, "terraform-destroy");
+    protected RemoteDetachedProcess tfDestroy() {
+        return RemoteSystemdUnit.of(this, RemoteDetachedProcess.TerraformCommand.TC_DESTROY);
     }
 
-    private void drainPendingRemoteLogs(RemoteSystemdUnit process) throws IOException {
+    private void drainPendingRemoteLogs(RemoteDetachedProcess process) throws IOException {
         String str;
         str = process.getIncrementalStdout();
         if (!str.isEmpty())
@@ -190,7 +196,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             logger.log("New standard error data:\n" + str);
     }
 
-    protected boolean checkStillRunningOrError(RemoteSystemdUnit process) throws IOException {
+    protected boolean checkStillRunningOrError(RemoteDetachedProcess process) throws IOException {
         // Always drain pending log messages regardless of any other activity/conditions.
         // That said, do not drain _before_ establishing whether the remote process is still
         // running as that would be a race against short-lived processes and would require a
@@ -208,7 +214,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         final String s3BucketName = getParameters().getLogsS3BucketName();
         if (s3BucketName != null) {
             // Implies the string is not empty (SSM does not allow that for parameter values).
-            final String prefix = model.getIdentifier() + "/" + process.getUnitName();
+            final String prefix = model.getIdentifier() + "/" + process.getCommandName();
             uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
             uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
         }
@@ -224,7 +230,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 logger.log("Spurious remote stderr:\n" + stderr);
             }
         } else {
-            final String message = String.format("Error in %s: %s", process.getUnitName(), process.getErrorString());
+            final String message = String.format("Error in %s: %s", process.getCommandName(), process.getErrorString());
             logger.log(message);
             logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
             logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
@@ -240,7 +246,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // There would be one more transfer if the CloudFormation template defines any Terraform
     // variables, so the above note would apply even more.
     protected final void getAndUploadConfiguration() throws IOException {
-        tfSshCommands().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
+        remoteProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, String text) {

@@ -1,6 +1,5 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import net.schmizz.sshj.SSHClient;
@@ -12,64 +11,28 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class TerraformSshCommands {
 
     protected final Logger logger;
-    protected final String configurationIdentifier, serverHostname, sshUsername, sshServerKeyFP,
+    protected final String serverHostname, sshUsername, sshServerKeyFP,
             sshClientSecretKeyContents;
     protected final int sshPort;
     protected String lastStdout, lastStderr;
     protected Integer lastExitStatusOrNull;
 
-    // Convert these constants to parameters later if necessary (more likely to be
-    // useful after parameters can be specified separately for each server).
-    private static final String
-            // TF_DATADIR must match the contents of the files in server-side-systemd/
-            // (at least as far as realpath(1) is concerned).
-            // sshj does not expand tilde to the remote user's home directory on the server
-            // (OpenSSH scp does that). Also neither any directory components nor the
-            // file name can be quoted (as in "/some/'work dir'/otherdir") because sshj
-            // fails to escape the quotes properly (again, works in OpenSSH).
-            TF_DATADIR = "~/tfdata",
-            TF_SCPDIR = "/tmp",
-            TF_TMPFILENAME = "configuration.bin",
-            TF_CONFFILENAME = "configuration.tf";
-
-    public static TerraformSshCommands of(TerraformBaseWorker<?> w) {
-        return new TerraformSshCommands(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
-    }
-
-    protected TerraformSshCommands(TerraformParameters params, Logger logger, String configurationIdentifier) {
+    protected TerraformSshCommands(TerraformParameters params, Logger logger) {
         this.logger = logger;
         this.serverHostname = params.getHost();
         this.sshPort = params.getPort();
         this.sshServerKeyFP = params.getFingerprint();
         this.sshUsername = params.getUsername();
         this.sshClientSecretKeyContents = params.getSSHKey();
-        this.configurationIdentifier = configurationIdentifier;
-    }
-
-    protected String getWorkDir() {
-        return TF_DATADIR + "/" + configurationIdentifier;
-    }
-
-    private String getScpDir() {
-        return TF_SCPDIR + "/" + configurationIdentifier;
-    }
-
-    public void mkWorkDir() throws IOException {
-        mkdir(getWorkDir());
     }
 
     protected void mkdir(String dir) throws IOException {
         runSSHCommand("mkdir -p " + dir);
-    }
-
-    public void rmWorkDir() throws IOException {
-        rmdir(getWorkDir());
     }
 
     protected void rmdir(String dir) throws IOException {
@@ -123,34 +86,6 @@ public class TerraformSshCommands {
                 // do nothing
             }
         }
-    }
-
-    public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map) throws IOException, IllegalArgumentException {
-        mkdir(getScpDir());
-        uploadFile(getScpDir(), TF_TMPFILENAME, contents);
-        final String tmpFilename = getScpDir() + "/" + TF_TMPFILENAME;
-        runSSHCommand("file  --brief --mime-type " + tmpFilename);
-        final String mimeType = lastStdout.replaceAll("\n", "");
-
-        switch (mimeType) {
-            case "text/plain":
-                runSSHCommand(String.format("mv %s %s/%s", tmpFilename, getWorkDir(), TF_CONFFILENAME));
-                break;
-            case "application/zip":
-                runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkDir()));
-                break;
-            default:
-                rmdir(getScpDir());
-                throw new IllegalArgumentException("Unknown MIME type " + mimeType);
-        }
-        if (vars_map != null && !vars_map.isEmpty()) {
-            final String vars_filename = "cfn-" + configurationIdentifier + ".auto.tfvars.json";
-            final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
-            // Work around the tilde [non-]expansion as explained above.
-            uploadFile(getScpDir(), vars_filename, vars_json);
-            runSSHCommand(String.format("mv %s/%s %s/%s", getScpDir(), vars_filename, getWorkDir(), vars_filename));
-        }
-        rmdir(getScpDir());
     }
 
     protected void uploadFile(String dirName, String fileName, byte[] contents) throws IOException {

@@ -1,9 +1,11 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import io.cloudsoft.terraform.infrastructure.commands.RemoteProcess;
 import io.cloudsoft.terraform.infrastructure.commands.TerraformOutputsCommand;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 import java.io.IOException;
+import java.util.IllegalFormatException;
 import java.util.UUID;
 
 public class CreateHandler extends TerraformBaseHandler {
@@ -30,11 +32,23 @@ public class CreateHandler extends TerraformBaseHandler {
             }
             model.setIdentifier(callbackContext.createdModelIdentifier);
 
+            String processManager = getParameters().getProcessManager();
+            if (callbackContext.processManager == null) {
+                callbackContext.processManager = processManager;
+            }
+            switch (processManager) {
+                case "systemd":
+                    break;
+                default:
+                    // Belt and braces -- getProcessManager() is supposed to do all required validation.
+                    throw new IllegalStateException ("Invalid process manager configured: " + processManager);
+            }
+
             currentStep = getCallbackContext().stepId == null ? Steps.CREATE_INIT_AND_MKDIR : Steps.valueOf(callbackContext.stepId);
 
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
-                    tfSshCommands().mkWorkDir();
+                    RemoteProcess.of(this).mkWorkDir();
                     advanceTo(Steps.CREATE_SYNC_FILE);
 
                     /* NOTE: here, and in several other places, we could proceed to the next

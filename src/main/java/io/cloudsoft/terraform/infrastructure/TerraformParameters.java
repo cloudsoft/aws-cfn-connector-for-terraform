@@ -52,6 +52,10 @@ public class TerraformParameters {
         }
     }
 
+    public String getProcessManager() {
+        return "systemd"; // FIXME: retrieve with getParameterValue() and validate
+    }
+
     public String getUsername() {
         return getParameterValue("ssh-username", true);
     }

@@ -9,7 +9,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 import java.util.Map;
 
-public class TerraformOutputsCommand extends TerraformSshCommands {
+public class TerraformOutputsCommand extends RemoteProcess {
 
     private final ObjectMapper objectMapper;
     private String outputJsonStringized = null;
