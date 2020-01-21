@@ -71,14 +71,14 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
             default:
                 throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
         }
-        String scriptName = "terraform-"+getCommandName()+"-"+configurationIdentifier+".sh";
+        String scriptName = "./terraform-"+getCommandName()+"-"+configurationIdentifier+".sh";
         String fullCmd = String.join("\n", 
             "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
             tfCmd,
-            "echo '$?' > "+exitstatusFileName,
+            "echo \\$? > "+exitstatusFileName,
             "EOF",
             "chmod +x "+scriptName,
             String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", scriptName, stdoutLogFileName, stderrLogFileName, pidFileName)
