@@ -53,7 +53,7 @@ public class TerraformParameters {
     }
 
     public String getProcessManager() {
-        return "systemd"; // FIXME: retrieve with getParameterValue() and validate
+        return null; // FIXME: retrieve with getParameterValue(); allow null; validation done by caller
     }
 
     public String getUsername() {

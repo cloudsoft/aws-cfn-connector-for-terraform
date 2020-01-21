@@ -2,11 +2,19 @@ package io.cloudsoft.terraform.infrastructure.commands;
 
 import java.io.IOException;
 
-public class RemoteNohup extends RemoteDetachedProcess {
+import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
+import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import software.amazon.cloudformation.proxy.Logger;
+
+public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraformProcess {
     private final String pidFileName;
 
-    RemoteNohup (TerraformCommand tc)
-    {
+    public static RemoteDetachedTerraformProcessNohup of(TerraformBaseWorker<?> w, TerraformCommand command) {
+        return new RemoteDetachedTerraformProcessNohup(w.getParameters(), w.getLogger(), command, w.getModel().getIdentifier());
+    }
+
+    public RemoteDetachedTerraformProcessNohup(TerraformParameters parameters, Logger logger, TerraformCommand tc, String identifier) {
+        super(parameters, logger, tc, identifier);
         stdoutLogFileName = String.format("%s/terraform-%s-%s-stdout.log", getWorkDir(), tc.toString(), configurationIdentifier);
         stderrLogFileName = String.format("%s/terraform-%s-%s-stderr.log", getWorkDir(), tc.toString(), configurationIdentifier);
         pidFileName = String.format("%s/%s@%s.pid", getWorkDir(), tc.toString(), configurationIdentifier);
@@ -17,8 +25,8 @@ public class RemoteNohup extends RemoteDetachedProcess {
     public String getErrorString() { return "unknown error"; }
 
     public boolean isRunning() throws IOException {
-        runSSHCommand(String.format("[ -d /proc/`cat %s` ] && echo true || echo false", pidFileName));
-        return lastStdout.equals("true");
+        ssh.runSSHCommand(String.format("[ -d /proc/`cat %s` ] && echo true || echo false", pidFileName));
+        return ssh.lastStdout.equals("true");
     }
 
     public void start() throws IOException {
@@ -36,6 +44,6 @@ public class RemoteNohup extends RemoteDetachedProcess {
             default:
                 throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
         }
-        runSSHCommand(String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName));
+        ssh.runSSHCommand(String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName));
     }
 }

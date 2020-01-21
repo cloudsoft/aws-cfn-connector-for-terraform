@@ -1,6 +1,10 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
-import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
@@ -8,12 +12,7 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import software.amazon.cloudformation.proxy.Logger;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
-
-public class TerraformSshCommands {
+public class SshToolbox {
 
     protected final Logger logger;
     protected final String serverHostname, sshUsername, sshServerKeyFP,
@@ -22,7 +21,7 @@ public class TerraformSshCommands {
     protected String lastStdout, lastStderr;
     protected Integer lastExitStatusOrNull;
 
-    protected TerraformSshCommands(TerraformParameters params, Logger logger) {
+    protected SshToolbox(TerraformParameters params, Logger logger) {
         this.logger = logger;
         this.serverHostname = params.getHost();
         this.sshPort = params.getPort();

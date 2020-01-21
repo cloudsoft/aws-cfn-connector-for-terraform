@@ -8,7 +8,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 import java.util.*;
 
-public class RemoteSystemdUnit extends RemoteDetachedProcess {
+public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
 
     @Getter
     private final String unitName;
@@ -22,11 +22,11 @@ public class RemoteSystemdUnit extends RemoteDetachedProcess {
     }
 */
 
-    public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, TerraformCommand tc) {
-        return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
+    public static RemoteDetachedTerraformProcessSystemd of(TerraformBaseWorker<?> w, TerraformCommand tc) {
+        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
     }
 
-    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
+    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
         super(params, logger, tc, configurationName);
         switch (tc) {
             case TC_INIT:
@@ -47,8 +47,8 @@ public class RemoteSystemdUnit extends RemoteDetachedProcess {
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
-        runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
-        return lastStdout.replaceAll("\n", "");
+        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
+        return ssh.lastStdout.replaceAll("\n", "");
     }
 
     public void start() throws IOException {
@@ -57,12 +57,12 @@ public class RemoteSystemdUnit extends RemoteDetachedProcess {
                 // starts writing over the pre-existing contents (at least the version 237-3ubuntu10.33).
                 "truncate --size=0 " + stdoutLogFileName,
                 "truncate --size=0 " + stderrLogFileName,
-                setupIncrementalFileCommand(stdoutLogFileName),
-                setupIncrementalFileCommand(stderrLogFileName),
+                ssh.setupIncrementalFileCommand(stdoutLogFileName),
+                ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
                 String.format("systemctl --user start %s@%s", unitName, configurationIdentifier)
         );
-        runSSHCommand(String.join("; ", commands));
+        ssh.runSSHCommand(String.join("; ", commands));
     }
 
     private String getActiveState() throws IOException {
@@ -90,18 +90,18 @@ public class RemoteSystemdUnit extends RemoteDetachedProcess {
     }
 
     public String getFullStdout() throws IOException {
-        return catFileIfExists(stdoutLogFileName);
+        return ssh.catFileIfExists(stdoutLogFileName);
     }
 
     public String getFullStderr() throws IOException {
-        return catFileIfExists(stderrLogFileName);
+        return ssh.catFileIfExists(stderrLogFileName);
     }
 
     public String getIncrementalStdout() throws IOException {
-        return catIncrementalFileIfExists(stdoutLogFileName);
+        return ssh.catIncrementalFileIfExists(stdoutLogFileName);
     }
 
     public String getIncrementalStderr() throws IOException {
-        return catIncrementalFileIfExists(stderrLogFileName);
+        return ssh.catIncrementalFileIfExists(stderrLogFileName);
     }
 }

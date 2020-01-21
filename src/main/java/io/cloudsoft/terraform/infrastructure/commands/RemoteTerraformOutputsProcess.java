@@ -9,23 +9,23 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 import java.util.Map;
 
-public class TerraformOutputsCommand extends RemoteProcess {
+public class RemoteTerraformOutputsProcess extends RemoteTerraformProcess {
 
     private final ObjectMapper objectMapper;
     private String outputJsonStringized = null;
 
-    public static TerraformOutputsCommand of(TerraformBaseWorker<?> w) {
-        return new TerraformOutputsCommand(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
+    public static RemoteTerraformOutputsProcess of(TerraformBaseWorker<?> w) {
+        return new RemoteTerraformOutputsProcess(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
     }
 
-    protected TerraformOutputsCommand(TerraformParameters params, Logger logger, String configurationIdentifier) {
+    protected RemoteTerraformOutputsProcess(TerraformParameters params, Logger logger, String configurationIdentifier) {
         super(params, logger, configurationIdentifier);
         this.objectMapper = new ObjectMapper();
     }
 
     public void run() throws IOException {
-        runSSHCommand(String.format("cd %s && terraform output -json", getWorkDir()));
-        outputJsonStringized = lastStdout;
+        ssh.runSSHCommand(String.format("cd %s && terraform output -json", getWorkDir()));
+        outputJsonStringized = ssh.lastStdout;
         logger.log("Outputs from TF: '" + outputJsonStringized + "'");
         if (outputJsonStringized == null || outputJsonStringized.isEmpty()) {
             outputJsonStringized = "{}";
