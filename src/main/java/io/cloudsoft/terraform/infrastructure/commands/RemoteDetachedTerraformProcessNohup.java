@@ -50,32 +50,32 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
     }
 
     public void start() throws IOException {
-        final String cmd;
+        final String tfCmd;
         switch (tfCommand) {
             case TC_INIT:
-                cmd = "terraform init -lock=true -no-color -input=false";
+                tfCmd = "terraform init -lock=true -no-color -input=false";
                 break;
             case TC_APPLY:
-                cmd = "terraform apply -lock=true -no-color -input=false -auto-approve";
+                tfCmd = "terraform apply -lock=true -no-color -input=false -auto-approve";
                 break;
             case TC_DESTROY:
-                cmd = "terraform destroy -lock=true -no-color -auto-approve";
+                tfCmd = "terraform destroy -lock=true -no-color -auto-approve";
                 break;
             default:
                 throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
         }
         String scriptName = "terraform-command-"+UUID.randomUUID();
-        String.join("\n", 
+        String fullCmd = String.join("\n", 
             "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
-            cmd,
+            tfCmd,
             "echo $? > "+exitstatusFileName,
             "EOF",
             "chmod +x "+scriptName,
-            String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName)
+            String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", tfCmd, stdoutLogFileName, stderrLogFileName, pidFileName)
             );
-        ssh.runSSHCommand(String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", cmd, stdoutLogFileName, stderrLogFileName, pidFileName));
+        ssh.runSSHCommand(fullCmd);
     }
 }
