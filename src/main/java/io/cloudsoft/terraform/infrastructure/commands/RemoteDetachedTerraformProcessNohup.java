@@ -30,7 +30,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
             return false;
         }
         try {
-            return Integer.parseInt(err.trim())==0;
+            return Integer.parseInt(err.trim())!=0;
         } catch (Exception e) {
             throw new IllegalStateException("Unparseable error status: '"+err.trim()+"'");
         }
