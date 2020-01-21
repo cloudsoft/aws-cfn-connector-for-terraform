@@ -8,28 +8,38 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.io.IOException;
 import java.util.*;
 
-public class RemoteSystemdUnit extends TerraformSshCommands {
+public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
 
-    @Getter
     private final String unitName;
     // systemd unit instance name is available as "configurationIdentifier" in the parent class.
-    private final String stdoutLogFileName, stderrLogFileName;
 
-    public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
-        return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), unitName, w.getModel().getIdentifier());
+    public static RemoteDetachedTerraformProcessSystemd of(TerraformBaseWorker<?> w, TerraformCommand tc) {
+        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
     }
 
-    protected RemoteSystemdUnit(TerraformParameters params, Logger logger, String unitName, String configurationName) {
-        super(params, logger, configurationName);
-        this.unitName = unitName;
+    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
+        super(params, logger, tc, configurationName);
+        switch (tc) {
+            case TC_INIT:
+                unitName = "terraform-init";
+                break;
+            case TC_APPLY:
+                unitName = "terraform-apply";
+                break;
+            case TC_DESTROY:
+                unitName = "terraform-destroy";
+                break;
+            default:
+                throw new IllegalArgumentException ("Invalid value " + tc.toString());
+        }
         // NB: The two values below must be consistent with what is in the systemd unit files.
         stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, configurationIdentifier);
         stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, configurationIdentifier);
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
-        runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
-        return lastStdout.replaceAll("\n", "");
+        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
+        return ssh.lastStdout.replaceAll("\n", "");
     }
 
     public void start() throws IOException {
@@ -38,12 +48,12 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
                 // starts writing over the pre-existing contents (at least the version 237-3ubuntu10.33).
                 "truncate --size=0 " + stdoutLogFileName,
                 "truncate --size=0 " + stderrLogFileName,
-                setupIncrementalFileCommand(stdoutLogFileName),
-                setupIncrementalFileCommand(stderrLogFileName),
+                ssh.setupIncrementalFileCommand(stdoutLogFileName),
+                ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
                 String.format("systemctl --user start %s@%s", unitName, configurationIdentifier)
         );
-        runSSHCommand(String.join("; ", commands));
+        ssh.runSSHCommand(String.join("; ", commands));
     }
 
     private String getActiveState() throws IOException {
@@ -68,21 +78,5 @@ public class RemoteSystemdUnit extends TerraformSshCommands {
 
     public String getErrorString() throws IOException {
         return String.format("result %s (%s)", getResult(), getMainExitCode());
-    }
-
-    public String getFullStdout() throws IOException {
-        return catFileIfExists(stdoutLogFileName);
-    }
-
-    public String getFullStderr() throws IOException {
-        return catFileIfExists(stderrLogFileName);
-    }
-
-    public String getIncrementalStdout() throws IOException {
-        return catIncrementalFileIfExists(stdoutLogFileName);
-    }
-
-    public String getIncrementalStderr() throws IOException {
-        return catIncrementalFileIfExists(stderrLogFileName);
     }
 }

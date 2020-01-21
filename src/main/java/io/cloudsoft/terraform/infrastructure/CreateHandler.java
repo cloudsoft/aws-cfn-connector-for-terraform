@@ -1,10 +1,11 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.infrastructure.commands.TerraformOutputsCommand;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-
 import java.io.IOException;
 import java.util.UUID;
+
+import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
+import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class CreateHandler extends TerraformBaseHandler {
 
@@ -34,7 +35,7 @@ public class CreateHandler extends TerraformBaseHandler {
 
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
-                    tfSshCommands().mkWorkDir();
+                    RemoteTerraformProcess.of(this).mkWorkDir();
                     advanceTo(Steps.CREATE_SYNC_FILE);
 
                     /* NOTE: here, and in several other places, we could proceed to the next
@@ -67,7 +68,7 @@ public class CreateHandler extends TerraformBaseHandler {
                         return statusInProgress();
                     }
 
-                    TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
+                    RemoteTerraformOutputsProcess outputCmd = RemoteTerraformOutputsProcess.of(this);
                     outputCmd.run();
                     model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
                     model.setOutputs(outputCmd.getOutputAsMap());

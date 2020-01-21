@@ -1,7 +1,7 @@
 package io.cloudsoft.terraform.infrastructure;
 
 import io.cloudsoft.terraform.infrastructure.CreateHandler.Steps;
-import io.cloudsoft.terraform.infrastructure.commands.TerraformOutputsCommand;
+import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class ReadHandler extends TerraformBaseHandler {
 
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            TerraformOutputsCommand outputCmd = TerraformOutputsCommand.of(this);
+            RemoteTerraformOutputsProcess outputCmd = RemoteTerraformOutputsProcess.of(this);
             outputCmd.run();
             model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());
             model.setOutputs(outputCmd.getOutputAsMap());
