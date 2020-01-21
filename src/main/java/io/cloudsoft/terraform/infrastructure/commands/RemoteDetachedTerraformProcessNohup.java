@@ -66,6 +66,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
         }
         String scriptName = "terraform-command-"+UUID.randomUUID();
         String.join("\n", 
+            "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
