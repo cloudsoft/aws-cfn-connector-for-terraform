@@ -46,7 +46,14 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
 
     public boolean isRunning() throws IOException {
         ssh.runSSHCommand(String.format("[ -d /proc/`cat %s` ] && echo true || echo false", pidFileName));
-        return ssh.lastStdout.equals("true");
+        String out = ssh.lastStdout.trim();
+        if (out.equals("true")) {
+            return true;
+        } else if (out.equals("false")) {
+            return false;
+        } else {
+            throw new IllegalStateException("Unexpected output from isRunning: '"+out+"'");
+        }
     }
 
     public void start() throws IOException {
