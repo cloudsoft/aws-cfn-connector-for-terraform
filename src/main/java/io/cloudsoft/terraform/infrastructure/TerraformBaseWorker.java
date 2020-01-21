@@ -201,15 +201,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     protected RemoteDetachedTerraformProcess tfInit() {
-        return RemoteDetachedTerraformProcessSystemd.of(this, RemoteDetachedTerraformProcess.TerraformCommand.TC_INIT);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_INIT);
     }
 
     protected RemoteDetachedTerraformProcess tfApply() {
-        return RemoteDetachedTerraformProcessSystemd.of(this, RemoteDetachedTerraformProcess.TerraformCommand.TC_APPLY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_APPLY);
     }
 
     protected RemoteDetachedTerraformProcess tfDestroy() {
-        return RemoteDetachedTerraformProcessSystemd.of(this, RemoteDetachedTerraformProcess.TerraformCommand.TC_DESTROY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_DESTROY);
     }
 
     private void drainPendingRemoteLogs(RemoteDetachedTerraformProcess process) throws IOException {
