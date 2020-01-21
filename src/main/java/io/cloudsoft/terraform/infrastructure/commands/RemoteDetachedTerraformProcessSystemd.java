@@ -10,17 +10,8 @@ import java.util.*;
 
 public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
 
-    @Getter
     private final String unitName;
     // systemd unit instance name is available as "configurationIdentifier" in the parent class.
-    private final String stdoutLogFileName, stderrLogFileName;
-
-/*
-    @Deprecated
-    public static RemoteSystemdUnit of(TerraformBaseWorker<?> w, String unitName) {
-        return new RemoteSystemdUnit(w.getParameters(), w.getLogger(), unitName, w.getModel().getIdentifier());
-    }
-*/
 
     public static RemoteDetachedTerraformProcessSystemd of(TerraformBaseWorker<?> w, TerraformCommand tc) {
         return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
@@ -87,21 +78,5 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
 
     public String getErrorString() throws IOException {
         return String.format("result %s (%s)", getResult(), getMainExitCode());
-    }
-
-    public String getFullStdout() throws IOException {
-        return ssh.catFileIfExists(stdoutLogFileName);
-    }
-
-    public String getFullStderr() throws IOException {
-        return ssh.catFileIfExists(stderrLogFileName);
-    }
-
-    public String getIncrementalStdout() throws IOException {
-        return ssh.catIncrementalFileIfExists(stdoutLogFileName);
-    }
-
-    public String getIncrementalStderr() throws IOException {
-        return ssh.catIncrementalFileIfExists(stderrLogFileName);
     }
 }
