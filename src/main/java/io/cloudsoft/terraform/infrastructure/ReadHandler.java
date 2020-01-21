@@ -1,12 +1,15 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import io.cloudsoft.terraform.infrastructure.CreateHandler.Steps;
+import java.io.IOException;
+
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
-import java.io.IOException;
-
 public class ReadHandler extends TerraformBaseHandler {
+
+    private enum Steps {
+        // nonoe
+    }
 
     @Override
     protected TerraformBaseWorker<?> newWorker() {
@@ -15,6 +18,8 @@ public class ReadHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
+        public Worker() { super(Steps.class); }
+        
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             RemoteTerraformOutputsProcess outputCmd = RemoteTerraformOutputsProcess.of(this);

@@ -23,7 +23,7 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
+public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
 
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
@@ -40,13 +40,19 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     protected CallbackContext callbackContext;
     @Getter
     private Logger logger;
-
+    @Getter
+    private final Class<Steps> stepsEnumClass;
+    
     protected TerraformParameters parameters;
 
     protected Steps currentStep;
 
     // === init and accessors ========================
 
+    public TerraformBaseWorker(Class<Steps> stepsEnumClass) {
+        this.stepsEnumClass = stepsEnumClass;
+    }
+    
     protected void init(
             @Nullable AmazonWebServicesClientProxy proxy,
             ResourceHandlerRequest<ResourceModel> request,
@@ -85,6 +91,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
             log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
+            preRunStep();
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
             log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
@@ -109,6 +116,22 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         }
     }
 
+    protected void preRunStep() {
+        if (getCallbackContext().stepId == null) {
+            if (stepsEnumClass.getEnumConstants().length==0) {
+                // leave it null
+            } else {
+                currentStep = stepsEnumClass.getEnumConstants()[0];
+            }
+        } else {
+            // continuing a step
+            currentStep = Enum.valueOf(stepsEnumClass, callbackContext.stepId);
+        }
+        // TODO remove, and fixup with step framework commit
+        log("DEBUG: client-token="+getRequest().getClientRequestToken()+" logical-id="+getRequest().getLogicalResourceIdentifier()+" "+
+            "next-token="+getRequest().getNextToken()+" aws-partition="+getRequest().getAwsPartition());
+    }
+    
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
 
     // === utils ========================

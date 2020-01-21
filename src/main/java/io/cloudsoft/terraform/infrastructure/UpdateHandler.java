@@ -1,12 +1,12 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import software.amazon.cloudformation.proxy.ProgressEvent;
-
 import java.io.IOException;
+
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class UpdateHandler extends TerraformBaseHandler {
 
-    protected enum Steps {
+    private enum Steps {
         UPDATE_SYNC_FILE,
         UPDATE_RUN_TF_APPLY,
         UPDATE_WAIT_ON_APPLY_THEN_RETURN
@@ -19,6 +19,8 @@ public class UpdateHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
+        public Worker() { super(Steps.class); }
+        
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             currentStep = callbackContext.stepId == null ? Steps.UPDATE_SYNC_FILE : Steps.valueOf(callbackContext.stepId);

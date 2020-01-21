@@ -3,13 +3,13 @@ package io.cloudsoft.terraform.infrastructure;
 import java.io.IOException;
 import java.util.UUID;
 
-import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
+import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class CreateHandler extends TerraformBaseHandler {
 
-    protected enum Steps {
+    private enum Steps {
         CREATE_INIT_AND_MKDIR,
         CREATE_SYNC_FILE,
         CREATE_RUN_TF_INIT,
@@ -24,15 +24,25 @@ public class CreateHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
+        public Worker() { super(Steps.class); }
+        
+        @Override
+        protected void preRunStep() {
+            if (model.getIdentifier()==null) {
+                if (callbackContext.createdModelIdentifier == null) {
+                    // creating this stack, the very first call for the stack
+                    callbackContext.createdModelIdentifier = UUID.randomUUID().toString();
+                    log("Identifier created: "+callbackContext.createdModelIdentifier);
+                }
+                // model doesn't seem to remember the identifier until the end
+                model.setIdentifier(callbackContext.createdModelIdentifier);
+            }
+            
+            super.preRunStep();
+        }
+        
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            if (callbackContext.createdModelIdentifier == null) {
-                callbackContext.createdModelIdentifier = UUID.randomUUID().toString();
-            }
-            model.setIdentifier(callbackContext.createdModelIdentifier);
-
-            currentStep = getCallbackContext().stepId == null ? Steps.CREATE_INIT_AND_MKDIR : Steps.valueOf(callbackContext.stepId);
-
             switch (currentStep) {
                 case CREATE_INIT_AND_MKDIR:
                     RemoteTerraformProcess.of(this).mkWorkDir();
