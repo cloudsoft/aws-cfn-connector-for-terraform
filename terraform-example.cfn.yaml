@@ -19,12 +19,10 @@ Resources:
 
         variable "TFBucket1Name" {
           type = string
-          default = "terraform-rp-example-bucket1-tfdfl"
         }
 
         variable "TFBucket2Name" {
           type = string
-          default = "terraform-rp-example-bucket2-tfdfl"
         }
 
         provider "aws" {
