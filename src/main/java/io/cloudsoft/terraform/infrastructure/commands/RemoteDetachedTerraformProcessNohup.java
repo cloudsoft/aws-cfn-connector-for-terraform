@@ -20,7 +20,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
         stdoutLogFileName = String.format("%s/terraform-%s-%s-stdout.log", getWorkDir(), getCommandName(), configurationIdentifier);
         stderrLogFileName = String.format("%s/terraform-%s-%s-stderr.log", getWorkDir(), getCommandName(), configurationIdentifier);
         exitstatusFileName = String.format("%s/terraform-%s-%s-exitstatus.log", getWorkDir(), getCommandName(), configurationIdentifier);
-        pidFileName = String.format("%s/%s@%s.pid", getWorkDir(), tc.toString(), configurationIdentifier);
+        pidFileName = String.format("%s/terraform-%s-$s.pid", getWorkDir(), getCommandName(), configurationIdentifier);
     }
 
     public boolean wasFailure() { 
