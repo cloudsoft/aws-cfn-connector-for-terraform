@@ -22,6 +22,7 @@ public class SshToolbox {
     protected Integer lastExitStatusOrNull;
 
     protected SshToolbox(TerraformParameters params, Logger logger) {
+        // TODO this should take the arguments below as parameters rather than depend on TerraformParameters 
         this.logger = logger;
         this.serverHostname = params.getHost();
         this.sshPort = params.getPort();
