@@ -119,7 +119,7 @@ public class SshToolbox {
         return fn + ".offset";
     }
 
-    protected String setupIncrementalFileCommand(String fn) throws IOException {
+    protected String setupIncrementalFileCommand(String fn) {
         return String.format(
             "truncate --size=0 %s; "
             + "echo 0 > %s", getSnapshotFileName(fn), getOffsetFileName(fn));
