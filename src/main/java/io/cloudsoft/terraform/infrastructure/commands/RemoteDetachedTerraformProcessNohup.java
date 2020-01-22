@@ -1,7 +1,6 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;

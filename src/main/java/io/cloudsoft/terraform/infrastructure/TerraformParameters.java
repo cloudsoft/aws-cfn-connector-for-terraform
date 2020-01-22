@@ -17,8 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";

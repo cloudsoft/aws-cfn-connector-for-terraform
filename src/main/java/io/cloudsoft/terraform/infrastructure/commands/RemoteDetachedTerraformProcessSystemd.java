@@ -2,7 +2,6 @@ package io.cloudsoft.terraform.infrastructure.commands;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
-import lombok.Getter;
 import software.amazon.cloudformation.proxy.Logger;
 
 import java.io.IOException;
