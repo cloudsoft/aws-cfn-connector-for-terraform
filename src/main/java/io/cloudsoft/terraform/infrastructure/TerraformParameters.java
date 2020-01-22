@@ -23,6 +23,8 @@ public class TerraformParameters {
     private static final String PREFIX = "/cfn/terraform";
     private static final int DEFAULT_SSH_PORT = 22;
     private static final String DEFAULT_PROCESS_MANAGER = "nohup";
+    // allow this so that parameters can be set, as they don't allow blanks or null
+    private static final String DISABLED_KEYWORD = "off";
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
     private final S3Client s3Client;
@@ -36,6 +38,10 @@ public class TerraformParameters {
     public TerraformParameters(AmazonWebServicesClientProxy proxy) {
         this(proxy, SsmClient.create(), S3Client.create());
     }
+    
+    protected boolean isOff(Object x) {
+        return x==null || DISABLED_KEYWORD.equals(x);
+    }
 
     public String getHost() {
         return getParameterValue("ssh-host", true);
@@ -43,7 +49,7 @@ public class TerraformParameters {
 
     public int getPort() {
         final String port = getParameterValue("ssh-port", false);
-        if (port==null) {
+        if (isOff(port)) {
             return DEFAULT_SSH_PORT;
         }
         try {
@@ -57,7 +63,7 @@ public class TerraformParameters {
 
     public String getProcessManager() {
         String pm = getParameterValue("process-manager", false);
-        if (pm == null) {
+        if (isOff(pm)) {
             pm = DEFAULT_PROCESS_MANAGER;
         }
         if (pm.equals("systemd") || pm.equals("nohup")) {
@@ -75,11 +81,19 @@ public class TerraformParameters {
     }
 
     public String getFingerprint() {
-        return getParameterValue("ssh-fingerprint", false);
+        String fp = getParameterValue("ssh-fingerprint", false);
+        if (isOff(fp)) {
+            return null;
+        }
+        return fp;
     }
 
-    public String getLogsS3BucketName() {
-        return getParameterValue("logs-s3-bucket-name", false);
+    public String getLogsS3BucketPrefix() {
+        String bp = getParameterValue("logs-s3-bucket-prefix", false);
+        if (isOff(bp)) {
+            return null;
+        }
+        return bp;
     }
 
     private String getParameterValue(String id, boolean required) {
@@ -97,6 +111,7 @@ public class TerraformParameters {
             if (required) {
                 throw ConnectorHandlerFailures.unhandled("Parameter '"+id+"' must be set in parameter store.", e);
             } else {
+                // annoyingly we get failure messages in the log if the parameter doesn't exist
                 return null;
             }
         } catch (RuntimeException e) {

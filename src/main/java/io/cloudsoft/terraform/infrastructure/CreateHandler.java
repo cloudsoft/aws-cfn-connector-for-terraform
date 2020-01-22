@@ -43,13 +43,17 @@ public class CreateHandler extends TerraformBaseHandler {
             super.preRunStep();
         }
 
+        @SuppressWarnings("fallthrough")
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             switch (currentStep) {
                 case CREATE_LOG_TARGET:
                     boolean creatingLogTarget = (callbackContext.logBucketName==null);
                     if (creatingLogTarget) {
-                        callbackContext.logBucketName = "logs-" + "cloudsoft-terraform-infrastructure" + "-" + model.getIdentifier();
+                        callbackContext.logBucketName = parameters.getLogsS3BucketPrefix();
+                        if (callbackContext.logBucketName!=null) {
+                            callbackContext.logBucketName += "-" + model.getIdentifier();
+                        }
                         final S3Client s3Client = S3Client.create();
                         CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
                                 .bucket(callbackContext.logBucketName)

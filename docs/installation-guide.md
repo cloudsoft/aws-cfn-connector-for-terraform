@@ -64,6 +64,7 @@ You will need to have the AWS CLI installed and configured on your local machine
    - `/cfn/terraform/ssh-key`
    - `/cfn/terraform/ssh-fingerprint`
    - `/cfn/terraform/process-manager`
+   - `/cfn/terraform/logs-s3-bucket-prefix`
    
    The value of `ssh-fingerprint` must be in one of the
    [fingerprint formats supported in SSHJ](https://github.com/hierynomus/sshj/blob/master/src/main/java/net/schmizz/sshj/transport/verification/FingerprintVerifier.java#L33).

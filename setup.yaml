@@ -42,10 +42,10 @@ Resources:
   TerraformSSHHostParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Terraform server host to connect to for SSH connections
+      Description: Terraform server hostname or IP address to connect to for SSH connections
       Name: /cfn/terraform/ssh-host
       Type: String
-      Value: 'host.example.com'
+      Value: FIXME
   TerraformSSHPortParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -59,21 +59,28 @@ Resources:
       Description: Username of the Terraform server host for SSH connections
       Name: /cfn/terraform/ssh-username
       Type: String
-      Value: 'terraform'
+      Value: FIXME
   TerraformSSHKeyParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Private SSH key of the CloudFormation client for SSH connections
       Name: /cfn/terraform/ssh-key
       Type: String
-      Value: '(FIXME)'
+      Value: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        FIXME - this is required to connect to the server
+        -----END OPENSSH PRIVATE KEY-----
   TerraformSSHFingerprintParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Public SSH key fingerprint of the Terraform server to verify SSH connections
+      Description: |
+        Public SSH key fingerprint of the Terraform server to verify SSH connections.
+        Any value other than "off" will enforce a fingerprint check during SSH connection.
+        This can be set to "off" to not require fingerprint checks, 
+        for instance if you trust the environment wherte this is running.
       Name: /cfn/terraform/ssh-fingerprint
       Type: String
-      Value: '(FIXME)'
+      Value: 'off'
   TerraformProcessManagerParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -81,6 +88,17 @@ Resources:
       Name: /cfn/terraform/process-manager
       Type: String
       Value: 'nohup'
+  TerraformLogsS3BucketPrefix:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: |
+        Prefix to use when creating log buckets.
+        Any value other than "off" will result in a bucket being created for each CFN resource created by this provider,
+        so that the user can easily inspect the logs (without needing special CloudWatch access).
+        A hyphen and the model identifier will be appended.
+      Name: /cfn/terraform/logs-s3-bucket-prefix
+      Type: String
+      Value: 'off'
 
 Outputs:
   LoggingRoleArn:
@@ -107,3 +125,6 @@ Outputs:
   TerraformProcessManagerParameter:
     Value:
       Ref: TerraformProcessManagerParameter
+  TerraformLogsS3BucketPrefix:
+    Value:
+      Ref: TerraformLogsS3BucketPrefix

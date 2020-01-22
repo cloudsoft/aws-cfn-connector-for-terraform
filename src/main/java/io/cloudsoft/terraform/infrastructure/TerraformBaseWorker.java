@@ -270,12 +270,10 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         final String stdout = process.getFullStdout();
         final String stderr = process.getFullStderr();
 
-        final String s3BucketName = getParameters().getLogsS3BucketName();
+        final String s3BucketName = callbackContext.getLogBucketName();
         if (s3BucketName != null) {
-            // Implies the string is not empty (SSM does not allow that for parameter values).
-            final String prefix = model.getIdentifier() + "/" + callbackContext.getCommandRequestId() + "-" + process.getCommandName();
-            uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
-            uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
+            uploadFileToS3(process.getCommandName()+"-"+"stdout.txt", stdout);
+            uploadFileToS3(process.getCommandName()+"-"+"stderr.txt", stderr);
         }
 
         // FIXME: instead of retrieving the full log files it would be faster to accumulate the
@@ -308,18 +306,23 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         remoteTerraformProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables(), firstTime);
     }
 
-    private void uploadFileToS3(String bucketName, String objectKey, String text) {
-        final S3Client s3Client = S3Client.create();
-        final PutObjectRequest putReq = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(objectKey)
-                .contentType("text/plain")
-                .build();
-        try {
-            proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(request, RequestBody.fromString(text)));
-            log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
-        } catch (Exception e) {
-            log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+    private void uploadFileToS3(String objectSuffix, String text) {
+        String bucketName = callbackContext.getLogBucketName();
+        if (bucketName!=null) {
+            final S3Client s3Client = S3Client.create();
+            final String objectPrefix = callbackContext.getCommandRequestId();
+            final String objectKey = objectPrefix+"/"+objectSuffix;
+            final PutObjectRequest putReq = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .contentType("text/plain")
+                    .build();
+            try {
+                proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(request, RequestBody.fromString(text)));
+                log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
+            } catch (Exception e) {
+                log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+            }
         }
     }
 }

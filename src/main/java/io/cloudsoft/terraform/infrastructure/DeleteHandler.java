@@ -37,6 +37,31 @@ public class DeleteHandler extends TerraformBaseHandler {
 
                     RemoteTerraformProcess.of(this).rmWorkDir();
 
+                    // TODO delete bucket
+                    /*
+                    if (creatingLogTarget) {
+                        callbackContext.logBucketName = parameters.getLogsS3BucketPrefix();
+                        if (callbackContext.logBucketName!=null) {
+                            callbackContext.logBucketName += "-" + model.getIdentifier();
+                        }
+                        final S3Client s3Client = S3Client.create();
+                        CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
+                                .bucket(callbackContext.logBucketName)
+                                .build();
+                        try {
+                            proxy.injectCredentialsAndInvokeV2(createBucketRequest, request -> s3Client.createBucket(createBucketRequest));
+                            log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
+                            setModelLogBucketUrlFromCallbackContextName();
+                        } catch (Exception e) {
+                            log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
+                            creatingLogTarget = false;
+                            callbackContext.logBucketName = null;
+                            model.setLogBucketUrl(null);
+                        }
+                    }
+                    */
+
+                    
                     return statusSuccess();
                 default:
                     throw new IllegalStateException("invalid step " + callbackContext.stepId);
