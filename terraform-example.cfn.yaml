@@ -72,4 +72,6 @@ Outputs:
   Bucket1Arn:
     Description: Outputs from Terraform as a stringified JSON map
     Value: !GetAtt TerraformExample.OutputsStringified
+  LogBucketUrl:
+    Value: !GetAtt TerraformExample.LogBucketUrl
 

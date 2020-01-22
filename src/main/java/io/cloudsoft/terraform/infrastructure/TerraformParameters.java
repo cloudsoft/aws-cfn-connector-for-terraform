@@ -1,17 +1,14 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
@@ -144,19 +141,13 @@ public class TerraformParameters {
             final String key = matcher.group(2);
 
             try {
-                final File tmpFile = File.createTempFile("configuration-", ".tf");
-                GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(key)
-                        .build();
-                proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
-                final byte[] result = FileUtils.readFileToByteArray(tmpFile);
+                byte[] result = new BucketUtils(proxy, s3Client).download(bucket, key);
                 if (result.length==0) {
                     throw ConnectorHandlerFailures.unhandled(String.format("S3 file at %s is empty", model.getConfigurationS3Path()));
                 }
                 return result;
             } catch (Exception e) {
-                throw ConnectorHandlerFailures.unhandled(String.format("Failed to get S3 file at %s: check it exists and roles/permissions set for this type connector", model.getConfigurationS3Path()), e);
+                throw ConnectorHandlerFailures.unhandled(String.format("Failed to get S3 Terraform configuration file at %s: check it exists and roles/permissions set for this type connector", model.getConfigurationS3Path()), e);
             }
         }
 

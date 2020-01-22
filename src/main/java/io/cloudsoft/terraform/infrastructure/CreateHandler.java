@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class CreateHandler extends TerraformBaseHandler {
@@ -50,18 +48,16 @@ public class CreateHandler extends TerraformBaseHandler {
                 case CREATE_LOG_TARGET:
                     boolean creatingLogTarget = (callbackContext.logBucketName==null);
                     if (creatingLogTarget) {
-                        callbackContext.logBucketName = parameters.getLogsS3BucketPrefix();
+                        callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
                         if (callbackContext.logBucketName!=null) {
-                            callbackContext.logBucketName += "-" + model.getIdentifier();
+                            callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
                         }
-                        final S3Client s3Client = S3Client.create();
-                        CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
-                                .bucket(callbackContext.logBucketName)
-                                .build();
                         try {
-                            proxy.injectCredentialsAndInvokeV2(createBucketRequest, request -> s3Client.createBucket(createBucketRequest));
+                            new BucketUtils(proxy).createBucket(callbackContext.logBucketName);
                             log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
                             setModelLogBucketUrlFromCallbackContextName();
+                            uploadCompleteLog(MAIN_LOG_BUCKET_FILE, "Beginning creation of "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId);
+                            
                         } catch (Exception e) {
                             log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
                             creatingLogTarget = false;

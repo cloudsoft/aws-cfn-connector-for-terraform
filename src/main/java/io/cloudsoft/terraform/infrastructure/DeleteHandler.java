@@ -37,30 +37,21 @@ public class DeleteHandler extends TerraformBaseHandler {
 
                     RemoteTerraformProcess.of(this).rmWorkDir();
 
-                    // TODO delete bucket
-                    /*
-                    if (creatingLogTarget) {
-                        callbackContext.logBucketName = parameters.getLogsS3BucketPrefix();
-                        if (callbackContext.logBucketName!=null) {
-                            callbackContext.logBucketName += "-" + model.getIdentifier();
-                        }
-                        final S3Client s3Client = S3Client.create();
-                        CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
-                                .bucket(callbackContext.logBucketName)
-                                .build();
+                    if (callbackContext.logBucketName != null) {
                         try {
-                            proxy.injectCredentialsAndInvokeV2(createBucketRequest, request -> s3Client.createBucket(createBucketRequest));
-                            log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
-                            setModelLogBucketUrlFromCallbackContextName();
-                        } catch (Exception e) {
-                            log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
-                            creatingLogTarget = false;
+                            new BucketUtils(proxy).deleteBucket(callbackContext.logBucketName);
+                            log(String.format("Deleted bucket for logs at s3://%s/", callbackContext.logBucketName));
                             callbackContext.logBucketName = null;
-                            model.setLogBucketUrl(null);
+                            setModelLogBucketUrlFromCallbackContextName();
+                            
+                        } catch (Exception e) {
+                            String message = String.format("Failed to delete log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage());
+                            log(message);
+                            throw ConnectorHandlerFailures.handled(message+". "+
+                                "The terraform-deployed infrastructure has been destroyed, "
+                                + "but the log bucket will need manual removal.");
                         }
                     }
-                    */
-
                     
                     return statusSuccess();
                 default:
