@@ -261,7 +261,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         final String s3BucketName = getParameters().getLogsS3BucketName();
         if (s3BucketName != null) {
             // Implies the string is not empty (SSM does not allow that for parameter values).
-            final String prefix = model.getIdentifier() + "/" + process.getCommandName();
+            final String prefix = model.getIdentifier() + "/" + callbackContext.getCommandRequestId() + "-" + process.getCommandName();
             uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
             uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
         }
