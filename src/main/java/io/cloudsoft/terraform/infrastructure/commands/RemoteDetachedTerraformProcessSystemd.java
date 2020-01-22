@@ -1,11 +1,12 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
 import software.amazon.cloudformation.proxy.Logger;
-
-import java.io.IOException;
-import java.util.*;
 
 public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
 
@@ -13,31 +14,31 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
     // systemd unit instance name is available as "configurationIdentifier" in the parent class.
 
     public static RemoteDetachedTerraformProcessSystemd of(TerraformBaseWorker<?> w, TerraformCommand tc) {
-        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
+        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier(), w.getCallbackContext().getCommandRequestId());
     }
 
-    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
-        super(params, logger, tc, configurationName);
+    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String modelIdentifier, String commandIdentifier) {
+        super(params, logger, tc, modelIdentifier, commandIdentifier);
         switch (tc) {
-            case TC_INIT:
+            case TF_INIT:
                 unitName = "terraform-init";
                 break;
-            case TC_APPLY:
+            case TF_APPLY:
                 unitName = "terraform-apply";
                 break;
-            case TC_DESTROY:
+            case TF_DESTROY:
                 unitName = "terraform-destroy";
                 break;
             default:
                 throw new IllegalArgumentException ("Invalid value " + tc.toString());
         }
         // NB: The two values below must be consistent with what is in the systemd unit files.
-        stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, configurationIdentifier);
-        stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, configurationIdentifier);
+        stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, commandIdentifier);
+        stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, commandIdentifier);
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
-        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
+        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, commandIdentifier));
         return ssh.lastStdout.replaceAll("\n", "");
     }
 
@@ -50,7 +51,7 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                 ssh.setupIncrementalFileCommand(stdoutLogFileName),
                 ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
-                String.format("systemctl --user start %s@%s", unitName, configurationIdentifier)
+                String.format("systemctl --user start %s@%s", unitName, commandIdentifier)
         );
         ssh.runSSHCommand(String.join("; ", commands));
     }

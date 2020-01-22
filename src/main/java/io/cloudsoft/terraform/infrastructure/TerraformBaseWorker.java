@@ -23,7 +23,7 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
+public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
 
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
@@ -40,13 +40,19 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     protected CallbackContext callbackContext;
     @Getter
     private Logger logger;
-
+    @Getter
+    private final Class<Steps> stepsEnumClass;
+    
     protected TerraformParameters parameters;
 
     protected Steps currentStep;
 
     // === init and accessors ========================
 
+    public TerraformBaseWorker(Class<Steps> stepsEnumClass) {
+        this.stepsEnumClass = stepsEnumClass;
+    }
+    
     protected void init(
             @Nullable AmazonWebServicesClientProxy proxy,
             ResourceHandlerRequest<ResourceModel> request,
@@ -82,15 +88,16 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
 
     // === lifecycle ========================
 
-    public final ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
+    public ProgressEvent<ResourceModel, CallbackContext> runHandlingError() {
         try {
-            logger.log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
+            log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
+            preRunStep();
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
-            logger.log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
+            log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
             return result;
 
         } catch (ConnectorHandlerFailures.Handled e) {
-            logger.log(getClass().getName() + " lambda exiting with error");
+            log(getClass().getName() + " lambda exiting with error");
             return statusFailed("FAILING: "+e.getMessage());
 
         } catch (ConnectorHandlerFailures.Unhandled e) {
@@ -99,16 +106,34 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
             } else {
                 log("FAILING: "+e.getMessage());
             }
-            logger.log(getClass().getName() + " lambda exiting with error");
+            log(getClass().getName() + " lambda exiting with error");
             return statusFailed(e.getMessage());
 
         } catch (Exception e) {
             logException("FAILING: "+e, e);
-            logger.log(getClass().getName() + " lambda exiting with error");
+            log(getClass().getName() + " lambda exiting with error");
             return statusFailed((currentStep!=null ? currentStep+": " : "")+e);
         }
     }
 
+    protected void preRunStep() {
+        if (getCallbackContext().stepId == null) {
+            if (stepsEnumClass.getEnumConstants().length==0) {
+                // leave it null
+            } else {
+                currentStep = stepsEnumClass.getEnumConstants()[0];
+            }
+            getCallbackContext().commandRequestId = Configuration.getIdentifier(true,  4);
+            log("Using "+getCallbackContext().commandRequestId+" to unique identify this command across all steps (stack element "+model.getIdentifier()+", request "+request.getClientRequestToken()+")");
+        } else {
+            // continuing a step
+            currentStep = Enum.valueOf(stepsEnumClass, callbackContext.stepId);
+        }
+        // TODO remove, and fixup with step framework commit
+        log("DEBUG: client-token="+getRequest().getClientRequestToken()+" logical-id="+getRequest().getLogicalResourceIdentifier()+" "+
+            "next-token="+getRequest().getNextToken()+" aws-partition="+getRequest().getAwsPartition());
+    }
+    
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
 
     // === utils ========================
@@ -168,7 +193,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     protected final void advanceTo(Steps nextStep) {
-        logger.log("Entering step "+nextStep);
+        log("Entering step "+nextStep);
         callbackContext.stepId = nextStep.toString();
         callbackContext.lastDelaySeconds = -1;
     }
@@ -197,25 +222,25 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     }
 
     protected RemoteDetachedTerraformProcess tfInit() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_INIT);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_INIT);
     }
 
     protected RemoteDetachedTerraformProcess tfApply() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_APPLY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_APPLY);
     }
 
     protected RemoteDetachedTerraformProcess tfDestroy() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_DESTROY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_DESTROY);
     }
 
     private void drainPendingRemoteLogs(RemoteDetachedTerraformProcess process) throws IOException {
         String str;
         str = process.getIncrementalStdout();
         if (!str.isEmpty())
-            logger.log("New standard output data:\n" + str);
+            log("New standard output data:\n" + str);
         str = process.getIncrementalStderr();
         if (!str.isEmpty())
-            logger.log("New standard error data:\n" + str);
+            log("New standard error data:\n" + str);
     }
 
     protected boolean checkStillRunningOrError(RemoteDetachedTerraformProcess process) throws IOException {
@@ -236,7 +261,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
         final String s3BucketName = getParameters().getLogsS3BucketName();
         if (s3BucketName != null) {
             // Implies the string is not empty (SSM does not allow that for parameter values).
-            final String prefix = model.getIdentifier() + "/" + process.getCommandName();
+            final String prefix = model.getIdentifier() + "/" + callbackContext.getCommandRequestId() + "-" + process.getCommandName();
             uploadFileToS3(s3BucketName, prefix + "-stdout.txt", stdout);
             uploadFileToS3(s3BucketName, prefix + "-stderr.txt", stderr);
         }
@@ -249,13 +274,13 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 // effect of the remote process' failure, but combined with a non-raised fault
                 // flag it may mean a bug (a failure to fail) in Terraform or in the resource
                 // provider code, hence report this separately to make it easier to relate.
-                logger.log("Spurious remote stderr:\n" + stderr);
+                log("Spurious remote stderr:\n" + stderr);
             }
         } else {
             final String message = String.format("Error in %s: %s", process.getCommandName(), process.getErrorString());
-            logger.log(message);
-            logger.log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
-            logger.log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
+            log(message);
+            log(stderr.isEmpty() ? "(Remote stderr is empty.)" : "Remote stderr:\n" + stderr);
+            log(stdout.isEmpty() ? "(Remote stdout is empty.)" : "Remote stdout:\n" + stdout);
             throw ConnectorHandlerFailures.handled(message+"; see logs for more detail.");
         }
         return false;
@@ -267,8 +292,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
     // the lambda's runtime filesystem.
     // There would be one more transfer if the CloudFormation template defines any Terraform
     // variables, so the above note would apply even more.
-    protected final void getAndUploadConfiguration() throws IOException {
-        remoteTerraformProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
+    protected final void getAndUploadConfiguration(boolean firstTime) throws IOException {
+        remoteTerraformProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables(), firstTime);
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, String text) {
@@ -280,9 +305,9 @@ public abstract class TerraformBaseWorker<Steps extends Enum<?>> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(putReq, request -> s3Client.putObject(request, RequestBody.fromString(text)));
-            logger.log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
+            log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
         } catch (Exception e) {
-            logger.log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+            log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
         }
     }
 }

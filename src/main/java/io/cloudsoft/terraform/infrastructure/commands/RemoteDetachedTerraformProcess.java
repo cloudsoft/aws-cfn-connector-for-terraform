@@ -11,13 +11,13 @@ abstract public class RemoteDetachedTerraformProcess extends RemoteTerraformProc
     final protected TerraformCommand tfCommand;
 
     public enum TerraformCommand {
-        TC_INIT,
-        TC_APPLY,
-        TC_DESTROY,
+        TF_INIT,
+        TF_APPLY,
+        TF_DESTROY,
     }
 
-    protected RemoteDetachedTerraformProcess(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationIdentifier) {
-        super(params, logger, configurationIdentifier);
+    protected RemoteDetachedTerraformProcess(TerraformParameters params, Logger logger, TerraformCommand tc, String modelIdentifier, String commandIdentifier) {
+        super(params, logger, modelIdentifier, commandIdentifier);
         tfCommand = tc;
     }
 

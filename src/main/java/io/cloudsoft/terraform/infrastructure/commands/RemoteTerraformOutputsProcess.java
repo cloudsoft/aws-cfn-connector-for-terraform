@@ -15,11 +15,11 @@ public class RemoteTerraformOutputsProcess extends RemoteTerraformProcess {
     private String outputJsonStringized = null;
 
     public static RemoteTerraformOutputsProcess of(TerraformBaseWorker<?> w) {
-        return new RemoteTerraformOutputsProcess(w.getParameters(), w.getLogger(), w.getModel().getIdentifier());
+        return new RemoteTerraformOutputsProcess(w.getParameters(), w.getLogger(), w.getModel().getIdentifier(), w.getCallbackContext().getCommandRequestId());
     }
 
-    protected RemoteTerraformOutputsProcess(TerraformParameters params, Logger logger, String configurationIdentifier) {
-        super(params, logger, configurationIdentifier);
+    protected RemoteTerraformOutputsProcess(TerraformParameters params, Logger logger, String modelIdentifier, String commandIdentifier) {
+        super(params, logger, modelIdentifier, commandIdentifier);
         this.objectMapper = new ObjectMapper();
     }
 
