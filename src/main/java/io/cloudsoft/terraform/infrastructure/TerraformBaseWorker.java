@@ -222,15 +222,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     protected RemoteDetachedTerraformProcess tfInit() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_INIT);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_INIT);
     }
 
     protected RemoteDetachedTerraformProcess tfApply() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_APPLY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_APPLY);
     }
 
     protected RemoteDetachedTerraformProcess tfDestroy() {
-        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TC_DESTROY);
+        return remoteProcessForCommand(RemoteDetachedTerraformProcess.TerraformCommand.TF_DESTROY);
     }
 
     private void drainPendingRemoteLogs(RemoteDetachedTerraformProcess process) throws IOException {
@@ -292,8 +292,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     // the lambda's runtime filesystem.
     // There would be one more transfer if the CloudFormation template defines any Terraform
     // variables, so the above note would apply even more.
-    protected final void getAndUploadConfiguration() throws IOException {
-        remoteTerraformProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables());
+    protected final void getAndUploadConfiguration(boolean firstTime) throws IOException {
+        remoteTerraformProcess().uploadConfiguration(getParameters().getConfiguration(model), model.getVariables(), firstTime);
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, String text) {

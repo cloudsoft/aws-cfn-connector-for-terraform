@@ -27,7 +27,7 @@ public class UpdateHandler extends TerraformBaseHandler {
 
             switch (currentStep) {
                 case UPDATE_SYNC_FILE:
-                    getAndUploadConfiguration();
+                    getAndUploadConfiguration(false);
                     advanceTo(Steps.UPDATE_RUN_TF_APPLY);
                     return statusInProgress();
 

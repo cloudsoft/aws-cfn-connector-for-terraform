@@ -54,7 +54,7 @@ public class CreateHandler extends TerraformBaseHandler {
                     return statusInProgress();
 
                 case CREATE_SYNC_FILE:
-                    getAndUploadConfiguration();
+                    getAndUploadConfiguration(true);
                     advanceTo(Steps.CREATE_RUN_TF_INIT);
                     return statusInProgress();
 
