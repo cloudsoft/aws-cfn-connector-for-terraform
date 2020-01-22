@@ -4,11 +4,14 @@ import java.io.IOException;
 
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformOutputsProcess;
 import io.cloudsoft.terraform.infrastructure.commands.RemoteTerraformProcess;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class CreateHandler extends TerraformBaseHandler {
 
     private enum Steps {
+        CREATE_LOG_TARGET,
         CREATE_INIT_AND_MKDIR,
         CREATE_SYNC_FILE,
         CREATE_RUN_TF_INIT,
@@ -43,14 +46,38 @@ public class CreateHandler extends TerraformBaseHandler {
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             switch (currentStep) {
+                case CREATE_LOG_TARGET:
+                    boolean creatingLogTarget = (callbackContext.logBucketName==null);
+                    if (creatingLogTarget) {
+                        callbackContext.logBucketName = "logs-" + "cloudsoft-terraform-infrastructure" + "-" + model.getIdentifier();
+                        final S3Client s3Client = S3Client.create();
+                        CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
+                                .bucket(callbackContext.logBucketName)
+                                .build();
+                        try {
+                            proxy.injectCredentialsAndInvokeV2(createBucketRequest, request -> s3Client.createBucket(createBucketRequest));
+                            log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
+                            setModelLogBucketUrlFromCallbackContextName();
+                        } catch (Exception e) {
+                            log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
+                            creatingLogTarget = false;
+                            callbackContext.logBucketName = null;
+                            model.setLogBucketUrl(null);
+                        }
+                    }
+                    advanceTo(Steps.CREATE_INIT_AND_MKDIR);
+                    if (callbackContext.logBucketName!=null) {
+                        /* NOTE: here, and in several other places, we could proceed to the next
+                         * step, but returning often increases transparency and maximises the time
+                         * available for each step (avoiding errors due to timeout)
+                         */
+                        return statusInProgress();
+                    }
+                    
                 case CREATE_INIT_AND_MKDIR:
                     RemoteTerraformProcess.of(this).mkWorkDir();
                     advanceTo(Steps.CREATE_SYNC_FILE);
 
-                    /* NOTE: here, and in several other places, we could proceed to the next
-                     * step, but returning often increases transparency and maximises the time
-                     * available for each step (avoiding errors due to timeout)
-                     */
                     return statusInProgress();
 
                 case CREATE_SYNC_FILE:

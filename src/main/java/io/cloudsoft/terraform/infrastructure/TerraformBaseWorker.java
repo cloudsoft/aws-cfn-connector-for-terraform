@@ -129,11 +129,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             // continuing a step
             currentStep = Enum.valueOf(stepsEnumClass, callbackContext.stepId);
         }
-        // TODO remove, and fixup with step framework commit
-        log("DEBUG: client-token="+getRequest().getClientRequestToken()+" logical-id="+getRequest().getLogicalResourceIdentifier()+" "+
-            "next-token="+getRequest().getNextToken()+" aws-partition="+getRequest().getAwsPartition());
+        
+        if (callbackContext.logBucketName==null && model.getLogBucketUrl()!=null) {
+            setCallbackLogBucketNameFromModelUrl();
+        } else if (callbackContext.logBucketName!=null && model.getLogBucketUrl()==null) {
+            // during creation, this isn't remembered in the model, so make sure we persist it
+            setModelLogBucketUrlFromCallbackContextName();
+        }
     }
-    
+
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
 
     // === utils ========================
@@ -146,6 +150,14 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         }
     }
 
+    protected void setCallbackLogBucketNameFromModelUrl() {
+        callbackContext.logBucketName = model.getLogBucketUrl().substring(model.getLogBucketUrl().lastIndexOf("/")+1);
+    }
+    
+    protected void setModelLogBucketUrlFromCallbackContextName() {
+        model.setLogBucketUrl("https://s3.console.aws.amazon.com/s3/buckets/"+callbackContext.logBucketName);
+    }
+    
     protected final void logException(String message, Throwable e) {
         final StringWriter sw = new StringWriter();
         final PrintWriter pw = new PrintWriter(sw);
