@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";
+    private static final int DEFAULT_SSH_PORT = 22;
     private static final String DEFAULT_PROCESS_MANAGER = "nohup";
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
@@ -44,7 +45,7 @@ public class TerraformParameters {
     public int getPort() {
         final String port = getParameterValue("ssh-port", false);
         if (port==null) {
-            return 22;
+            return DEFAULT_SSH_PORT;
         }
         try {
             return Integer.parseInt(port.trim());
