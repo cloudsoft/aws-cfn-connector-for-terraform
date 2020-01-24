@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import io.cloudsoft.terraform.infrastructure.commands.SshToolbox.PostRunBehaviour;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteTerraformProcess {
@@ -50,8 +51,13 @@ public class RemoteTerraformProcess {
         this.commandIdentifier = commandIdentifier;
     }
 
+    /** parent directory where all TF runs, for any stack/user/etc live */ 
+    protected String getBaseDir() {
+        return TF_DATADIR;
+    }
+    
     protected String getWorkDir() {
-        return TF_DATADIR + "/" + modelIdentifier;
+        return getBaseDir() + "/" + modelIdentifier;
     }
 
     public void mkWorkDir() throws IOException {
@@ -72,14 +78,14 @@ public class RemoteTerraformProcess {
         String tmpFileBasename = "terraform-upload-"+commandIdentifier+"-"+RandomStringUtils.random(4)+".file";
         ssh.uploadFile(getScpTmpDir(), tmpFileBasename, contents);
         final String tmpFilename = getScpTmpDir() + "/" + tmpFileBasename;
-        ssh.runSSHCommand("file  --brief --mime-type " + tmpFilename);
+        ssh.runSSHCommand("file  --brief --mime-type " + tmpFilename, PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
         final String mimeType = ssh.lastStdout.trim();
         switch (mimeType) {
             case "text/plain":
-                ssh.runSSHCommand(String.format("mv %s %s/%s", tmpFilename, getWorkDir(), TF_CONFFILENAME));
+                ssh.runSSHCommand(String.format("mv %s %s/%s", tmpFilename, getWorkDir(), TF_CONFFILENAME), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
                 break;
             case "application/zip":
-                ssh.runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkDir()));
+                ssh.runSSHCommand(String.format("unzip %s -d %s", tmpFilename, getWorkDir()), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
                 break;
             default:
                 ssh.rmdir(getScpTmpDir());
@@ -91,10 +97,10 @@ public class RemoteTerraformProcess {
             final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(vars_map);
             // Work around the tilde [non-]expansion as explained above.
             ssh.uploadFile(getScpTmpDir(), vars_filename, vars_json);
-            ssh.runSSHCommand(String.format("mv %s/%s %s/%s", getScpTmpDir(), vars_filename, getWorkDir(), vars_filename));
+            ssh.runSSHCommand(String.format("mv %s/%s %s/%s", getScpTmpDir(), vars_filename, getWorkDir(), vars_filename), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
         } else if (!firstTime) {
             // delete an old vars file if updating with no vars, in case there were vars there previously
-            ssh.runSSHCommand(String.format("rm -f %s/%s", getWorkDir(), vars_filename));
+            ssh.runSSHCommand(String.format("rm -f %s/%s", getWorkDir(), vars_filename), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
         }
         
         ssh.rmdir(getScpTmpDir());

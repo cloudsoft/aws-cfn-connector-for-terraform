@@ -23,8 +23,10 @@ public class CallbackContext {
     public int lastDelaySeconds;
     public String logBucketName;
     
+    // cache this for the duration of a command
+    public String processManager;
+    
     // needed for creation only
     public String createdModelIdentifier;
-    public String processManager;
 
 }

@@ -27,11 +27,9 @@ class Configuration extends BaseConfiguration {
     }
     
     public static String getDateTimeString() {
-        String pattern = "yyyyMMdd-HHmmss";
-        SimpleDateFormat df = new SimpleDateFormat(pattern);
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String date = df.format(new Date());
-        return date;
+        return df.format(new Date());
     }
     
     public static String getIdentifier(boolean includeDateTime, int randomLength) {

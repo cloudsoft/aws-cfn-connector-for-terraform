@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import io.cloudsoft.terraform.infrastructure.commands.SshToolbox.PostRunBehaviour;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraformProcess {
@@ -53,7 +54,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
         // Test a pathname that does not result in a false positive when the "cat"
         // sub-shell fails because e.g. the pidfile or the working directory does
         // not exist. In particular, "cmdline" would not be a good choice.
-        ssh.runSSHCommand(String.format("[ -f /proc/`cat %s`/environ ] && echo true || echo false", pidFileName));
+        ssh.runSSHCommand(String.format("[ -f /proc/`cat %s`/environ ] && echo true || echo false", pidFileName), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         String out = ssh.lastStdout.trim();
         if (out.equals("true")) {
             return true;
@@ -65,32 +66,23 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
     }
 
     public void start() throws IOException {
-        final String tfCmd;
-        switch (tfCommand) {
-            case TF_INIT:
-                tfCmd = "terraform init -lock=true -no-color -input=false";
-                break;
-            case TF_APPLY:
-                tfCmd = "terraform apply -lock=true -no-color -input=false -auto-approve";
-                break;
-            case TF_DESTROY:
-                tfCmd = "terraform destroy -lock=true -no-color -auto-approve";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
-        }
         String scriptName = "./"+getFileName(false, "script.sh");
         String fullCmd = String.join("\n", 
             "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
-            tfCmd,
+            getTerraformCommand(),
             "echo \\$? > "+exitstatusFileName,
             "EOF",
             "chmod +x "+scriptName,
             String.format("nohup %s </dev/null >%s 2>%s & echo $! >%s", scriptName, stdoutLogFileName, stderrLogFileName, pidFileName)
             );
-        ssh.runSSHCommand(fullCmd);
+        ssh.runSSHCommand(fullCmd, PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
     }
+    
+    @Override
+    public void cleanup() {
+    }
+
 }
