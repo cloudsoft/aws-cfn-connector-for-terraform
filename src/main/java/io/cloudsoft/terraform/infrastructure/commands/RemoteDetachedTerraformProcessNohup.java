@@ -51,10 +51,7 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
     }
 
     public boolean isRunning() throws IOException {
-        // Test a pathname that does not result in a false positive when the "cat"
-        // sub-shell fails because e.g. the pidfile or the working directory does
-        // not exist. In particular, "cmdline" would not be a good choice.
-        ssh.runSSHCommand(String.format("[ -f /proc/`cat %s`/environ ] && echo true || echo false", pidFileName), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
+        ssh.runSSHCommand(String.format("if ! cat %s >/dev/null; then echo 'failed to cat the pidfile'; elif [ -f /proc/`cat %s`/environ ]; then echo true; else echo false; fi", pidFileName, pidFileName), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         String out = ssh.lastStdout.trim();
         if (out.equals("true")) {
             return true;
