@@ -25,11 +25,14 @@ public class ReadHandler extends TerraformBaseHandler {
             log("Read requested, given desired model "+model+" and previous model "+prevModel);
             
             // copy previous values for those we don't look up dynamically
+            // (seems to do nothing, prev model is usually null)
+            // ((so many of these values remain unset))
             if (prevModel!=null) {
                 model.setIdentifier(prevModel.getIdentifier());
                 model.setConfigurationContent(prevModel.getConfigurationContent());
                 model.setConfigurationS3Path(prevModel.getConfigurationS3Path());
                 model.setConfigurationUrl(prevModel.getConfigurationUrl());
+                model.setLogBucketName(prevModel.getLogBucketUrl());
                 model.setLogBucketUrl(prevModel.getLogBucketUrl());
                 model.setVariables(prevModel.getVariables());
             }

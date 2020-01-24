@@ -33,8 +33,12 @@
       "description": "Outputs produced by the Terraform configuration, as a JSON-stringified representation of the Outputs map",
       "type": "string"
     },
+    "LogBucketName": {
+      "description": "Optional name of S3 bucket where logs will be transferred; if the bucket exists, it must be writeable by this resource provider's execution role; if it does not exist, it will be created (and never deleted) by this resource provider",
+      "type": "string"
+    },
     "LogBucketUrl": {
-      "description": "URL to access the bucket where logs are written, if enabled by the administrator",
+      "description": "URL to access the bucket where logs are written, if configured",
       "type": "string"
     },
     "ConfigurationContent": {

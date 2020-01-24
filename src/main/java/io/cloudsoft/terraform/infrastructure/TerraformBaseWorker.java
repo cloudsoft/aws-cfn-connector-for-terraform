@@ -172,11 +172,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
     protected void initLogBucketName() {
         if (callbackContext.logBucketName==null) {
-            callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
-            if (callbackContext.logBucketName!=null) {
-                callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
-                setModelLogBucketUrlFromCallbackContextName();
+            callbackContext.logBucketName = model.getLogBucketName();
+            if (callbackContext.logBucketName==null) {
+                callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
+                if (callbackContext.logBucketName!=null) {
+                    callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
+                }
             }
+            
+            setModelLogBucketUrlFromCallbackContextName();
         }
     }
     protected void initLogBucketFirstMessage() {
@@ -275,7 +279,9 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
-                .message(message)
+                // would be nice if this message appeared in UI, but it doesn't
+                .message(message)   
+                // callback data from this is thrown away
                 .build();
     }
 
@@ -418,7 +424,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         String bucketName = callbackContext.getLogBucketName();
         if (bucketName!=null) {
             BucketUtils bucketUtils = new BucketUtils(proxy);
-            final String objectKey = callbackContext.getCommandRequestId()+"/"+objectSuffix;
+            final String objectKey = getLogFileObjectKey(objectSuffix);
             try {
                 return Optional.of(new String(bucketUtils.download(bucketName, objectKey)));
             } catch (Exception e) {
@@ -429,11 +435,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             return Optional.empty();
         }
     }
+
+    private String getLogFileObjectKey(String objectSuffix) {
+        return (model.getLogBucketName()!=null ? model.getIdentifier()+"/" : "") + callbackContext.getCommandRequestId()+"/"+objectSuffix;
+    }
     protected void uploadCompleteLog(String objectSuffix, String text) {
         String bucketName = callbackContext.getLogBucketName();
         if (bucketName!=null) {
             BucketUtils bucketUtils = new BucketUtils(proxy);
-            final String objectKey = callbackContext.getCommandRequestId()+"/"+objectSuffix;
+            final String objectKey = getLogFileObjectKey(objectSuffix);
             try {
                 bucketUtils.upload(bucketName, objectKey, RequestBody.fromString(text), "text/plain");
                 

@@ -11,6 +11,7 @@ Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
     Properties:
+      LogBucketName: cloudsoft-terraform-infrastructure-user-logs
       ConfigurationContent: |
         variable "AWSRegion" {
           type = string
