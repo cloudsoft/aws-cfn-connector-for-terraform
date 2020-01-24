@@ -207,11 +207,14 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
     
     protected boolean initLogBucketFirstMessage() {
-        String msg = Configuration.getDateTimeString()+"  "+
-            commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n";
-        if (callbackContext.getLogBucketName()!=null) {
-            log("Initializing log bucket "+callbackContext.logBucketName+": "+msg);
-            return uploadCompleteLog(MAIN_LOG_BUCKET_FILE, msg);
+        if (userLogsEnabled()) {
+            String msg = Configuration.getDateTimeString()+"  "+
+                commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n";
+            if (callbackContext.getLogBucketName()!=null) {
+                //for debugging:
+                // log("Initializing log bucket "+callbackContext.logBucketName+": "+msg);
+                return uploadCompleteLog(MAIN_LOG_BUCKET_FILE, msg);
+            }
         }
         return false;
     }
@@ -245,9 +248,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         logUserLogOnly(message);
     }
 
+    protected boolean userLogsEnabled() { 
+        return true;
+    }
+    
     private void logUserLogOnly(String message) {
-        uploadCompleteLog(MAIN_LOG_BUCKET_FILE, downloadLog(MAIN_LOG_BUCKET_FILE).orElse("")+
-            Configuration.getDateTimeString()+"  "+message+"\n");
+        if (userLogsEnabled()) {
+            uploadCompleteLog(MAIN_LOG_BUCKET_FILE, downloadLog(MAIN_LOG_BUCKET_FILE).orElse("")+
+                Configuration.getDateTimeString()+"  "+message+"\n");
+        }
     }
     
     protected final void logException(String message, Throwable e) {
@@ -467,7 +476,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     private String getLogFileObjectKey(String objectSuffix) {
-        return (model.getLogBucketName()!=null ? model.getIdentifier()+"/" : "") + callbackContext.getCommandRequestId()+"/"+objectSuffix;
+        return (model.getLogBucketName()!=null ? model.getIdentifier()+"/" : "") + callbackContext.getCommandRequestId()+"-"+getCommandSummary()+"/"+objectSuffix;
     }
     protected boolean uploadCompleteLog(String objectSuffix, String text) {
         String bucketName = callbackContext.getLogBucketName();

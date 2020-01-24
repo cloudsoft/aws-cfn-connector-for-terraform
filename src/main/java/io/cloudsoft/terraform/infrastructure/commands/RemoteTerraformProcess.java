@@ -114,6 +114,7 @@ public class RemoteTerraformProcess {
         // Work around the tilde [non-]expansion as explained above.
         final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(metadata);
         ssh.uploadFile(getScpTmpDir(), tmpFileBasename, vars_json);
+        ssh.mkdir(getWorkDir());
         ssh.runSSHCommand(String.format("mv %s/%s %s/%s", getScpTmpDir(), tmpFileBasename, 
             getWorkDir(), TF_CFN_METADATA_JSON), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
         ssh.rmdir(getScpTmpDir());
