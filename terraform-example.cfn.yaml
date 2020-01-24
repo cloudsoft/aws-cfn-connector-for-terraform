@@ -3,10 +3,10 @@ Description: Terraform in CloudFormation example, using the Terraform Connector 
 Parameters: 
   CFNBucket1Name:
     Type: String
-    Default: terraform-rp-example-bucket1-cfndfl
+    Default: terraform-rp-example-bucket1-default-from-cfn
   CFNBucket2Name:
     Type: String
-    Default: terraform-rp-example-bucket2-cfndfl
+    Default: terraform-rp-example-bucket2-default-from-cfn
 Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
@@ -19,12 +19,11 @@ Resources:
 
         variable "TFBucket1Name" {
           type = string
-          default = "terraform-rp-example-bucket1-tfdfl"
+          default = "terraform-rp-example-bucket1-default-from-tf-overridden-by-cfn-so-not-used-or-needed"
         }
 
         variable "TFBucket2Name" {
           type = string
-          default = "terraform-rp-example-bucket2-tfdfl"
         }
 
         provider "aws" {
@@ -70,7 +69,7 @@ Resources:
         TFBucket2Name: !Ref CFNBucket2Name
 
 Outputs:
-  Bucket1Arn:
+  TerraformOutputs:
     Description: Outputs from Terraform as a stringified JSON map
     Value: !GetAtt TerraformExample.OutputsStringified
 

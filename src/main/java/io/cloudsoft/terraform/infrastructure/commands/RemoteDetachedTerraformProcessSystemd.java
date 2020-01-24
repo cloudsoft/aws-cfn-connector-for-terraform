@@ -1,66 +1,78 @@
 package io.cloudsoft.terraform.infrastructure.commands;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import io.cloudsoft.terraform.infrastructure.commands.SshToolbox.PostRunBehaviour;
 import software.amazon.cloudformation.proxy.Logger;
-
-import java.io.IOException;
-import java.util.*;
 
 public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
 
-    private final String unitName;
-    // systemd unit instance name is available as "configurationIdentifier" in the parent class.
-
     public static RemoteDetachedTerraformProcessSystemd of(TerraformBaseWorker<?> w, TerraformCommand tc) {
-        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier());
+        return new RemoteDetachedTerraformProcessSystemd(w.getParameters(), w.getLogger(), tc, w.getModel().getIdentifier(), w.getCallbackContext().getCommandRequestId());
     }
 
-    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String configurationName) {
-        super(params, logger, tc, configurationName);
-        switch (tc) {
-            case TC_INIT:
-                unitName = "terraform-init";
-                break;
-            case TC_APPLY:
-                unitName = "terraform-apply";
-                break;
-            case TC_DESTROY:
-                unitName = "terraform-destroy";
-                break;
-            default:
-                throw new IllegalArgumentException ("Invalid value " + tc.toString());
-        }
-        // NB: The two values below must be consistent with what is in the systemd unit files.
-        stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, configurationIdentifier);
-        stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, configurationIdentifier);
+    protected RemoteDetachedTerraformProcessSystemd(TerraformParameters params, Logger logger, TerraformCommand tc, String modelIdentifier, String commandIdentifier) {
+        super(params, logger, tc, modelIdentifier, commandIdentifier);
+        stdoutLogFileName = String.format("%s/%s-stdout.log", getLogDir(), getUnitPrefix());
+        stderrLogFileName = String.format("%s/%s-stderr.log", getLogDir(), getUnitPrefix());
+    }
+    
+    protected String getLogDir() {
+        return getWorkDir();
+    }
+    
+    private String getUnitPrefix() {
+        return "terraform-"+modelIdentifier+"-"+commandIdentifier+"-"+getCommandName().toLowerCase();
+    }
+
+    private String getUnitFullName() {
+        return getUnitPrefix()+".service";
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
-        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, configurationIdentifier));
+        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s | cut -d= -f2", 
+            propName, getUnitFullName()), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         return ssh.lastStdout.replaceAll("\n", "");
     }
 
     public void start() throws IOException {
         final List<String> commands = Arrays.asList(
-                // systemd neither replaces nor appends the log file on a 2nd run of the same unit, it just
-                // starts writing over the pre-existing contents (at least the version 237-3ubuntu10.33).
-                "truncate --size=0 " + stdoutLogFileName,
-                "truncate --size=0 " + stderrLogFileName,
                 ssh.setupIncrementalFileCommand(stdoutLogFileName),
                 ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
-                String.format("systemctl --user start %s@%s", unitName, configurationIdentifier)
+                String.format("systemd-run"
+                    + " --unit="+getUnitPrefix()
+                    + " --user"
+                    + " --remain-after-exit"   // this is required, otherwise we don't get exit code
+                    + " -p WorkingDirectory="+getWorkDir()
+                    + " -p StandardOutput=file:"+stdoutLogFileName
+                    + " -p StandardError=file:"+stderrLogFileName
+                    // indirection through `env` solves potential issue where cmd wants absolue path
+                    + " /usr/bin/env " + getTerraformCommand()
+                    
+                    // note: could use -t and redirects, but better if we don't need them, and -p seems to work!
+//                    + " -t"
+//                    + " < /dev/null > "+stdoutLogFileName+" 2> "+stderrLogFileName
+                    
+                    )
         );
-        ssh.runSSHCommand(String.join("; ", commands));
+        ssh.runSSHCommand(String.join("; ", commands), PostRunBehaviour.FAIL, 
+            PostRunBehaviour.IGNORE /* prints the unit prefix */ );
     }
 
-    private String getActiveState() throws IOException {
-        return getRemotePropertyValue("ActiveState");
+    private String getSubState() throws IOException {
+        return getRemotePropertyValue("SubState");
     }
 
     public boolean isRunning() throws IOException {
-        return "active".equals(getActiveState());
+        // this doesn't work for transients where we say "remain-after-exit"
+//        return "active".equals(getActiveState());
+
+        return "running".equals(getSubState());
     }
 
     private String getResult() throws IOException {
@@ -78,4 +90,12 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
     public String getErrorString() throws IOException {
         return String.format("result %s (%s)", getResult(), getMainExitCode());
     }
+    
+    @Override
+    public void cleanup() throws IOException {
+        // stop every run from polluting the user systemctl history
+        ssh.runSSHCommand("systemctl --user stop "+getUnitFullName(), 
+            PostRunBehaviour.WARN, PostRunBehaviour.IGNORE);
+    }
+
 }
