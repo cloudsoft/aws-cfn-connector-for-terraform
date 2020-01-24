@@ -51,7 +51,8 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                     + " -p WorkingDirectory="+getWorkDir()
                     + " -p StandardOutput=file:"+stdoutLogFileName
                     + " -p StandardError=file:"+stderrLogFileName
-                    + " " + getTerraformCommand()
+                    // indirection through `env` solves potential issue where cmd wants absolue path
+                    + " /usr/bin/env " + getTerraformCommand()
                     
                     // note: could use -t and redirects, but better if we don't need them, and -p seems to work!
 //                    + " -t"
