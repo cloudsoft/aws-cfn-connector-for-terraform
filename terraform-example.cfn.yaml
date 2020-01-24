@@ -69,7 +69,7 @@ Resources:
         TFBucket2Name: !Ref CFNBucket2Name
 
 Outputs:
-  Bucket1Arn:
+  TerraformOutputs:
     Description: Outputs from Terraform as a stringified JSON map
     Value: !GetAtt TerraformExample.OutputsStringified
 

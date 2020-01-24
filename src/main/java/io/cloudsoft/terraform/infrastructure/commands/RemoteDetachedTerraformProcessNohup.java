@@ -65,27 +65,13 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
     }
 
     public void start() throws IOException {
-        final String tfCmd;
-        switch (tfCommand) {
-            case TF_INIT:
-                tfCmd = "terraform init -lock=true -no-color -input=false";
-                break;
-            case TF_APPLY:
-                tfCmd = "terraform apply -lock=true -no-color -input=false -auto-approve";
-                break;
-            case TF_DESTROY:
-                tfCmd = "terraform destroy -lock=true -no-color -auto-approve";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
-        }
         String scriptName = "./"+getFileName(false, "script.sh");
         String fullCmd = String.join("\n", 
             "cd "+getWorkDir(),
             ssh.setupIncrementalFileCommand(stdoutLogFileName),
             ssh.setupIncrementalFileCommand(stderrLogFileName),
             "cat > "+scriptName+" << EOF",
-            tfCmd,
+            getTerraformCommand(),
             "echo \\$? > "+exitstatusFileName,
             "EOF",
             "chmod +x "+scriptName,
@@ -93,4 +79,5 @@ public class RemoteDetachedTerraformProcessNohup extends RemoteDetachedTerraform
             );
         ssh.runSSHCommand(fullCmd);
     }
+
 }

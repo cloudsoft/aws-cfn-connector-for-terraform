@@ -41,6 +41,19 @@ abstract public class RemoteDetachedTerraformProcess extends RemoteTerraformProc
         return ssh.catIncrementalFileIfExists(stderrLogFileName);
     }
 
+    protected String getTerraformCommand() {
+        switch (tfCommand) {
+            case TF_INIT:
+                return "terraform init -lock=true -no-color -input=false";
+            case TF_APPLY:
+                return "terraform apply -lock=true -no-color -input=false -auto-approve";
+            case TF_DESTROY:
+                return "terraform destroy -lock=true -no-color -auto-approve";
+            default:
+                throw new IllegalArgumentException("Unknown command " + tfCommand.toString());
+        }
+    }
+
     abstract public void start() throws IOException;
     abstract public boolean isRunning() throws IOException;
     abstract public boolean wasFailure() throws IOException;
