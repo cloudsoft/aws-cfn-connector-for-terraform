@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 public class TerraformParameters {
 
@@ -22,18 +23,20 @@ public class TerraformParameters {
     private static final String DEFAULT_PROCESS_MANAGER = "nohup";
     // allow this so that parameters can be set, as they don't allow blanks or null
     private static final String DISABLED_KEYWORD = "off";
+    private Logger logger;
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
     private final S3Client s3Client;
 
-    public TerraformParameters(AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
+    public TerraformParameters(Logger logger, AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
+        this.logger = logger;
         this.proxy = proxy;
         this.ssmClient = ssmClient;
         this.s3Client = s3Client;
     }
 
-    public TerraformParameters(AmazonWebServicesClientProxy proxy) {
-        this(proxy, SsmClient.create(), S3Client.create());
+    public TerraformParameters(Logger logger, AmazonWebServicesClientProxy proxy) {
+        this(logger, proxy, SsmClient.create(), S3Client.create());
     }
     
     protected boolean isOff(Object x) {
@@ -108,7 +111,10 @@ public class TerraformParameters {
             if (required) {
                 throw ConnectorHandlerFailures.unhandled("Parameter '"+id+"' must be set in parameter store.", e);
             } else {
-                // annoyingly we get failure messages in the log if the parameter doesn't exist
+                // annoyingly we get failure messages in the log if the parameter doesn't exist; explain that so people don't panic
+                if (logger!=null) {
+                    logger.log("Parameter '"+id+"' not in parameter store; using default. If there is an SSM failure message above, it is likely due to this and is benign. Set the default explicitly to suppress these messages.");
+                }
                 return null;
             }
         } catch (RuntimeException e) {

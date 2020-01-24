@@ -24,7 +24,12 @@ public class CreateHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
-        public Worker() { super(Steps.class); }
+        public Worker() { super("Create", Steps.class); }
+        
+        @Override
+        protected void initLogBucket() {
+            // do nothing during pre-run.  we _create_ the bucket in the first step of the actual run.
+        }
         
         @Override
         protected void preRunStep() {
@@ -46,23 +51,20 @@ public class CreateHandler extends TerraformBaseHandler {
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             switch (currentStep) {
                 case CREATE_LOG_TARGET:
+                    initLogBucketName();
                     boolean creatingLogTarget = (callbackContext.logBucketName==null);
                     if (creatingLogTarget) {
-                        callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
-                        if (callbackContext.logBucketName!=null) {
-                            callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
-                        }
                         try {
                             new BucketUtils(proxy).createBucket(callbackContext.logBucketName);
                             log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
                             setModelLogBucketUrlFromCallbackContextName();
-                            uploadCompleteLog(MAIN_LOG_BUCKET_FILE, "Beginning creation of "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId);
+                            initLogBucketFirstMessage();
                             
                         } catch (Exception e) {
                             log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
                             creatingLogTarget = false;
                             callbackContext.logBucketName = null;
-                            model.setLogBucketUrl(null);
+                            setModelLogBucketUrlFromCallbackContextName();
                         }
                     }
                     advanceTo(Steps.CREATE_INIT_AND_MKDIR);

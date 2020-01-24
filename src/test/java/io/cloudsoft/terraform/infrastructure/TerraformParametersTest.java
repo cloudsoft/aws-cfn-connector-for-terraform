@@ -1,6 +1,19 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import org.apache.commons.io.FileUtils;
+import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -17,17 +30,6 @@ import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 public class TerraformParametersTest {
 
@@ -47,7 +49,7 @@ public class TerraformParametersTest {
         proxy = mock(AmazonWebServicesClientProxy.class);
         ssmClient = mock(SsmClient.class);
         s3Client = mock(S3Client.class);
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+        parameters = new TerraformParameters(null, proxy, ssmClient, s3Client);
     }
 
     @Test
@@ -231,7 +233,7 @@ public class TerraformParametersTest {
         proxy = mock(AmazonWebServicesClientProxy.class);
         ssmClient = mock(SsmClient.class);
         s3Client = mock(S3Client.class);
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+        parameters = new TerraformParameters(null, proxy, ssmClient, s3Client);
 
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-username")

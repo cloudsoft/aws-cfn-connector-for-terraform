@@ -37,6 +37,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     @Getter
     protected ResourceModel model;
     @Getter
+    protected ResourceModel prevModel;
+    @Getter
     protected CallbackContext callbackContext;
     @Getter
     private Logger logger;
@@ -45,11 +47,15 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     
     private TerraformParameters parameters;
 
+    @Getter
+    private String commandSummary;
+    @Getter
     protected Steps currentStep;
 
     // === init and accessors ========================
 
-    public TerraformBaseWorker(Class<Steps> stepsEnumClass) {
+    public TerraformBaseWorker(String commandSummary, Class<Steps> stepsEnumClass) {
+        this.commandSummary = commandSummary;
         this.stepsEnumClass = stepsEnumClass;
     }
     
@@ -64,6 +70,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         this.proxy = proxy;
         this.request = Preconditions.checkNotNull(request, "request");
         this.model = request.getDesiredResourceState();
+        this.prevModel = request.getPreviousResourceState();
         this.callbackContext = callbackContext!=null ? callbackContext : new CallbackContext();
         this.logger = Preconditions.checkNotNull(logger, "logger");
     }
@@ -73,7 +80,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             if (proxy==null) {
                 throw new IllegalStateException("Parameters cannot be accessed before proxy set during init");
             }
-            parameters = new TerraformParameters(proxy);
+            parameters = new TerraformParameters(logger, proxy);
         }
         return parameters;
     }
@@ -93,7 +100,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             log(getClass().getName() + " lambda starting, model: "+model+", callback: "+callbackContext);
             preRunStep();
             ProgressEvent<ResourceModel, CallbackContext> result = runStep();
-            log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", callback: "+result.getCallbackContext()+", message: "+result.getMessage());
+            log(getClass().getName() + " lambda exiting, status: "+result.getStatus()+", message: "+result.getMessage()+", callback: "+result.getCallbackContext()+", model: "+result.getResourceModel());
             if (OperationStatus.SUCCESS==result.getStatus()) {
                 logUserLogOnly("SUCCESS: "+model);
             }
@@ -122,27 +129,60 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     protected void preRunStep() {
+        if (model.getLogBucketUrl()==null && prevModel!=null && prevModel.getLogBucketUrl()!=null) {
+            model.setLogBucketUrl(prevModel.getLogBucketUrl());
+        }
+        if (callbackContext.logBucketName==null && model.getLogBucketUrl()!=null) {
+            // don't this state occurs -- model (and prevmodel) are wiped apart from identifiers between model runs.
+            // we will populate the log bucket name below in `initLogBucket`
+            setCallbackLogBucketNameFromModelUrl();
+        } else if (callbackContext.logBucketName!=null && model.getLogBucketUrl()==null) {
+            // this sometimes wasn't rememered; problem may be fixed now
+            setModelLogBucketUrlFromCallbackContextName();
+        }
+        
         if (getCallbackContext().stepId == null) {
+            // very first run
+            
+            getCallbackContext().commandRequestId = Configuration.getIdentifier(true,  6);
+            log("Using "+getCallbackContext().commandRequestId+" to uniquely identify this command across all steps (stack element "+model.getIdentifier()+", request "+request.getClientRequestToken()+")");
+
+            initLogBucket();
+
+            // init steps
             if (stepsEnumClass.getEnumConstants().length==0) {
                 // leave it null
             } else {
                 currentStep = stepsEnumClass.getEnumConstants()[0];
             }
-            getCallbackContext().commandRequestId = Configuration.getIdentifier(true,  6);
-            log("Using "+getCallbackContext().commandRequestId+" to uniquely identify this command across all steps (stack element "+model.getIdentifier()+", request "+request.getClientRequestToken()+")");
-            uploadCompleteLog(MAIN_LOG_BUCKET_FILE, "Beginning command requested "+getClass().getSimpleName()+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId);
             
         } else {
             // continuing a step
             currentStep = Enum.valueOf(stepsEnumClass, callbackContext.stepId);
         }
-        
-        if (callbackContext.logBucketName==null && model.getLogBucketUrl()!=null) {
-            setCallbackLogBucketNameFromModelUrl();
-        } else if (callbackContext.logBucketName!=null && model.getLogBucketUrl()==null) {
-            // during creation, this isn't remembered in the model, so make sure we persist it
-            setModelLogBucketUrlFromCallbackContextName();
+    }
+
+    /** on the pre-run of the first step in a command, check/ensure that the log bucket exists and 
+     * populate the field in the callback and the model.
+     * this is needed because the model's log bucket url is not persisted between commands.
+     */
+    protected void initLogBucket() {
+        initLogBucketName();
+        initLogBucketFirstMessage();
+    }
+    protected void initLogBucketName() {
+        if (callbackContext.logBucketName==null) {
+            callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
+            if (callbackContext.logBucketName!=null) {
+                callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
+                setModelLogBucketUrlFromCallbackContextName();
+            }
         }
+    }
+    protected void initLogBucketFirstMessage() {
+        uploadCompleteLog(MAIN_LOG_BUCKET_FILE,
+            Configuration.getDateTimeString()+"  "+
+            commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n");
     }
 
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
@@ -191,7 +231,32 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         return sw.toString();
     }
 
+    protected String appendMessages(String message, Object ...appendices) {
+        String result = "";
+        for (Object app: appendices) {
+            if (app!=null) {
+                result += app;
+                if (result.equals(result.trim())) {
+                    result += " ";
+                }
+            }
+        }
+        if (result.isEmpty()) {
+            return message;
+        }
+        
+        result = result.trim();
+        if (message==null || message.isEmpty()) {
+            return result;
+        } else {
+            return message += " ("+result+")";
+        }
+    }
+
     protected ProgressEvent<ResourceModel, CallbackContext> statusFailed(String message) {
+        message = appendMessages(message, 
+            model.getLogBucketUrl()==null ? null : 
+                "Logs are available at "+model.getLogBucketUrl()+" and may be kept after stack rollback.");
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.FAILED)
@@ -200,19 +265,33 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> statusSuccess() {
+        String message = appendMessages(null,
+            getCommandSummary()+" succeeded.",
+            model.getOutputs()==null || model.getOutputs().isEmpty() ? null :
+                "Outputs: "+model.getOutputs()+". \n",
+            model.getLogBucketUrl()==null ? null : 
+                "Logs are available at "+model.getLogBucketUrl()+" "+
+                (!"Delete".equals(commandSummary) ? "." : "and may be kept after stack deletion."));
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.SUCCESS)
+                .message(message)
                 .build();
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> statusInProgress() {
+        String message = appendMessages(null,
+            currentStep == null ? "In progress..." : "Step: " + currentStep,
+            model.getOutputs()==null || model.getOutputs().isEmpty() ? null :
+                "Outputs: "+model.getOutputs()+". \n",
+            model.getLogBucketUrl()==null ? null : 
+                "Logs are available at "+model.getLogBucketUrl()+" .");
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .callbackContext(callbackContext)
                 .callbackDelaySeconds(nextDelay(callbackContext))
                 .status(OperationStatus.IN_PROGRESS)
-                .message(currentStep == null ? null : "Step: " + currentStep)
+                .message(message)
                 .build();
     }
 
@@ -353,9 +432,12 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             final String objectKey = callbackContext.getCommandRequestId()+"/"+objectSuffix;
             try {
                 bucketUtils.upload(bucketName, objectKey, RequestBody.fromString(text), "text/plain");
-                log(String.format("Uploaded a file to s3://%s/%s", bucketName, objectKey));
+                
             } catch (Exception e) {
-                log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s)", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+                log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s); disabling logs", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
+                
+                callbackContext.logBucketName = null;
+                setModelLogBucketUrlFromCallbackContextName();
             }
         }
     }

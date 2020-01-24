@@ -30,7 +30,7 @@ public class TerraformBaseHandlerTest {
     }
 
     public static class EmptyWorker extends TerraformBaseWorker<NoSteps> {
-        public EmptyWorker() { super(NoSteps.class); }
+        public EmptyWorker() { super("Empty", NoSteps.class); }
         
         @Override
         public ProgressEvent<ResourceModel, CallbackContext> runStep() {

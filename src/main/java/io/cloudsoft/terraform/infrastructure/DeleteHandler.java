@@ -7,6 +7,10 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class DeleteHandler extends TerraformBaseHandler {
 
+    /** TODO it might be nice if we detect failure and can delete if it isn't a failure,
+     * and then possibly to expose this is a parameter "always", "never", "on_success" */
+    private static boolean DELETE_LOGS = false;
+    
     private enum Steps {
         DELETE_RUN_TF_DESTROY,
         DELETE_WAIT_ON_DESTROY_THEN_RMDIR_AND_RETURN
@@ -19,7 +23,7 @@ public class DeleteHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
-        public Worker() { super(Steps.class); }
+        public Worker() { super("Delete", Steps.class); }
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
@@ -37,19 +41,21 @@ public class DeleteHandler extends TerraformBaseHandler {
 
                     RemoteTerraformProcess.of(this).rmWorkDir();
 
-                    if (callbackContext.logBucketName != null) {
-                        try {
-                            new BucketUtils(proxy).deleteBucket(callbackContext.logBucketName);
-                            log(String.format("Deleted bucket for logs at s3://%s/", callbackContext.logBucketName));
-                            callbackContext.logBucketName = null;
-                            setModelLogBucketUrlFromCallbackContextName();
-                            
-                        } catch (Exception e) {
-                            String message = String.format("Failed to delete log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage());
-                            log(message);
-                            throw ConnectorHandlerFailures.handled(message+". "+
-                                "The terraform-deployed infrastructure has been destroyed, "
-                                + "but the log bucket will need manual removal.");
+                    if (DELETE_LOGS) {
+                        if (callbackContext.logBucketName != null) {
+                            try {
+                                new BucketUtils(proxy).deleteBucket(callbackContext.logBucketName);
+                                log(String.format("Deleted bucket for logs at s3://%s/", callbackContext.logBucketName));
+                                callbackContext.logBucketName = null;
+                                setModelLogBucketUrlFromCallbackContextName();
+                                
+                            } catch (Exception e) {
+                                String message = String.format("Failed to delete log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage());
+                                log(message);
+                                throw ConnectorHandlerFailures.handled(message+". "+
+                                    "The terraform-deployed infrastructure has been destroyed, "
+                                    + "but the log bucket will need manual removal.");
+                            }
                         }
                     }
                     
