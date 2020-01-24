@@ -22,7 +22,7 @@
   },
   "properties": {
     "Identifier": {
-      "description": "UUID for this deployment",
+      "description": "Identifier for this deployment",
       "type": "string"
     },
     "Outputs": {
@@ -57,6 +57,9 @@
   "additionalProperties": false,
   "primaryIdentifier": [
     "/properties/Identifier"
+  ],
+  "additionalIdentifiers": [
+    [ "/properties/LogBucketUrl" ]
   ],
   "readOnlyProperties": [
     "/properties/Identifier",

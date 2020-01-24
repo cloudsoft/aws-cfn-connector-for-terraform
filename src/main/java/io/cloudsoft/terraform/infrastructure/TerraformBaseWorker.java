@@ -170,7 +170,7 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         initLogBucketName();
         initLogBucketFirstMessage();
     }
-    protected void initLogBucketName() {
+    protected boolean initLogBucketName() {
         if (callbackContext.logBucketName==null) {
             callbackContext.logBucketName = model.getLogBucketName();
             if (callbackContext.logBucketName==null) {
@@ -182,11 +182,16 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
             
             setModelLogBucketUrlFromCallbackContextName();
         }
+        return (callbackContext.logBucketName!=null);
     }
-    protected void initLogBucketFirstMessage() {
-        uploadCompleteLog(MAIN_LOG_BUCKET_FILE,
-            Configuration.getDateTimeString()+"  "+
-            commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n");
+    protected boolean initLogBucketFirstMessage() {
+        String msg = Configuration.getDateTimeString()+"  "+
+            commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n";
+        if (callbackContext.getLogBucketName()!=null) {
+            log("Initializing log bucket "+callbackContext.logBucketName+": "+msg);
+            return uploadCompleteLog(MAIN_LOG_BUCKET_FILE, msg);
+        }
+        return false;
     }
 
     protected abstract ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException;
@@ -439,20 +444,23 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     private String getLogFileObjectKey(String objectSuffix) {
         return (model.getLogBucketName()!=null ? model.getIdentifier()+"/" : "") + callbackContext.getCommandRequestId()+"/"+objectSuffix;
     }
-    protected void uploadCompleteLog(String objectSuffix, String text) {
+    protected boolean uploadCompleteLog(String objectSuffix, String text) {
         String bucketName = callbackContext.getLogBucketName();
         if (bucketName!=null) {
             BucketUtils bucketUtils = new BucketUtils(proxy);
             final String objectKey = getLogFileObjectKey(objectSuffix);
             try {
                 bucketUtils.upload(bucketName, objectKey, RequestBody.fromString(text), "text/plain");
+                return true;
                 
             } catch (Exception e) {
                 log(String.format("Failed to put log file %s into S3 bucket %s: %s (%s); disabling logs", objectKey, bucketName, e.getClass().getName(), e.getMessage()));
                 
                 callbackContext.logBucketName = null;
                 setModelLogBucketUrlFromCallbackContextName();
+                return false;
             }
         }
+        return false;
     }
 }
