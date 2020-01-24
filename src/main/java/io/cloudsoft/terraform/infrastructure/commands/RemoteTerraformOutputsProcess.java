@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import io.cloudsoft.terraform.infrastructure.commands.SshToolbox.PostRunBehaviour;
 import software.amazon.cloudformation.proxy.Logger;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class RemoteTerraformOutputsProcess extends RemoteTerraformProcess {
     }
 
     public void run() throws IOException {
-        ssh.runSSHCommand(String.format("cd %s && terraform output -json", getWorkDir()));
+        ssh.runSSHCommand(String.format("cd %s && terraform output -json", getWorkDir()), PostRunBehaviour.FAIL, PostRunBehaviour.FAIL);
         outputJsonStringized = ssh.lastStdout;
         logger.log("Outputs from TF: '" + outputJsonStringized + "'");
         if (outputJsonStringized == null || outputJsonStringized.isEmpty()) {

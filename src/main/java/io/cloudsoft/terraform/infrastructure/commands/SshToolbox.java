@@ -32,11 +32,11 @@ public class SshToolbox {
     }
 
     protected void mkdir(String dir) throws IOException {
-        runSSHCommand("mkdir -p " + dir);
+        runSSHCommand("mkdir -p " + dir, PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
     }
 
     protected void rmdir(String dir) throws IOException {
-        runSSHCommand("rm -rf " + dir);
+        runSSHCommand("rm -rf " + dir, PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
     }
 
     protected void debug(String message) {
@@ -47,7 +47,9 @@ public class SshToolbox {
 //        logger.log(message);
     }
 
-    protected void runSSHCommand(String command) throws IOException {
+    public enum PostRunBehaviour { IGNORE, WARN, FAIL }
+    
+    protected void runSSHCommand(String command, PostRunBehaviour onNonZeroExitCode, PostRunBehaviour onNonEmptyStdErr) throws IOException {
         debug("DEBUG: @" + serverHostname + "> " + command);
 
         final SSHClient ssh = new SSHClient();
@@ -66,10 +68,29 @@ public class SshToolbox {
             debug("stdout: " + lastStdout);
             debug("stderr: " + lastStderr);
             debug("exit status: " + lastExitStatusOrNull);
-            if (!((Integer) 0).equals(lastExitStatusOrNull) || !lastStderr.isEmpty()) {
-                logger.log("Unexpected result/output from command '" + command + "': " + lastExitStatusOrNull + "\n"
+            if (!((Integer) 0).equals(lastExitStatusOrNull)) {
+                if (onNonZeroExitCode == PostRunBehaviour.IGNORE) {
+                    // nothing
+                } else {
+                    logger.log("WARN: unexpected exit code from command '" + command + "': " + lastExitStatusOrNull + "\n"
                         + "  stderr: " + lastStderr + "\n"
                         + "  stdout: " + lastStdout);
+                    if (onNonZeroExitCode == PostRunBehaviour.FAIL) {
+                        throw new IllegalStateException("Non-zero exit code ("+lastExitStatusOrNull+")");
+                    }
+                }
+            }
+            if (!lastStderr.isEmpty()) {
+                if (onNonEmptyStdErr == PostRunBehaviour.IGNORE) {
+                    // nothing
+                } else {
+                    logger.log("WARN: unexpected stderr from command '" + command + "'; exit code 0 but:\n"
+                        + "  stderr: " + lastStderr + "\n"
+                        + "  stdout: " + lastStdout);
+                    if (onNonEmptyStdErr == PostRunBehaviour.FAIL) {
+                        throw new IllegalStateException("Non-empty stderr");
+                    }
+                }
             }
         } finally {
             try {
@@ -107,7 +128,7 @@ public class SshToolbox {
     }
 
     protected String catFileIfExists(String remotePath) throws IOException {
-        runSSHCommand(String.format("[ -f %s ] && cat %s || :", remotePath, remotePath));
+        runSSHCommand(String.format("[ -f %s ] && cat %s || :", remotePath, remotePath), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         return lastStdout;
     }
 
@@ -130,7 +151,7 @@ public class SshToolbox {
         runSSHCommand(String.format(
             "cp %s %s; "
             + "dd status=none if=%s bs=1 skip=`cat %s`; wc -c <%s >%s",
-            fn, sfn, sfn, ofn, sfn, ofn));
+            fn, sfn, sfn, ofn, sfn, ofn), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         return lastStdout;
     }
 

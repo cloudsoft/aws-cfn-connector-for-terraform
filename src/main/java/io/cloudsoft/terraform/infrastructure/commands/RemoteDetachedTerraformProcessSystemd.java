@@ -6,6 +6,7 @@ import java.util.List;
 
 import io.cloudsoft.terraform.infrastructure.TerraformBaseWorker;
 import io.cloudsoft.terraform.infrastructure.TerraformParameters;
+import io.cloudsoft.terraform.infrastructure.commands.SshToolbox.PostRunBehaviour;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerraformProcess {
@@ -34,7 +35,7 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
 
     private String getRemotePropertyValue(String propName) throws IOException {
         ssh.runSSHCommand(String.format("systemctl --user show --property %s %s | cut -d= -f2", 
-            propName, getUnitFullName()));
+            propName, getUnitFullName()), PostRunBehaviour.IGNORE, PostRunBehaviour.IGNORE);
         return ssh.lastStdout.replaceAll("\n", "");
     }
 
@@ -58,15 +59,19 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                     
                     )
         );
-        ssh.runSSHCommand(String.join("; ", commands));
+        ssh.runSSHCommand(String.join("; ", commands), PostRunBehaviour.FAIL, 
+            PostRunBehaviour.IGNORE /* prints the unit prefix */ );
     }
 
-    private String getActiveState() throws IOException {
-        return getRemotePropertyValue("ActiveState");
+    private String getSubState() throws IOException {
+        return getRemotePropertyValue("SubState");
     }
 
     public boolean isRunning() throws IOException {
-        return "active".equals(getActiveState());
+        // this doesn't work for transients where we say "remain-after-exit"
+//        return "active".equals(getActiveState());
+
+        return "running".equals(getSubState());
     }
 
     private String getResult() throws IOException {
@@ -84,4 +89,12 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
     public String getErrorString() throws IOException {
         return String.format("result %s (%s)", getResult(), getMainExitCode());
     }
+    
+    @Override
+    public void cleanup() throws IOException {
+        // stop every run from polluting the user systemctl history
+        ssh.runSSHCommand("systemctl --user stop "+getUnitFullName(), 
+            PostRunBehaviour.WARN, PostRunBehaviour.IGNORE);
+    }
+
 }

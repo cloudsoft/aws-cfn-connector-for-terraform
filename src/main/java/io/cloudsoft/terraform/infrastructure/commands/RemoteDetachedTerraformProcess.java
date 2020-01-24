@@ -58,4 +58,6 @@ abstract public class RemoteDetachedTerraformProcess extends RemoteTerraformProc
     abstract public boolean isRunning() throws IOException;
     abstract public boolean wasFailure() throws IOException;
     abstract public String getErrorString() throws IOException;
+    abstract public void cleanup() throws IOException;
+    
 }
