@@ -10,8 +10,7 @@ public class CreateHandler extends TerraformBaseHandler {
 
     private enum Steps {
         CREATE_LOG_TARGET,
-        CREATE_INIT_AND_MKDIR,
-        CREATE_SYNC_FILE,
+        CREATE_INIT_AND_UPLOAD,
         CREATE_RUN_TF_INIT,
         CREATE_WAIT_ON_INIT_THEN_RUN_TF_APPLY,
         CREATE_WAIT_ON_APPLY_THEN_GET_OUTPUTS_AND_RETURN
@@ -37,10 +36,17 @@ public class CreateHandler extends TerraformBaseHandler {
                 if (callbackContext.createdModelIdentifier == null) {
                     // creating this stack, the very first call for the stack
                     callbackContext.createdModelIdentifier = Configuration.getIdentifier(true,  8);
+                    model.setIdentifier(callbackContext.createdModelIdentifier);
+                    
                     log("Stack resource model identifier set as: "+callbackContext.createdModelIdentifier);
+                    
+                    // create the metadata file
+                    saveMetadata();
+                    
+                } else {
+                    // model doesn't seem to remember the identifier until the end
+                    model.setIdentifier(callbackContext.createdModelIdentifier);
                 }
-                // model doesn't seem to remember the identifier until the end
-                model.setIdentifier(callbackContext.createdModelIdentifier);
             }
             
             super.preRunStep();
@@ -51,36 +57,42 @@ public class CreateHandler extends TerraformBaseHandler {
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
             switch (currentStep) {
                 case CREATE_LOG_TARGET:
-                    boolean logBucketAlreadyExists = (callbackContext.logBucketName!=null);
-                    if (initLogBucketName()) {
-                        // using log bucket
-                        if (logBucketAlreadyExists) {
-                            initLogBucketFirstMessage();
-                            
-                        } else {
-                            // try writing to the log, to see if the bucket exists
-                            if (!initLogBucketFirstMessage()) {
-                                // try creating it -- but first restore the name
-                                initLogBucketName();
-                                log("Log bucket "+callbackContext.logBucketName+" does not exist or is not accessible (there may be related failure messages above); will try to create it");
-                                try {
-                                    new BucketUtils(proxy).createBucket(callbackContext.logBucketName);
-                                    if (!initLogBucketFirstMessage()) {
-                                        throw new IllegalStateException("Bucket created but we cannot write to it. Check permissions. Log bucket will be disabled.");
-                                    }
-                                    log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
-                                    setModelLogBucketUrlFromCallbackContextName();
-                                    
-                                } catch (Exception e) {
-                                    log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
-                                    callbackContext.logBucketName = null;
-                                    model.setLogBucketName(null);  // clear the log bucket they requested
-                                    setModelLogBucketUrlFromCallbackContextName();
-                                }
-                            }
+                    String logBucketName = model.getLogBucketName();
+                    if (logBucketName==null) {
+                        logBucketName = getParameters().getLogsS3BucketPrefix();
+                        if (logBucketName!=null) {
+                            logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
                         }
-                    } 
-                    advanceTo(Steps.CREATE_INIT_AND_MKDIR);
+                    }
+                    if (logBucketName!=null) {
+                        callbackContext.logBucketName = logBucketName;
+                        setModelLogBucketUrlFromCallbackContextName();
+
+                        // try writing, in case it exists
+                        if (!initLogBucketFirstMessage()) {
+                            // try creating it -- but first restore the name (as failed write will have reset it)
+                            callbackContext.logBucketName = logBucketName;
+                            setModelLogBucketUrlFromCallbackContextName();
+                            
+                            log("Log bucket "+callbackContext.logBucketName+" does not exist or is not accessible (there may be related failure messages above); will try to create it");
+                            try {
+                                new BucketUtils(proxy).createBucket(callbackContext.logBucketName);
+                                if (!initLogBucketFirstMessage()) {
+                                    throw new IllegalStateException("Bucket created but we cannot write to it. Check permissions. Log bucket will be disabled.");
+                                }
+                                log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
+                                setModelLogBucketUrlFromCallbackContextName();
+                            } catch (Exception e) {
+                                log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
+                                callbackContext.logBucketName = null;
+                                model.setLogBucketName(null);  // clear the log bucket they requested
+                                setModelLogBucketUrlFromCallbackContextName();
+                            }
+                            saveMetadata();
+                        }
+                    }
+                    
+                    advanceTo(Steps.CREATE_INIT_AND_UPLOAD);
                     if (callbackContext.logBucketName!=null) {
                         /* NOTE: here, and in several other places, we could proceed to the next
                          * step, but returning often increases transparency and maximises the time
@@ -89,14 +101,10 @@ public class CreateHandler extends TerraformBaseHandler {
                         return statusInProgress();
                     }
                     
-                case CREATE_INIT_AND_MKDIR:
+                case CREATE_INIT_AND_UPLOAD:
                     RemoteTerraformProcess.of(this).mkWorkDir();
-                    advanceTo(Steps.CREATE_SYNC_FILE);
-
-                    return statusInProgress();
-
-                case CREATE_SYNC_FILE:
                     getAndUploadConfiguration(true);
+                    
                     advanceTo(Steps.CREATE_RUN_TF_INIT);
                     return statusInProgress();
 

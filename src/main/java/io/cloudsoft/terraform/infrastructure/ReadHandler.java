@@ -22,22 +22,22 @@ public class ReadHandler extends TerraformBaseHandler {
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            log("Read requested, given desired model "+model+" and previous model "+prevModel);
             
-            // copy previous values for those we don't look up dynamically
-            // (seems to do nothing, prev model is usually null)
-            // ((so many of these values remain unset))
-            if (prevModel!=null) {
-                model.setIdentifier(prevModel.getIdentifier());
-                model.setConfigurationContent(prevModel.getConfigurationContent());
-                model.setConfigurationS3Path(prevModel.getConfigurationS3Path());
-                model.setConfigurationUrl(prevModel.getConfigurationUrl());
-                model.setLogBucketName(prevModel.getLogBucketUrl());
-                model.setLogBucketUrl(prevModel.getLogBucketUrl());
-                model.setVariables(prevModel.getVariables());
-            }
+            // this is set by the framework
+//            model.setIdentifier
+            
+            // these are set by the call to loadMetadata
+//            model.setLogBucketName
+//            model.setLogBucketUrl
+            
+            // these are left null by the current implementation
+            // (we could cache them as part of metadata)
+//            model.setConfigurationContent(prevModel.getConfigurationContent());
+//            model.setConfigurationS3Path(prevModel.getConfigurationS3Path());
+//            model.setConfigurationUrl(prevModel.getConfigurationUrl());
+//            model.setVariables(prevModel.getVariables());
 
-            // and look up these to make sure they are current
+            // and the two "real" ones we look up each time to make sure they are current
             RemoteTerraformOutputsProcess outputCmd = RemoteTerraformOutputsProcess.of(this);
             outputCmd.run();
             model.setOutputsStringified(outputCmd.getOutputAsJsonStringized());

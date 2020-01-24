@@ -31,6 +31,7 @@ public class ListHandlerTest {
             @Override
             protected TerraformBaseWorker<?> newWorker() {
                 TerraformBaseWorker<?> result = super.newWorker();
+                result.storeMetadataOnServer = false;
                 result.setParameters(HandlerTestFixture.newTerraformParametersForTests(logger, proxy, null, null));
                 return result;
             }

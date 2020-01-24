@@ -60,6 +60,7 @@ public class HandlerTestFixture {
 
         // null value for all parameters
         final TerraformBaseWorker<?> worker = handlerFactory.get().newWorker();
+        worker.storeMetadataOnServer = false;
         worker.setParameters(newTerraformParametersForTests(logger, proxy, ssmClient, s3Client));
         TerraformBaseWorker<?> spyWorker = spy(worker);
 

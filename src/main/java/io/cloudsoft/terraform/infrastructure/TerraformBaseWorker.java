@@ -3,10 +3,13 @@ package io.cloudsoft.terraform.infrastructure;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import io.cloudsoft.terraform.infrastructure.commands.RemoteDetachedTerraformProcess;
@@ -37,8 +40,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     @Getter
     protected ResourceModel model;
     @Getter
-    protected ResourceModel prevModel;
-    @Getter
     protected CallbackContext callbackContext;
     @Getter
     private Logger logger;
@@ -52,6 +53,9 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     @Getter
     protected Steps currentStep;
 
+    @VisibleForTesting
+    boolean storeMetadataOnServer = true;
+    
     // === init and accessors ========================
 
     public TerraformBaseWorker(String commandSummary, Class<Steps> stepsEnumClass) {
@@ -70,7 +74,6 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         this.proxy = proxy;
         this.request = Preconditions.checkNotNull(request, "request");
         this.model = request.getDesiredResourceState();
-        this.prevModel = request.getPreviousResourceState();
         this.callbackContext = callbackContext!=null ? callbackContext : new CallbackContext();
         this.logger = Preconditions.checkNotNull(logger, "logger");
     }
@@ -129,13 +132,11 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     protected void preRunStep() {
-        if (model.getLogBucketUrl()==null && prevModel!=null && prevModel.getLogBucketUrl()!=null) {
-            model.setLogBucketUrl(prevModel.getLogBucketUrl());
-        }
         if (callbackContext.logBucketName==null && model.getLogBucketUrl()!=null) {
             // don't this state occurs -- model (and prevmodel) are wiped apart from identifiers between model runs.
             // we will populate the log bucket name below in `initLogBucket`
             setCallbackLogBucketNameFromModelUrl();
+            
         } else if (callbackContext.logBucketName!=null && model.getLogBucketUrl()==null) {
             // this sometimes wasn't rememered; problem may be fixed now
             setModelLogBucketUrlFromCallbackContextName();
@@ -143,6 +144,9 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         
         if (getCallbackContext().stepId == null) {
             // very first run
+            
+            // model data that we need to remember needs to be cached somewhere; we use the server for this
+            loadMetadata();
             
             getCallbackContext().commandRequestId = Configuration.getIdentifier(true,  6);
             log("Using "+getCallbackContext().commandRequestId+" to uniquely identify this command across all steps (stack element "+model.getIdentifier()+", request "+request.getClientRequestToken()+")");
@@ -162,28 +166,46 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         }
     }
 
-    /** on the pre-run of the first step in a command, check/ensure that the log bucket exists and 
-     * populate the field in the callback and the model.
-     * this is needed because the model's log bucket url is not persisted between commands.
+    // not the cleanest way to store config between commands, or most elegant code,
+    // but it gets the job done.
+    
+    protected void saveMetadata() {
+        if (storeMetadataOnServer) {
+            Map<String,Object> md = new LinkedHashMap<>();
+            if (model.getLogBucketName()!=null) md.put("LogBucketName", model.getLogBucketName());
+            if (model.getLogBucketUrl()!=null) md.put("LogBucketUrl", model.getLogBucketUrl());
+            try {
+                RemoteTerraformProcess.of(this).saveMetadata(md);
+            } catch (Exception e) {
+                throw ConnectorHandlerFailures.unhandled("Unable to save model metadata: "+e, e);
+            }
+        }
+    }
+
+    protected void loadMetadata() {
+        if (storeMetadataOnServer) {
+            Map<?, ?> md;
+            try {
+                md = RemoteTerraformProcess.of(this).loadMetadata();
+            } catch (Exception e) {
+                throw ConnectorHandlerFailures.unhandled("Unable to save model metadata: "+e, e);
+            }
+    
+            if (md.get("LogBucketName")!=null) model.setLogBucketName((String)md.get("LogBucketName"));
+            if (md.get("LogBucketUrl")!=null) model.setLogBucketUrl((String)md.get("LogBucketUrl"));
+            setCallbackLogBucketNameFromModelUrl();
+        }
+    }
+
+    /** on the pre-run of the first step in a command, check whether the log bucket exists and 
+     * populate the field in the callback for use in subsequent steps. the model's bucket URL is used
+     * to compute the bucket name, and that bucket URL is written to the server and read before this is called.
      */
     protected void initLogBucket() {
-        initLogBucketName();
+        setCallbackLogBucketNameFromModelUrl();
         initLogBucketFirstMessage();
     }
-    protected boolean initLogBucketName() {
-        if (callbackContext.logBucketName==null) {
-            callbackContext.logBucketName = model.getLogBucketName();
-            if (callbackContext.logBucketName==null) {
-                callbackContext.logBucketName = getParameters().getLogsS3BucketPrefix();
-                if (callbackContext.logBucketName!=null) {
-                    callbackContext.logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
-                }
-            }
-            
-            setModelLogBucketUrlFromCallbackContextName();
-        }
-        return (callbackContext.logBucketName!=null);
-    }
+    
     protected boolean initLogBucketFirstMessage() {
         String msg = Configuration.getDateTimeString()+"  "+
             commandSummary+" command requested "+" on "+model.getIdentifier()+", command "+getCallbackContext().commandRequestId+"\n";
@@ -199,7 +221,9 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     // === utils ========================
     
     protected void setCallbackLogBucketNameFromModelUrl() {
-        callbackContext.logBucketName = model.getLogBucketUrl().substring(model.getLogBucketUrl().lastIndexOf("/")+1);
+        if (model.getLogBucketUrl()!=null) {
+            callbackContext.logBucketName = model.getLogBucketUrl().substring(model.getLogBucketUrl().lastIndexOf("/")+1);
+        }
     }
     
     protected void setModelLogBucketUrlFromCallbackContextName() {
@@ -222,7 +246,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     private void logUserLogOnly(String message) {
-        uploadCompleteLog(MAIN_LOG_BUCKET_FILE, downloadLog(MAIN_LOG_BUCKET_FILE).orElse("")+message+"\n");
+        uploadCompleteLog(MAIN_LOG_BUCKET_FILE, downloadLog(MAIN_LOG_BUCKET_FILE).orElse("")+
+            Configuration.getDateTimeString()+"  "+message+"\n");
     }
     
     protected final void logException(String message, Throwable e) {
