@@ -23,8 +23,6 @@ public class UpdateHandler extends TerraformBaseHandler {
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {
-            currentStep = callbackContext.stepId == null ? Steps.UPDATE_SYNC_FILE : Steps.valueOf(callbackContext.stepId);
-
             switch (currentStep) {
                 case UPDATE_SYNC_FILE:
                     getAndUploadConfiguration(false);

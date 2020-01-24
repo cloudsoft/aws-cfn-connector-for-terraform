@@ -22,8 +22,10 @@ public class CallbackContext {
     public String stepId;
     public int lastDelaySeconds;
     
+    // cache this for the duration of a command
+    public String processManager;
+    
     // needed for creation only
     public String createdModelIdentifier;
-    public String processManager;
 
 }
