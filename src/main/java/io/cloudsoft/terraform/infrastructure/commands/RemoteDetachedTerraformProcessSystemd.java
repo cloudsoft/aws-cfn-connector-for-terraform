@@ -33,12 +33,21 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                 throw new IllegalArgumentException ("Invalid value " + tc.toString());
         }
         // NB: The two values below must be consistent with what is in the systemd unit files.
-        stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getWorkDir(), unitName, commandIdentifier);
-        stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getWorkDir(), unitName, commandIdentifier);
+        stdoutLogFileName = String.format("%s/%s@%s-stdout-live.log", getLogDir(), unitName, getInstanceName());
+        stderrLogFileName = String.format("%s/%s@%s-stderr-live.log", getLogDir(), unitName, getInstanceName());
+    }
+    
+    protected String getLogDir() {
+        return getBaseDir() + "/" + getInstanceName();
+    }
+    
+    private String getInstanceName() {
+        /* systemd only has one thing it can use to identify runs, the "instance name", so it should use model and command IDs */
+        return modelIdentifier+"-"+commandIdentifier;
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
-        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, commandIdentifier));
+        ssh.runSSHCommand(String.format("systemctl --user show --property %s %s@%s | cut -d= -f2", propName, unitName, getInstanceName()));
         return ssh.lastStdout.replaceAll("\n", "");
     }
 
@@ -51,7 +60,7 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                 ssh.setupIncrementalFileCommand(stdoutLogFileName),
                 ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
-                String.format("systemctl --user start %s@%s", unitName, commandIdentifier)
+                String.format("systemctl --user start %s@%s", unitName, getInstanceName())
         );
         ssh.runSSHCommand(String.join("; ", commands));
     }

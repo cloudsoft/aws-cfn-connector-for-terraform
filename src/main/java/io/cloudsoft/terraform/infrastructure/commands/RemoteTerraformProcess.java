@@ -50,8 +50,13 @@ public class RemoteTerraformProcess {
         this.commandIdentifier = commandIdentifier;
     }
 
+    /** parent directory where all TF runs, for any stack/user/etc live */ 
+    protected String getBaseDir() {
+        return TF_DATADIR;
+    }
+    
     protected String getWorkDir() {
-        return TF_DATADIR + "/" + modelIdentifier;
+        return getBaseDir() + "/" + modelIdentifier;
     }
 
     public void mkWorkDir() throws IOException {
