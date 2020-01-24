@@ -38,12 +38,11 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
     }
     
     protected String getLogDir() {
-        return getBaseDir() + "/" + getInstanceName();
+        return getWorkDir();
     }
     
     private String getInstanceName() {
-        /* systemd only has one thing it can use to identify runs, the "instance name", so it should use model and command IDs */
-        return modelIdentifier+"-"+commandIdentifier;
+        return commandIdentifier;
     }
 
     private String getRemotePropertyValue(String propName) throws IOException {
@@ -60,7 +59,7 @@ public class RemoteDetachedTerraformProcessSystemd extends RemoteDetachedTerrafo
                 ssh.setupIncrementalFileCommand(stdoutLogFileName),
                 ssh.setupIncrementalFileCommand(stderrLogFileName),
                 "loginctl enable-linger",
-                String.format("systemctl --user start %s@%s", unitName, getInstanceName())
+                String.format("systemctl --user --working-directory=%s start %s@%s", getWorkDir(), unitName, getInstanceName())
         );
         ssh.runSSHCommand(String.join("; ", commands));
     }
