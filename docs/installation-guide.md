@@ -95,7 +95,8 @@ This resource provider (RP) uses the following parameters:
      bucket created as part of the stack and returned to the user as a URL on success;
      note this can be overridden by the user with a property on the resource (see the [user-guide.md])
 
-Where a parameter is optional, it can be left unset or the special value `default` can be set to tell the RP
-to use the default value.  Leaving it unset is fine, but it does cause warnings in the CloudWatch logs 
-(which we cannot disable); the CloudFormation in `setup.yaml` uses the keyword `default`.
+Where a parameter is optional, it can be omitted or the special value `default` can be set to tell the RP
+to use the default value.  Note that omitting it causes warnings in the CloudWatch logs 
+(which we cannot disable, though in this case they are benign), and it is not permitted so leave it blank:
+this is why the special value `default` is recognized by this RP, as used in `setup.yaml`.
   
