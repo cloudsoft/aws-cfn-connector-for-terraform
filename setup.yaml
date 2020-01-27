@@ -75,12 +75,12 @@ Resources:
     Properties:
       Description: |
         Public SSH key fingerprint of the Terraform server to verify SSH connections.
-        Any value other than "off" will enforce a fingerprint check during SSH connection.
-        This can be set to "off" to not require fingerprint checks, 
+        Any key value will enforce a fingerprint check during SSH connection.
+        This can be set to "default" to not require fingerprint checks, 
         for instance if you trust the environment wherte this is running.
       Name: /cfn/terraform/ssh-fingerprint
       Type: String
-      Value: 'off'
+      Value: 'default'
   TerraformProcessManagerParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -93,12 +93,12 @@ Resources:
     Properties:
       Description: |
         Prefix to use when creating log buckets.
-        Any value other than "off" will result in a bucket being created for each CFN resource created by this provider,
+        Any value other than "default" will result in a bucket being created for each CFN resource created by this provider,
         so that the user can easily inspect the logs (without needing special CloudWatch access).
         A hyphen and the model identifier will be appended.
       Name: /cfn/terraform/logs-s3-bucket-prefix
       Type: String
-      Value: 'off'
+      Value: 'default'
 
 Outputs:
   LoggingRoleArn:

@@ -76,7 +76,7 @@ This resource provider (RP) uses the following parameters:
    
    - `/cfn/terraform/ssh-username` (required): the user as which the RP should SSH
    
-   - `/cfn/terraform/ssh-key` (required): the RSA key with which the RP should SSH
+   - `/cfn/terraform/ssh-key` (required): the SSH key with which the RP should SSH
     
    - `/cfn/terraform/ssh-port` (defaults to 22): the port to which the RP should SSH
    
@@ -94,4 +94,8 @@ This resource provider (RP) uses the following parameters:
    - `/cfn/terraform/logs-s3-bucket-prefix` (optional): if set, all Terraform logs are shipped to an S3
      bucket created as part of the stack and returned to the user as a URL on success;
      note this can be overridden by the user with a property on the resource (see the [user-guide.md])
-   
+
+Where a parameter is optional, it can be left unset or the special value `default` can be set to tell the RP
+to use the default value.  Leaving it unset is fine, but it does cause warnings in the CloudWatch logs 
+(which we cannot disable); the CloudFormation in `setup.yaml` uses the keyword `default`.
+  

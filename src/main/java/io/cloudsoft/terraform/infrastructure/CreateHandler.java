@@ -61,9 +61,10 @@ public class CreateHandler extends TerraformBaseHandler {
                     if (logBucketName==null) {
                         logBucketName = getParameters().getLogsS3BucketPrefix();
                         if (logBucketName!=null) {
-                            logBucketName = (callbackContext.logBucketName + "-" + model.getIdentifier()).toLowerCase();
+                            logBucketName = logBucketName + "-" + model.getIdentifier().toLowerCase();
                         }
                     }
+                    boolean triedCreatingLogBucket = false;
                     if (logBucketName!=null) {
                         callbackContext.logBucketName = logBucketName;
                         setModelLogBucketUrlFromCallbackContextName();
@@ -74,16 +75,17 @@ public class CreateHandler extends TerraformBaseHandler {
                             callbackContext.logBucketName = logBucketName;
                             setModelLogBucketUrlFromCallbackContextName();
                             
-                            log("Log bucket "+callbackContext.logBucketName+" does not exist or is not accessible (there may be related failure messages above); will try to create it");
+                            log("Log bucket "+logBucketName+" does not exist or is not accessible (there may be related failure messages above); will try to create it");
                             try {
-                                new BucketUtils(proxy).createBucket(callbackContext.logBucketName);
+                                triedCreatingLogBucket = true;
+                                new BucketUtils(proxy).createBucket(logBucketName);
                                 if (!initLogBucketFirstMessage()) {
                                     throw new IllegalStateException("Bucket created but we cannot write to it. Check permissions. Log bucket will be disabled.");
                                 }
-                                log(String.format("Created bucket for logs at s3://%s/", callbackContext.logBucketName));
+                                log(String.format("Created bucket for logs at s3://%s/", logBucketName));
                                 setModelLogBucketUrlFromCallbackContextName();
                             } catch (Exception e) {
-                                log(String.format("Failed to create log bucket %s: %s (%s)", callbackContext.logBucketName, e.getClass().getName(), e.getMessage()));
+                                log(String.format("Failed to create log bucket %s: %s (%s)", logBucketName, e.getClass().getName(), e.getMessage()));
                                 callbackContext.logBucketName = null;
                                 model.setLogBucketName(null);  // clear the log bucket they requested
                                 setModelLogBucketUrlFromCallbackContextName();
@@ -93,10 +95,11 @@ public class CreateHandler extends TerraformBaseHandler {
                     }
                     
                     advanceTo(Steps.CREATE_INIT_AND_UPLOAD);
-                    if (callbackContext.logBucketName!=null) {
-                        /* NOTE: here, and in several other places, we could proceed to the next
+                    if (triedCreatingLogBucket) {
+                        /* NOTE: here, and in several other places, we could always proceed to the next
                          * step, but returning often increases transparency and maximises the time
-                         * available for each step (avoiding errors due to timeout)
+                         * available for each step (avoiding errors due to timeout), so do that if
+                         * we've done things on a step that might have taken a bit of time
                          */
                         return statusInProgress();
                     }

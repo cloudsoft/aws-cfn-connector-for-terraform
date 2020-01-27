@@ -3,6 +3,9 @@ package io.cloudsoft.terraform.infrastructure;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +25,7 @@ public class TerraformParameters {
     private static final int DEFAULT_SSH_PORT = 22;
     private static final String DEFAULT_PROCESS_MANAGER = "nohup";
     // allow this so that parameters can be set, as they don't allow blanks or null
-    private static final String DISABLED_KEYWORD = "off";
+    private static final Set<String> DEFAULT_KEYWORDS = new LinkedHashSet<String>(Arrays.asList("default", "disabled", "off"));
     private Logger logger;
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
@@ -39,8 +42,8 @@ public class TerraformParameters {
         this(logger, proxy, SsmClient.create(), S3Client.create());
     }
     
-    protected boolean isOff(Object x) {
-        return x==null || DISABLED_KEYWORD.equals(x);
+    protected boolean isDefault(Object x) {
+        return x==null || DEFAULT_KEYWORDS.contains(x.toString().toLowerCase());
     }
 
     public String getHost() {
@@ -49,7 +52,7 @@ public class TerraformParameters {
 
     public int getPort() {
         final String port = getParameterValue("ssh-port", false);
-        if (isOff(port)) {
+        if (isDefault(port)) {
             return DEFAULT_SSH_PORT;
         }
         try {
@@ -63,7 +66,7 @@ public class TerraformParameters {
 
     public String getProcessManager() {
         String pm = getParameterValue("process-manager", false);
-        if (isOff(pm)) {
+        if (isDefault(pm)) {
             pm = DEFAULT_PROCESS_MANAGER;
         }
         if (pm.equals("systemd") || pm.equals("nohup")) {
@@ -82,7 +85,7 @@ public class TerraformParameters {
 
     public String getFingerprint() {
         String fp = getParameterValue("ssh-fingerprint", false);
-        if (isOff(fp)) {
+        if (isDefault(fp)) {
             return null;
         }
         return fp;
@@ -90,7 +93,7 @@ public class TerraformParameters {
 
     public String getLogsS3BucketPrefix() {
         String bp = getParameterValue("logs-s3-bucket-prefix", false);
-        if (isOff(bp)) {
+        if (isDefault(bp)) {
             return null;
         }
         return bp;
