@@ -19,7 +19,7 @@ public class UpdateHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
-        public Worker() { super(Steps.class); }
+        public Worker() { super("Update", Steps.class); }
         
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() throws IOException {

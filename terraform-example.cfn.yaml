@@ -11,6 +11,7 @@ Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure
     Properties:
+      LogBucketName: cloudsoft-terraform-infrastructure-my-user-logs
       ConfigurationContent: |
         variable "AWSRegion" {
           type = string
@@ -72,4 +73,6 @@ Outputs:
   TerraformOutputs:
     Description: Outputs from Terraform as a stringified JSON map
     Value: !GetAtt TerraformExample.OutputsStringified
+  LogBucketUrl:
+    Value: !GetAtt TerraformExample.LogBucketUrl
 

@@ -1,40 +1,49 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 public class TerraformParameters {
 
     private static final String PREFIX = "/cfn/terraform";
     private static final int DEFAULT_SSH_PORT = 22;
     private static final String DEFAULT_PROCESS_MANAGER = "nohup";
+    // allow this so that parameters can be set, as they don't allow blanks or null
+    private static final Set<String> DEFAULT_KEYWORDS = new LinkedHashSet<String>(Arrays.asList("default", "disabled", "off"));
+    private Logger logger;
     private final AmazonWebServicesClientProxy proxy;
     private final SsmClient ssmClient;
     private final S3Client s3Client;
 
-    public TerraformParameters(AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
+    public TerraformParameters(Logger logger, AmazonWebServicesClientProxy proxy, SsmClient ssmClient, S3Client s3Client) {
+        this.logger = logger;
         this.proxy = proxy;
         this.ssmClient = ssmClient;
         this.s3Client = s3Client;
     }
 
-    public TerraformParameters(AmazonWebServicesClientProxy proxy) {
-        this(proxy, SsmClient.create(), S3Client.create());
+    public TerraformParameters(Logger logger, AmazonWebServicesClientProxy proxy) {
+        this(logger, proxy, SsmClient.create(), S3Client.create());
+    }
+    
+    protected boolean isDefault(Object x) {
+        return x==null || DEFAULT_KEYWORDS.contains(x.toString().toLowerCase());
     }
 
     public String getHost() {
@@ -43,7 +52,7 @@ public class TerraformParameters {
 
     public int getPort() {
         final String port = getParameterValue("ssh-port", false);
-        if (port==null) {
+        if (isDefault(port)) {
             return DEFAULT_SSH_PORT;
         }
         try {
@@ -57,7 +66,7 @@ public class TerraformParameters {
 
     public String getProcessManager() {
         String pm = getParameterValue("process-manager", false);
-        if (pm == null) {
+        if (isDefault(pm)) {
             pm = DEFAULT_PROCESS_MANAGER;
         }
         if (pm.equals("systemd") || pm.equals("nohup")) {
@@ -75,11 +84,19 @@ public class TerraformParameters {
     }
 
     public String getFingerprint() {
-        return getParameterValue("ssh-fingerprint", false);
+        String fp = getParameterValue("ssh-fingerprint", false);
+        if (isDefault(fp)) {
+            return null;
+        }
+        return fp;
     }
 
-    public String getLogsS3BucketName() {
-        return getParameterValue("logs-s3-bucket-name", false);
+    public String getLogsS3BucketPrefix() {
+        String bp = getParameterValue("logs-s3-bucket-prefix", false);
+        if (isDefault(bp)) {
+            return null;
+        }
+        return bp;
     }
 
     private String getParameterValue(String id, boolean required) {
@@ -97,6 +114,10 @@ public class TerraformParameters {
             if (required) {
                 throw ConnectorHandlerFailures.unhandled("Parameter '"+id+"' must be set in parameter store.", e);
             } else {
+                // annoyingly we get failure messages in the log if the parameter doesn't exist; explain that so people don't panic
+                if (logger!=null) {
+                    logger.log("Parameter '"+id+"' not in parameter store; using default. If there is an SSM failure message above, it is likely due to this and is benign. Set the default explicitly to suppress these messages.");
+                }
                 return null;
             }
         } catch (RuntimeException e) {
@@ -129,19 +150,13 @@ public class TerraformParameters {
             final String key = matcher.group(2);
 
             try {
-                final File tmpFile = File.createTempFile("configuration-", ".tf");
-                GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(key)
-                        .build();
-                proxy.injectCredentialsAndInvokeV2(getObjectRequest, request -> s3Client.getObject(request, tmpFile.toPath()));
-                final byte[] result = FileUtils.readFileToByteArray(tmpFile);
+                byte[] result = new BucketUtils(proxy, s3Client).download(bucket, key);
                 if (result.length==0) {
                     throw ConnectorHandlerFailures.unhandled(String.format("S3 file at %s is empty", model.getConfigurationS3Path()));
                 }
                 return result;
             } catch (Exception e) {
-                throw ConnectorHandlerFailures.unhandled(String.format("Failed to get S3 file at %s: check it exists and roles/permissions set for this type connector", model.getConfigurationS3Path()), e);
+                throw ConnectorHandlerFailures.unhandled(String.format("Failed to get S3 Terraform configuration file at %s: check it exists and roles/permissions set for this type connector", model.getConfigurationS3Path()), e);
             }
         }
 

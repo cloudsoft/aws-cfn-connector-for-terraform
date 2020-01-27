@@ -19,8 +19,12 @@ public class ListHandler extends TerraformBaseHandler {
 
     protected static class Worker extends TerraformBaseWorker<Steps> {
 
-        public Worker() { super(Steps.class); }
+        public Worker() { super("List", Steps.class); }
         
+        protected boolean userLogsEnabled() { 
+            return false;
+        }
+
         @Override
         protected ProgressEvent<ResourceModel, CallbackContext> runStep() {
             final List<ResourceModel> models = new ArrayList<>();

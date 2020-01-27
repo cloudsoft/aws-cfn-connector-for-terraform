@@ -27,7 +27,15 @@ public class ListHandlerTest {
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final ListHandler handler = new ListHandler();
+        final ListHandler handler = new ListHandler() {
+            @Override
+            protected TerraformBaseWorker<?> newWorker() {
+                TerraformBaseWorker<?> result = super.newWorker();
+                result.storeMetadataOnServer = false;
+                result.setParameters(HandlerTestFixture.newTerraformParametersForTests(logger, proxy, null, null));
+                return result;
+            }
+        };
 
         final ResourceModel model = ResourceModel.builder().build();
 

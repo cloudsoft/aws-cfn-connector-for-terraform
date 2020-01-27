@@ -1,11 +1,27 @@
 package io.cloudsoft.terraform.infrastructure;
 
-import org.apache.commons.io.FileUtils;
+import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
+
+import software.amazon.awssdk.core.sync.ResponseTransformer;
+import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -14,16 +30,6 @@ import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 public class TerraformParametersTest {
 
@@ -43,7 +49,7 @@ public class TerraformParametersTest {
         proxy = mock(AmazonWebServicesClientProxy.class);
         ssmClient = mock(SsmClient.class);
         s3Client = mock(S3Client.class);
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+        parameters = new TerraformParameters(null, proxy, ssmClient, s3Client);
     }
 
     @Test
@@ -227,7 +233,7 @@ public class TerraformParametersTest {
         proxy = mock(AmazonWebServicesClientProxy.class);
         ssmClient = mock(SsmClient.class);
         s3Client = mock(S3Client.class);
-        parameters = new TerraformParameters(proxy, ssmClient, s3Client);
+        parameters = new TerraformParameters(null, proxy, ssmClient, s3Client);
 
         final GetParameterRequest expectedGetParameterRequest = GetParameterRequest.builder()
                 .name("/cfn/terraform/ssh-username")
@@ -279,6 +285,7 @@ public class TerraformParametersTest {
         });
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getConfigurationReturnsDownloadedConfigurationFromS3PathProperty() {
         final String expectedBucket = "my-bucket";
@@ -288,16 +295,16 @@ public class TerraformParametersTest {
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
-        when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).then(invocationOnMock -> {
-            Path path = invocationOnMock.getArgument(1);
-            FileUtils.write(path.toFile(), expectedContent, StandardCharsets.UTF_8);
+        when(s3Client.getObject(any(GetObjectRequest.class), any(ResponseTransformer.class))).then(invocationOnMock -> {
+            ResponseTransformer<?,?> transformer = invocationOnMock.getArgument(1);
+            transformer.transform(null, AbortableInputStream.create(new ByteArrayInputStream(expectedContent.getBytes())));
             return null;
         });
 
         byte[] result = parameters.getConfiguration(model);
         verify(proxy, times(1)).injectCredentialsAndInvokeV2(any(GetObjectRequest.class), any());
         ArgumentCaptor<GetObjectRequest> argument = ArgumentCaptor.forClass(GetObjectRequest.class);
-        verify(s3Client, times(1)).getObject(argument.capture(), any(Path.class));
+        verify(s3Client, times(1)).getObject(argument.capture(), any(ResponseTransformer.class));
 
         assertArrayEquals(expectedContent.getBytes(StandardCharsets.UTF_8), result);
         assertEquals(expectedBucket, argument.getValue().bucket());

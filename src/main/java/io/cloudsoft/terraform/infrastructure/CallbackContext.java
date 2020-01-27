@@ -21,6 +21,7 @@ public class CallbackContext {
     public String commandRequestId;
     public String stepId;
     public int lastDelaySeconds;
+    public String logBucketName;
     
     // cache this for the duration of a command
     public String processManager;

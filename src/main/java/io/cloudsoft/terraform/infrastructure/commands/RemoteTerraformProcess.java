@@ -27,6 +27,7 @@ public class RemoteTerraformProcess {
     private static final String
         TF_DATADIR = "~/tfdata",
         TF_SCPDIR = "/tmp",
+        TF_CFN_METADATA_JSON = "cfn-metadata.json",
         TF_CONFFILENAME = "configuration.tf";
 
     /** This should be the same for all runs against a particular TF deployment managed by CFN,
@@ -75,7 +76,7 @@ public class RemoteTerraformProcess {
     public void uploadConfiguration(byte[] contents, Map<String, Object> vars_map, boolean firstTime) throws IOException, IllegalArgumentException {
         ssh.mkdir(getScpTmpDir());
         
-        String tmpFileBasename = "terraform-upload-"+commandIdentifier+"-"+RandomStringUtils.random(4)+".file";
+        String tmpFileBasename = "terraform-upload-"+commandIdentifier+"-"+RandomStringUtils.randomAlphanumeric(4)+".file";
         ssh.uploadFile(getScpTmpDir(), tmpFileBasename, contents);
         final String tmpFilename = getScpTmpDir() + "/" + tmpFileBasename;
         ssh.runSSHCommand("file  --brief --mime-type " + tmpFilename, PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
@@ -106,4 +107,23 @@ public class RemoteTerraformProcess {
         ssh.rmdir(getScpTmpDir());
     }
 
+    // provide a way to store metadata on the server
+    public void saveMetadata(Map<String,Object> metadata) throws IOException {
+        ssh.mkdir(getScpTmpDir());
+        String tmpFileBasename = "terraform-upload-metadata-"+RandomStringUtils.randomAlphanumeric(4)+".file";
+        // Work around the tilde [non-]expansion as explained above.
+        final byte[] vars_json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(metadata);
+        ssh.uploadFile(getScpTmpDir(), tmpFileBasename, vars_json);
+        ssh.mkdir(getWorkDir());
+        ssh.runSSHCommand(String.format("mv %s/%s %s/%s", getScpTmpDir(), tmpFileBasename, 
+            getWorkDir(), TF_CFN_METADATA_JSON), PostRunBehaviour.FAIL, PostRunBehaviour.IGNORE);
+        ssh.rmdir(getScpTmpDir());
+    }
+
+    // provide a way to store metadata on the server
+    public Map<?,?> loadMetadata() throws IOException {
+        ssh.runSSHCommand("cat "+getWorkDir()+"/"+TF_CFN_METADATA_JSON, PostRunBehaviour.FAIL, PostRunBehaviour.FAIL);
+        return new ObjectMapper().readValue(ssh.lastStdout.getBytes(), Map.class);
+    }
+    
 }
