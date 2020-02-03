@@ -48,7 +48,7 @@ Properties:
 | `ConfigurationUrl` | Public HTTP URL of a Terraform configuration. This will be downloaded from within CloudFormation and uploaded to the Terraform server. | (as above) |
 | `ConfigurationS3Path` | S3 path object representing a Terraform configuration. The current account must have access to this resource. This will be downloaded from within CloudFormation and uploaded to the Terraform server. | (as above) |
 | `Variables` | Variables to make available to the Terraform configuration by means of an `.auto.tfvars.json` file. | Optional in the CloudFormation template, although may be required by the Terraform configuration. |
-| `LogBucketName` | The name of an S3 bucket to create (if not present) and write log files | Optional; useful if the Terraform is not behaving as expected |
+| `LogBucketName` | The name of an S3 bucket to create (if not present) and write log files. This property value can contain a `*` character which will be replaced by the model's identifier, ensuring creation of a new bucket for each stack which the user will have access to. If the value does not contain `*` the bucket should either be intended for a single user or else manually configured with appropriate permissions for all users to see and for this resource provider to write to, otherwise the bucket may be unusable or inaccessible to some.  Restrictions on bucket names apply (between 3 and 63 characters long, no capital letters, etc). | Optional; useful if the Terraform is not behaving as expected |
 
 ## Return Values
 
@@ -58,7 +58,7 @@ The resource provider will set the following outputs on the resource.
 |-----|------|-------------|
 | `Outputs` | Object | All output coming from the Terraform configuration, as a map. |
 | `OutputsStringified` | String | All output coming from the Terraform configuration, as a JSON string of the map. |
-| `LogBucketUrl` | String | A URL where logs can be found (if the property or RP configuration is set). Note that this is only set if a log bucket is explicitly requested either with the `LogBucketName` property in CFN or a `/cfn/terraform/logs-s3-bucket-prefix` parameter in SSM. |
+| `LogBucketUrl` | String | A URL where logs can be found if S3 logs are configured. Note that this is only set if a log bucket is explicitly requested, either with the `LogBucketName` property in CFN or a `/cfn/terraform/logs-s3-bucket-name` parameter in SSM. |
 
 You can use the `Fn::GetAtt` intrinsic function to access these values,
 e.g. in the `Outputs` section of your CloudFormation to set an output on the stack and see it. 

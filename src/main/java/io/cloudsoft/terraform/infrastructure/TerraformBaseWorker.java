@@ -476,7 +476,14 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     }
 
     private String getLogFileObjectKey(String objectSuffix) {
-        return (model.getLogBucketName()!=null ? model.getIdentifier()+"/" : "") + callbackContext.getCommandRequestId()+"-"+getCommandSummary()+"/"+objectSuffix;
+        String folder;
+        if (callbackContext.getLogBucketName().contains(model.getIdentifier().toLowerCase())) {
+            folder = "";
+        } else {
+            // put in a virtual subfolder unless the bucket name already contains the model identifier 
+            folder = model.getIdentifier()+"/";
+        }
+        return folder + callbackContext.getCommandRequestId()+"-"+getCommandSummary()+"/"+objectSuffix;
     }
     protected boolean uploadCompleteLog(String objectSuffix, String text) {
         String bucketName = callbackContext.getLogBucketName();

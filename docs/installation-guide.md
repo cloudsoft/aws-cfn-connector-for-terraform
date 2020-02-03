@@ -91,9 +91,11 @@ This resource provider (RP) uses the following parameters:
      must run a Linux distribution that uses systemd with support for user mode and linger
      (typically CentOS 8, Fedora 28+, Ubuntu 18.04+, but not Amazon Linux 2)
         
-   - `/cfn/terraform/logs-s3-bucket-prefix` (optional): if set, all Terraform logs are shipped to an S3
-     bucket created as part of the stack and returned to the user as a URL on success;
-     note this can be overridden by the user with a property on the resource (see the [user-guide.md])
+   - `/cfn/terraform/logs-s3-bucket-name` (optional): if set, all Terraform logs are shipped to an S3
+     bucket and returned in output and in error messages.
+     This value value is as per the `LogBucketName` property on the resource;
+     see the documentation on that property in the [user-guide.md].
+     If that property is set it will override any value set here.
 
 Where a parameter is optional, it can be omitted or the special value `default` can be set to tell the RP
 to use the default value.  Note that omitting it causes warnings in the CloudWatch logs 

@@ -1,5 +1,7 @@
 package io.cloudsoft.terraform.infrastructure;
 
+import com.google.common.base.Strings;
+
 /** Unchecked exceptions indicating a handler request should fail.
  * These are used primarily to ensure an appropriate level of logging to the consumer.
  */
@@ -38,6 +40,13 @@ public class ConnectorHandlerFailures {
         protected Unhandled(String message, Throwable cause) {
             super(message, cause);
         }
+    }
+
+    /** Return a simple message, viz. the Exception.getMessage if non-blank (dropping the exception class), otherwise a toString */
+    public static String simpleMessage(Exception e) {
+        if (e==null) return "No details";
+        if (Strings.isNullOrEmpty(e.getMessage())) return e.toString();
+        return e.getMessage();
     }
 
 

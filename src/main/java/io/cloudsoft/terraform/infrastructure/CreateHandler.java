@@ -59,13 +59,11 @@ public class CreateHandler extends TerraformBaseHandler {
                 case CREATE_LOG_TARGET:
                     String logBucketName = model.getLogBucketName();
                     if (logBucketName==null) {
-                        logBucketName = getParameters().getLogsS3BucketPrefix();
-                        if (logBucketName!=null) {
-                            logBucketName = logBucketName + "-" + model.getIdentifier().toLowerCase();
-                        }
+                        logBucketName = getParameters().getLogsS3BucketName();
                     }
                     boolean triedCreatingLogBucket = false;
                     if (logBucketName!=null) {
+                        logBucketName = logBucketName.replace("*", model.getIdentifier().toLowerCase());
                         callbackContext.logBucketName = logBucketName;
                         setModelLogBucketUrlFromCallbackContextName();
 
@@ -85,10 +83,8 @@ public class CreateHandler extends TerraformBaseHandler {
                                 log(String.format("Created bucket for logs at s3://%s/", logBucketName));
                                 setModelLogBucketUrlFromCallbackContextName();
                             } catch (Exception e) {
-                                log(String.format("Failed to create log bucket %s: %s (%s)", logBucketName, e.getClass().getName(), e.getMessage()));
-                                callbackContext.logBucketName = null;
-                                model.setLogBucketName(null);  // clear the log bucket they requested
-                                setModelLogBucketUrlFromCallbackContextName();
+                                log(String.format("Failed to createlog bucket %s: %s (%s)", logBucketName, e.getClass().getName(), e.getMessage()));
+                                throw ConnectorHandlerFailures.handled("Unable to initialize log bucket; either the bucket is not creatable or not writeable: "+ConnectorHandlerFailures.simpleMessage(e));
                             }
                         }
                         saveMetadata();

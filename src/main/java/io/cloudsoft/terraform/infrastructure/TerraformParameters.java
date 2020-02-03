@@ -91,8 +91,8 @@ public class TerraformParameters {
         return fp;
     }
 
-    public String getLogsS3BucketPrefix() {
-        String bp = getParameterValue("logs-s3-bucket-prefix", false);
+    public String getLogsS3BucketName() {
+        String bp = getParameterValue("logs-s3-bucket-name", false);
         if (isDefault(bp)) {
             return null;
         }
