@@ -93,7 +93,7 @@ This resource provider (RP) uses the following parameters:
         
    - `/cfn/terraform/logs-s3-bucket-name` (optional): if set, all Terraform logs are shipped to an S3
      bucket and returned in output and in error messages.
-     This value value is as per the `LogBucketName` property on the resource;
+     This value is as per the `LogBucketName` property on the resource;
      see the documentation on that property in the [user-guide.md].
      If that property is set it will override any value set here.
 

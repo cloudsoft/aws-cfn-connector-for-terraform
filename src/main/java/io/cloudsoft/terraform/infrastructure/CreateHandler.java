@@ -84,6 +84,7 @@ public class CreateHandler extends TerraformBaseHandler {
                                 setModelLogBucketUrlFromCallbackContextName();
                             } catch (Exception e) {
                                 log(String.format("Failed to createlog bucket %s: %s (%s)", logBucketName, e.getClass().getName(), e.getMessage()));
+                                callbackContext.logBucketName = null;
                                 throw ConnectorHandlerFailures.handled("Unable to initialize log bucket; either the bucket is not creatable or not writeable: "+ConnectorHandlerFailures.simpleMessage(e));
                             }
                         }
