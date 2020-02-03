@@ -58,7 +58,7 @@ The resource provider will set the following outputs on the resource.
 |-----|------|-------------|
 | `Outputs` | Object | All output coming from the Terraform configuration, as a map. |
 | `OutputsStringified` | String | All output coming from the Terraform configuration, as a JSON string of the map. |
-| `LogBucketUrl` | String | A URL where logs can be found (if the property or RP configuration is set). |
+| `LogBucketUrl` | String | A URL where logs can be found (if the property or RP configuration is set). Note that this is only set if a log bucket is explicitly requested either with the `LogBucketName` property in CFN or a `/cfn/terraform/logs-s3-bucket-prefix` parameter in SSM. |
 
 You can use the `Fn::GetAtt` intrinsic function to access these values,
 e.g. in the `Outputs` section of your CloudFormation to set an output on the stack and see it. 
