@@ -80,7 +80,7 @@ public class HandlerTestFixture {
         return new TerraformParameters(logger, proxy, ssmClient, s3Client) {
             // this one is read during init
             @Override
-            public String getLogsS3BucketPrefix() {
+            public String getLogsS3BucketName() {
                 return null;
             }
         };

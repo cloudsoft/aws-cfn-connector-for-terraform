@@ -88,15 +88,19 @@ Resources:
       Name: /cfn/terraform/process-manager
       Type: String
       Value: 'nohup'
-  TerraformLogsS3BucketPrefix:
+  TerraformLogsS3BucketName:
     Type: AWS::SSM::Parameter
     Properties:
       Description: |
-        Prefix to use when creating log buckets.
-        Any value other than "default" will result in a bucket being created for each CFN resource created by this provider,
+        Optional bucket where all Terraform logs will be shipped.
+        Any value other than "default" will result in a bucket being created as necessary and logs copied to it,
         so that the user can easily inspect the logs (without needing special CloudWatch access).
-        A hyphen and the model identifier will be appended.
-      Name: /cfn/terraform/logs-s3-bucket-prefix
+        This parameter value can contain a * character which will be replaced by the model's identifier,
+        ensuring creation of a new bucket for each run which the user will have access to but other users will not.
+        If the value does not contain * the bucket should be created ahead of time with appropriate permissions for 
+        users to see and for this resource provider to write to, otherwise the bucket may be unusable or inaccessible to some users.  
+        Note this can be overridden by the user with a property on the resource (see the user guide).
+      Name: /cfn/terraform/logs-s3-bucket-name
       Type: String
       Value: 'default'
 
@@ -125,6 +129,6 @@ Outputs:
   TerraformProcessManagerParameter:
     Value:
       Ref: TerraformProcessManagerParameter
-  TerraformLogsS3BucketPrefix:
+  TerraformLogsS3BucketName:
     Value:
-      Ref: TerraformLogsS3BucketPrefix
+      Ref: TerraformLogsS3BucketName
