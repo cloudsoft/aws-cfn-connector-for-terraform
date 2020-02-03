@@ -90,8 +90,8 @@ public class CreateHandler extends TerraformBaseHandler {
                                 model.setLogBucketName(null);  // clear the log bucket they requested
                                 setModelLogBucketUrlFromCallbackContextName();
                             }
-                            saveMetadata();
                         }
+                        saveMetadata();
                     }
                     
                     advanceTo(Steps.CREATE_INIT_AND_UPLOAD);
