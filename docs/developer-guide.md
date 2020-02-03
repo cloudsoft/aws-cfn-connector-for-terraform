@@ -116,5 +116,7 @@ Some features we'd like to support include:
 
 * Supporting multiple connector instances in the same account, pointing at different TF servers.
 
+* Being more forgiving of transient network errors where possible (eg when checking status of a long-running command execution)
+
 Contributions are welcome!
 
