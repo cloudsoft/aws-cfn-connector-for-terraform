@@ -111,21 +111,21 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
 
         } catch (ConnectorHandlerFailures.Handled e) {
             log(getClass().getName() + " lambda exiting with error");
-            String message = "FAILING: "+e.getMessage();
+            String message = "FAILED: "+e.getMessage();
             logUserLogOnly(message);
             return statusFailed(message);
 
         } catch (ConnectorHandlerFailures.Unhandled e) {
             if (e.getCause()!=null) {
-                logExceptionIncludingUserLog("FAILING: "+e.getMessage(), e.getCause());
+                logExceptionIncludingUserLog("FAILED: "+e.getMessage(), e.getCause());
             } else {
-                logIncludingUserLog("FAILING: "+e.getMessage());
+                logIncludingUserLog("FAILED: "+e.getMessage());
             }
             log(getClass().getName() + " lambda exiting with error");
             return statusFailed(e.getMessage());
 
         } catch (Exception e) {
-            logExceptionIncludingUserLog("FAILING: "+e, e);
+            logExceptionIncludingUserLog("FAILED: "+e, e);
             log(getClass().getName() + " lambda exiting with error");
             return statusFailed((currentStep!=null ? currentStep+": " : "")+e);
         }
