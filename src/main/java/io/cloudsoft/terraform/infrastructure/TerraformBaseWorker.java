@@ -27,6 +27,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
 
+    private static final String HTTPS_S3_BUCKET_PREFIX = "https://s3.console.aws.amazon.com/s3/buckets/";
     // Mirror Terraform, which maxes its state checks at 10 seconds when working on long jobs
     private static final int MAX_CHECK_INTERVAL_SECONDS = 10;
     // Use YAML doc separator to separate logged messages
@@ -225,14 +226,32 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
     
     protected void setCallbackLogBucketNameFromModelUrl() {
         if (model.getLogBucketUrl()!=null) {
-            callbackContext.logBucketName = model.getLogBucketUrl().substring(model.getLogBucketUrl().lastIndexOf("/")+1);
+            String name = model.getLogBucketUrl();
+            
+            // must have the prefix, remove it
+            if (!name.startsWith(HTTPS_S3_BUCKET_PREFIX)) {
+                throw new IllegalStateException("Malformed bucket URL: "+name);
+            }
+            name = name.substring(HTTPS_S3_BUCKET_PREFIX.length());
+            
+            // might have a /model suffix - if so remove that too
+            int end = name.indexOf('/');
+            if (end>=0) {
+                name = name.substring(0, end);
+            }
+            callbackContext.logBucketName = name;
         }
     }
     
     protected void setModelLogBucketUrlFromCallbackContextName() {
-        model.setLogBucketUrl(
-            callbackContext.logBucketName==null ? null :
-                "https://s3.console.aws.amazon.com/s3/buckets/"+callbackContext.logBucketName);
+        String url = null;
+        if (callbackContext.logBucketName!=null) {
+            url = HTTPS_S3_BUCKET_PREFIX+callbackContext.logBucketName;
+            if (!callbackContext.logBucketName.contains(model.getIdentifier().toLowerCase())) {
+                url += "/"+model.getIdentifier().toLowerCase();
+            }
+        }
+        model.setLogBucketUrl(url);
     }
 
     protected void log(String message) {
