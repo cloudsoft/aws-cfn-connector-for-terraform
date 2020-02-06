@@ -3,10 +3,10 @@ Description: Terraform in CloudFormation example, using the Terraform Connector 
 Parameters: 
   CFNBucket1Name:
     Type: String
-    Default: terraform-rp-example-bucket1-default-from-cfn
+    Default: terraform-rp-example-bucket1-default-from-cfn-2
   CFNBucket2Name:
     Type: String
-    Default: terraform-rp-example-bucket2-default-from-cfn
+    Default: terraform-rp-example-bucket2-default-from-cfn-2
 Resources:
   TerraformExample:
     Type: Cloudsoft::Terraform::Infrastructure

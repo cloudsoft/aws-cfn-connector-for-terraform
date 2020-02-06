@@ -248,7 +248,8 @@ public abstract class TerraformBaseWorker<Steps extends Enum<Steps>> {
         if (callbackContext.logBucketName!=null) {
             url = HTTPS_S3_BUCKET_PREFIX+callbackContext.logBucketName;
             if (!callbackContext.logBucketName.contains(model.getIdentifier().toLowerCase())) {
-                url += "/"+model.getIdentifier().toLowerCase();
+                // note, NOT lower case here, needs trailing slash
+                url += "/"+model.getIdentifier()+"/";
             }
         }
         model.setLogBucketUrl(url);
