@@ -104,6 +104,11 @@ See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the in
 
 Some features we'd like to support include:
 
+* Implement the "List" operation
+
+* Make "Read" more efficient by being able to cache outputs from the last execution
+  (rather than need to SSH to ask about outputs on each run)
+
 * Getting individual outputs, e.g. using `!GetAtt TerraformExample.Outputs.custom_output1.value`.
   This project currently returns the map in `Outputs`, but CFN does not support accessing it.
 
