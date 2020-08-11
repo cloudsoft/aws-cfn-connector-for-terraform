@@ -13,12 +13,14 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.http.AbortableInputStream;
@@ -294,7 +296,12 @@ public class TerraformParametersTest {
         final String configurationS3Path = String.format("s3://%s/%s", expectedBucket, expectedKey);
         final ResourceModel model = ResourceModel.builder().configurationS3Path(configurationS3Path).build();
 
-        when(proxy.injectCredentialsAndInvokeV2(any(), any())).then(InvocationOnMock::callRealMethod);
+        when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return ((Function<Object,Object>)invocation.getArgument(1)).apply(invocation.getArgument(0));
+            }
+        });
         when(s3Client.getObject(any(GetObjectRequest.class), any(ResponseTransformer.class))).then(invocationOnMock -> {
             ResponseTransformer<?,?> transformer = invocationOnMock.getArgument(1);
             transformer.transform(null, AbortableInputStream.create(new ByteArrayInputStream(expectedContent.getBytes())));
