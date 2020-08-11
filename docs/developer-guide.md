@@ -123,5 +123,10 @@ Some features we'd like to support include:
 
 * Being more forgiving of transient network errors where possible (eg when checking status of a long-running command execution)
 
+And technical debt:
+
+* The build insists on overwriting the `docs/` folder, even if the `README.md` exists, ever since upgrading `cfn`.
+  Seems it is `cfn generate` which does this, with no option to disable it.
+
 Contributions are welcome!
 
