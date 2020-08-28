@@ -2,7 +2,7 @@
 
 ## Quick start
 
-First, you need to install the custom type into CloudFomation. See the [installation guide](./docs/installation-guide.md) documentation.
+First, you need to install the custom type into CloudFomation. See the [installation guide](./doc/installation-guide.md) documentation.
 
 Once done, you can use Terraform in CloudFormation templates by specifying the type `Cloudsoft::Terraform::Infrastructure`.
 For example:
@@ -35,8 +35,8 @@ Features:
 * Drive Terraform updates through CloudFormation
 * Read and delete
 
-For more information on how to use the custom type, see the [user guide](./docs/user-guide.md) documentation.
+For more information on how to use the custom type, see the [user guide](./doc/user-guide.md) documentation.
 
 ## Development
 
-To setup your local environment, please see the [developer guide](./docs/developer-guide.md) documentation.
+To setup your local environment, please see the [developer guide](./doc/developer-guide.md) documentation.

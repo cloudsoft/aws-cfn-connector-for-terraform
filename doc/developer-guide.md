@@ -140,6 +140,7 @@ And technical debt:
 
 * The build insists on overwriting the `docs/` folder, even if the `README.md` exists, ever since upgrading `cfn`.
   Seems it is `cfn generate` which does this, with no option to disable it.
+  For now the docs are in `doc/` instead, with `docs/` ignored in `.gitignore`.
 
 Contributions are welcome!
 
