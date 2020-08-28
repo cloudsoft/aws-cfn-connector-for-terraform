@@ -100,6 +100,19 @@ _Note these tests require the a Terraform server to be up and running, as well p
 See [prerequisites](./installation-guide.md#prerequisites) and [step 3 of the installation guide](./installation-guide.md#installation)._
 
 
+## Troubleshooting
+
+The `aws` and `cfn` tools and maven repository seem at present (Summer 2020) to be updated quite frequently
+in ways that break backwards compatibility with respect to building this project or sometimes using this project.
+If errors are encountered it is recommented that you update to the latest version,
+following the instructions [here](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html),
+summarized below for convenience:
+
+    brew install python awscli
+    pip3 install --upgrade cloudformation-cli-java-plugin
+    # then update the RPDK verisonin the pom.xml here and fix any compilation breakages
+
+
 ## Open Features aka Limitations
 
 Some features we'd like to support include:
